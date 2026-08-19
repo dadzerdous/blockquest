@@ -2,46 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  />
-
-  <title>Spike Trolley RPG</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Spike Trolley RPG v0.2</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-
-  <div id="gameWrap">
-
-    <div id="hud">
-      <div>
-        HERO
-        <span id="heroHp">❤️ 5 / 5</span>
+  <div id="gameShell">
+    <div id="gameWrap">
+      <div id="hud">
+        <div>HERO <span id="heroHp">❤️ 5 / 5</span></div>
+        <div id="roomTitle">ROOM 1 — GOBLIN OUTPOST</div>
+        <div>ENEMIES <span id="enemyCount">0</span></div>
       </div>
 
-      <div id="roomTitle">
-        GOBLIN OUTPOST
+      <canvas id="gameCanvas" width="900" height="1400"></canvas>
+
+      <div id="message">TAP / CLICK TO LAUNCH</div>
+      <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
+
+      <div id="upgradeOverlay" class="hidden">
+        <div class="upgradePanel">
+          <div class="eyebrow">ROOM CLEARED</div>
+          <h1>Choose an Upgrade</h1>
+          <p>Permanent for this run. Pick one to enter the next room.</p>
+
+          <div class="upgradeChoices">
+            <button class="upgradeCard" data-upgrade="power">
+              <span class="upgradeIcon">💥</span>
+              <strong>HEAVY SHOT</strong>
+              <span>Ball damage +1</span>
+              <small id="powerLevel">Damage: 1</small>
+            </button>
+
+            <button class="upgradeCard" data-upgrade="width">
+              <span class="upgradeIcon">🛡️</span>
+              <strong>WIDER TROLLEY</strong>
+              <span>Trolley width +15%</span>
+              <small id="widthLevel">Width: 220</small>
+            </button>
+
+            <button class="upgradeCard" data-upgrade="speed">
+              <span class="upgradeIcon">💨</span>
+              <strong>FASTER RUNNER</strong>
+              <span>Trolley speed +15%</span>
+              <small id="speedLevel">Speed: 620</small>
+            </button>
+          </div>
+        </div>
       </div>
-
-      <div>
-        ENEMIES
-        <span id="enemyCount">0</span>
-      </div>
     </div>
-
-    <canvas id="gameCanvas"></canvas>
-
-    <div id="message">
-      TAP / CLICK TO LAUNCH
-    </div>
-
-    <div id="mobileHint">
-      Drag anywhere to steer the trolley
-    </div>
-
   </div>
 
   <script src="game.js"></script>
