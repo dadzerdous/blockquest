@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.4</title>
+  <title>Spike Trolley RPG v0.5</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="gameShell">
     <div id="gameWrap">
       <div id="hud">
-        <div>HERO <span id="heroHp">❤️ 5 / 5</span></div>
+        <div>HERO <span id="heroHp">❤️ 5 / 5</span><span id="heroShield"></span><span id="goldHud">💰 0</span></div>
         <div id="roomTitle">ROOM 1 — GOBLIN OUTPOST</div>
         <div>ENEMIES <span id="enemyCount">0</span></div>
       </div>
@@ -18,8 +18,43 @@
       <canvas id="gameCanvas" width="900" height="1400"></canvas>
 
       <div id="message">TAP / CLICK TO LAUNCH</div>
-      <div id="versionBadge">v0.4</div>
+      <button id="glueButton" class="hidden">🧲 GLUE <span id="glueButtonCount">0</span></button>
+      <div id="versionBadge">v0.5</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
+
+
+      <div id="shopOverlay" class="hidden">
+        <div class="upgradePanel">
+          <div class="eyebrow">TRAVELING MERCHANT</div>
+          <h1>Goblin Road Shop</h1>
+          <p>Spend run gold. Leave whenever you are ready.</p>
+
+          <div class="upgradeChoices">
+            <button class="upgradeCard shopCard" data-shop="overshield">
+              <span class="upgradeIcon">💙</span>
+              <strong>OVERSHIELD — 12 GOLD</strong>
+              <span>Blocks the first damage in every room.</span>
+              <small id="shieldOwned">Not owned</small>
+            </button>
+
+            <button class="upgradeCard shopCard" data-shop="glue">
+              <span class="upgradeIcon">🧲</span>
+              <strong>BALL GLUE — 8 GOLD</strong>
+              <span>Next paddle catch sticks the ball for up to 3 seconds.</span>
+              <small id="glueCount">Charges: 0</small>
+            </button>
+
+            <button class="upgradeCard shopCard" data-shop="heal">
+              <span class="upgradeIcon">❤️</span>
+              <strong>PATCH UP — 6 GOLD</strong>
+              <span>Restore 2 HP.</span>
+              <small id="healStatus">Current HP</small>
+            </button>
+          </div>
+
+          <button id="leaveShop" class="leaveShop">LEAVE SHOP →</button>
+        </div>
+      </div>
 
       <div id="upgradeOverlay" class="hidden">
         <div class="upgradePanel">

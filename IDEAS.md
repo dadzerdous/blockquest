@@ -1,5 +1,9 @@
 # Spike Trolley RPG — Ideas
 
+## Build
+
+Current prototype: **v0.5**
+
 ## Current Direction
 
 **v0.4 returns to classic direct trolley control.**
@@ -173,3 +177,63 @@ Functional hub that visually grows with progress.
 - Permanent progression.
 - Rescued NPCs.
 - Visible trophies/unlocks.
+
+
+## Equipment Architecture — Direction
+
+Equipment is distinct from run upgrades and shop consumables.
+
+### Character Equipment Slots
+
+- **Boots / Feet** — primarily movement speed, acceleration, braking, agility.
+- **Hat / Helmet** — primarily defense and hazard resistance.
+- **Chest** — primarily max HP / survivability.
+- **Ring** — special effects, elemental synergies, utility.
+- **Amulet** — special effects, status interactions, control.
+- **Ball** — weapon: damage, element, piercing, explosive behavior, etc.
+- **Trolley** — paddle/platform: width, handling, bounce properties, defense.
+- **Pet** — companion support.
+
+Prefer deliberately designed equipment identities over endless +1/+2/+3 copies.
+
+Examples:
+
+- Goblin Runners — fast movement.
+- Lead Boots — slower but stronger braking/control.
+- Winged Boots — faster direction changes.
+- Guard Helmet — defense.
+- Leather Armor — max HP.
+- Ember Ring — improves fire interactions.
+- Lodestone Amulet — improves Ball Glue.
+
+### Discovery / Collection Philosophy
+
+- Equipment can be found during runs.
+- First discovery permanently adds the item to the player's collection.
+- Previously discovered duplicate equipment can convert to gold.
+- Before future runs, the player can choose starting equipment from the permanent collection.
+- Starting loadout should be limited so run discovery remains meaningful.
+- Avoid randomized Diablo-style stat rolls for now.
+
+## Board Philosophy
+
+**Everything on the board can have properties, but not everything on the board is an objective.**
+
+- Mobs must be defeated to clear combat rooms.
+- Environmental bricks can remain when the room ends.
+- Bricks may still have HP, armor, elements, resistances, statuses, and interactions.
+- Optional brick destruction can expose treasure, secrets, healing, or tactical paths.
+- Future ice walls can be weak to fire.
+- Future fire/explosive interactions can damage neighboring bricks and mobs.
+
+## Shop Philosophy
+
+Shop purchases are distinct from earned run upgrades and equipment.
+
+Current first shop concepts:
+
+- **Overshield** — blocks one damage each room and visually shatters.
+- **Ball Glue** — activate a charge; the next paddle catch sticks the ball for up to a few seconds.
+- Healing.
+
+Later shops may sell equipment, enchants, utility, or other tactical resources.

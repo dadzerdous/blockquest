@@ -232,3 +232,70 @@ body {
   font-weight: 800;
   pointer-events: none;
 }
+
+
+#heroShield {
+  color: #75c8ff;
+}
+
+#goldHud {
+  color: #f4d26f;
+}
+
+#shopOverlay {
+  position: absolute;
+  z-index: 31;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 5%;
+  background: rgba(8, 7, 12, .92);
+  backdrop-filter: blur(4px);
+}
+
+.shopCard:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.leaveShop {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px;
+  border: 2px solid #7a6f84;
+  border-radius: 12px;
+  background: #342e3d;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#glueButton {
+  position: absolute;
+  z-index: 18;
+  left: 10px;
+  bottom: 10px;
+  padding: 8px 10px;
+  border: 2px solid #9d8ac7;
+  border-radius: 10px;
+  background: rgba(35, 28, 49, .9);
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#glueButton.armed {
+  border-color: #f0d06c;
+  box-shadow: 0 0 18px rgba(240, 208, 108, .65);
+}
+
+#glueButton:disabled {
+  opacity: .4;
+}
+
+@keyframes shieldFlash {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(2); }
+  100% { filter: brightness(1); }
+}
