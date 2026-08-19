@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.5**
+Current prototype: **v0.6**
 
 ## Current Direction
 
@@ -237,3 +237,17 @@ Current first shop concepts:
 - Healing.
 
 Later shops may sell equipment, enchants, utility, or other tactical resources.
+
+
+## v0.6 Art Integration
+
+Added approved first-pass game art:
+
+- `assets/bg1.png` — Goblin Outpost dungeon background.
+- `assets/trolley1.png` — adventurer + trolley sprite.
+
+The art is now drawn by the game code while gameplay collision remains separate.
+
+### Progression Note
+
+Overall XP / permanent growth is still planned, especially so failed runs do not feel completely wasted, but **no XP system is implemented in v0.6**. We are deliberately waiting until the immediate combat/run structure is a little clearer.

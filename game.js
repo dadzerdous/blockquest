@@ -24,6 +24,13 @@ const glueButtonCount = document.getElementById("glueButtonCount");
 const WORLD_WIDTH = 900;
 const WORLD_HEIGHT = 1400;
 
+
+const bgImage = new Image();
+bgImage.src = "assets/bg1.png";
+
+const trolleyImage = new Image();
+trolleyImage.src = "assets/trolley1.png";
+
 let gameState = "waiting";
 let lastTime = 0;
 let keys = {};
@@ -719,41 +726,47 @@ function updateHUD() {
 }
 
 function drawBackground() {
-  // Simple atmospheric cave placeholder. Art pass comes later.
-  const gradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
-  gradient.addColorStop(0, "#161321");
-  gradient.addColorStop(0.6, "#262031");
-  gradient.addColorStop(1, "#121017");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  // Approved dungeon artwork. It is scaled to fully cover the fixed 9:14
+  // gameplay world without changing gameplay geometry.
+  if (bgImage.complete && bgImage.naturalWidth > 0) {
+    const imageRatio = bgImage.naturalWidth / bgImage.naturalHeight;
+    const worldRatio = WORLD_WIDTH / WORLD_HEIGHT;
 
-  // distant stone arches
-  ctx.strokeStyle = "rgba(135, 116, 151, .12)";
-  ctx.lineWidth = 18;
-  for (let x = 120; x < WORLD_WIDTH; x += 220) {
-    ctx.beginPath();
-    ctx.arc(x, 540, 110, Math.PI, 0);
-    ctx.lineTo(x + 110, 1000);
-    ctx.stroke();
+    let drawWidth;
+    let drawHeight;
+    let drawX;
+    let drawY;
+
+    if (imageRatio > worldRatio) {
+      drawHeight = WORLD_HEIGHT;
+      drawWidth = drawHeight * imageRatio;
+      drawX = (WORLD_WIDTH - drawWidth) / 2;
+      drawY = 0;
+    } else {
+      drawWidth = WORLD_WIDTH;
+      drawHeight = drawWidth / imageRatio;
+      drawX = 0;
+      drawY = (WORLD_HEIGHT - drawHeight) / 2;
+    }
+
+    ctx.drawImage(
+      bgImage,
+      drawX,
+      drawY,
+      drawWidth,
+      drawHeight
+    );
+
+    // Light darkening layer keeps mobs/bricks readable over the artwork.
+    ctx.fillStyle = "rgba(7, 8, 12, 0.18)";
+    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  } else {
+    ctx.fillStyle = "#1c1926";
+    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
   }
 
-  // torches
-  for (const x of [70, WORLD_WIDTH - 70]) {
-    ctx.fillStyle = "#5c4634";
-    ctx.fillRect(x - 6, 360, 12, 90);
-
-    ctx.fillStyle = "rgba(255, 166, 68, .12)";
-    ctx.beginPath();
-    ctx.arc(x, 345, 95, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#ff9f43";
-    ctx.beginPath();
-    ctx.arc(x, 345, 13, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.fillStyle = "#292532";
+  // Retain subtle side boundaries for collision readability.
+  ctx.fillStyle = "rgba(12, 12, 18, 0.30)";
   ctx.fillRect(0, 110, 28, WORLD_HEIGHT);
   ctx.fillRect(WORLD_WIDTH - 28, 110, 28, WORLD_HEIGHT);
 }
@@ -788,18 +801,28 @@ function drawPlayer() {
 
   const x = player.x;
   const y = player.y;
-  const wheelOffset = Math.max(55, player.width * 0.32);
 
-  // Overshield bubble
+  // Overshield bubble remains code-driven so it can flash/shatter later.
   if (shieldReady || shieldShatterTimer > 0) {
-    const alpha = shieldReady ? 0.85 : Math.max(0, shieldShatterTimer / 0.55);
+    const alpha = shieldReady
+      ? 0.85
+      : Math.max(0, shieldShatterTimer / 0.55);
 
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = "#69d0ff";
     ctx.lineWidth = shieldReady ? 9 : 4;
+
     ctx.beginPath();
-    ctx.ellipse(x, y - 20, player.width / 2 + 38, 95, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y - 30,
+      player.width / 2 + 44,
+      112,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.stroke();
 
     ctx.globalAlpha = alpha * 0.12;
@@ -808,37 +831,42 @@ function drawPlayer() {
     ctx.restore();
   }
 
-  ctx.fillStyle = "#17151c";
+  if (trolleyImage.complete && trolleyImage.naturalWidth > 0) {
+    const spriteWidth = player.width * 1.22;
+    const spriteHeight =
+      spriteWidth *
+      (trolleyImage.naturalHeight / trolleyImage.naturalWidth);
 
-  ctx.beginPath();
-  ctx.arc(x - wheelOffset, y + 30, 23, 0, Math.PI * 2);
-  ctx.fill();
+    // Bottom-align the wheels slightly below the old paddle collision area.
+    ctx.drawImage(
+      trolleyImage,
+      x - spriteWidth / 2,
+      y - spriteHeight * 0.72,
+      spriteWidth,
+      spriteHeight
+    );
+  } else {
+    // Fallback paddle if the image has not loaded yet.
+    ctx.fillStyle = "#76523c";
+    ctx.fillRect(
+      x - player.width / 2,
+      y - player.height / 2,
+      player.width,
+      player.height
+    );
 
-  ctx.beginPath();
-  ctx.arc(x + wheelOffset, y + 30, 23, 0, Math.PI * 2);
-  ctx.fill();
+    ctx.strokeStyle = "#c3b8a4";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(
+      x - player.width / 2,
+      y - player.height / 2,
+      player.width,
+      player.height
+    );
 
-  ctx.fillStyle = "#81798a";
+    drawDriver(x, y - 28);
+  }
 
-  ctx.beginPath();
-  ctx.arc(x - wheelOffset, y + 30, 11, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.arc(x + wheelOffset, y + 30, 11, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#76523c";
-  ctx.fillRect(x - player.width / 2, y - player.height / 2, player.width, player.height);
-
-  ctx.fillStyle = "#b5814f";
-  ctx.fillRect(x - player.width / 2, y - player.height / 2, player.width, 9);
-
-  ctx.strokeStyle = "#c3b8a4";
-  ctx.lineWidth = 6;
-  ctx.strokeRect(x - player.width / 2, y - player.height / 2, player.width, player.height);
-
-  drawDriver(x, y - 28);
   ctx.restore();
 }
 
