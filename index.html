@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+
+  <title>Spike Trolley RPG</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <div id="gameWrap">
+
+    <div id="hud">
+      <div>
+        HERO
+        <span id="heroHp">❤️ 5 / 5</span>
+      </div>
+
+      <div id="roomTitle">
+        GOBLIN OUTPOST
+      </div>
+
+      <div>
+        ENEMIES
+        <span id="enemyCount">0</span>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="message">
+      TAP / CLICK TO LAUNCH
+    </div>
+
+    <div id="mobileHint">
+      Drag anywhere to steer the trolley
+    </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
