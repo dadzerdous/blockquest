@@ -21,7 +21,9 @@ body {
 
 #gameShell {
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -32,8 +34,15 @@ body {
 #gameWrap {
   position: relative;
   aspect-ratio: 9 / 14;
+
+  /* Fallback for older browsers. */
   width: min(100vw, calc(100vh * 9 / 14));
   height: min(100vh, calc(100vw * 14 / 9));
+
+  /* Dynamic viewport units account for mobile browser bars in both
+     portrait and landscape, so the entire 9:14 playfield stays visible. */
+  width: min(100dvw, calc(100dvh * 9 / 14));
+  height: min(100dvh, calc(100dvw * 14 / 9));
   overflow: hidden;
   background: #181625;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.65);
@@ -208,4 +217,18 @@ body {
   margin-top: 3px;
   color: #a9a1ae;
   font-size: clamp(9px, 1.4vh, 11px);
+}
+
+#versionBadge {
+  position: absolute;
+  z-index: 14;
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 7px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, .5);
+  color: rgba(255, 255, 255, .65);
+  font-size: clamp(8px, 1.2vh, 10px);
+  font-weight: 800;
+  pointer-events: none;
 }
