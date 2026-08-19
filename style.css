@@ -401,3 +401,105 @@ body {
 .treasureGlow {
   filter: drop-shadow(0 0 8px #ffd85b);
 }
+
+
+#runLobby {
+  position: absolute;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 6%;
+  background:
+    linear-gradient(rgba(5, 5, 9, .58), rgba(5, 5, 9, .84)),
+    url("assets/bg1.png") center / cover no-repeat;
+}
+
+.lobbyPanel {
+  width: 100%;
+  max-width: 560px;
+  padding: 6%;
+  border: 2px solid #6b6173;
+  border-radius: 18px;
+  background: rgba(22, 19, 28, .94);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .65);
+  text-align: center;
+}
+
+.lobbyPanel h1 {
+  margin: 8px 0 4px;
+  font-size: clamp(25px, 4.2vh, 42px);
+}
+
+.lobbyPanel p {
+  margin: 0 0 18px;
+  color: #c9c4ce;
+}
+
+.lobbySummary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.lobbySummary div {
+  padding: 10px 6px;
+  border: 1px solid #51495a;
+  border-radius: 10px;
+  background: #17141d;
+}
+
+.lobbySummary span {
+  display: block;
+  color: #9e96a5;
+  font-size: clamp(8px, 1.2vh, 10px);
+  font-weight: 800;
+}
+
+.lobbySummary strong {
+  display: block;
+  margin-top: 4px;
+  color: #f0da88;
+  font-size: clamp(14px, 2.2vh, 19px);
+}
+
+.lobbyActions {
+  display: grid;
+  gap: 10px;
+}
+
+.primaryLobbyButton,
+.secondaryLobbyButton {
+  width: 100%;
+  padding: 13px;
+  border-radius: 11px;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.primaryLobbyButton {
+  border: 2px solid #c6a348;
+  background: #8a6420;
+}
+
+.secondaryLobbyButton {
+  border: 2px solid #75658f;
+  background: #342e3d;
+}
+
+.lastRunSummary {
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid #4f4658;
+  border-radius: 10px;
+  background: #15121a;
+  color: #d5cedb;
+  font-size: clamp(10px, 1.6vh, 13px);
+}
+
+.armorHud {
+  color: #d8dde7;
+}

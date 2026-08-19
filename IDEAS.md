@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.7**
+Current prototype: **v0.8**
 
 ## Current Direction
 
@@ -327,3 +327,36 @@ They may become the primary source of elemental effects:
 Equipment can determine socket capacity and interact with particular rune types.
 
 This may replace the need for a traditional permanent skill tree. Do not implement a skill tree until the other systems prove one is needed.
+
+
+## v0.8 Flow / Stat Revision
+
+- Permanent stats are now managed **between runs**, not during an active run.
+- Added an actual run lobby/splash screen.
+- XP remains permanent and continues to provide a path forward for struggling players.
+- Every stat point now gives an immediate benefit; removed 3-point milestone gating.
+
+Current direct effects:
+
+- Vitality: +1 max HP per point.
+- Defense: +1 armor HP refreshed each room per point.
+- Agility: +3% trolley speed per point.
+- Power: +10% ball damage per point.
+- Control: +3% trolley width per point for now.
+- Fortune: +5% gold from treasure per point.
+
+Stats remain freely reallocatable between runs.
+
+## Brick Damage Art
+
+- `assets/brick1.png` — full/healthy environmental brick.
+- `assets/brick2.png` — damaged environmental brick.
+- Brick art switches to `brick2.png` at half HP.
+
+Future elements can reuse this state-driven art approach for ice, fire, armor, cracked walls, etc.
+
+## Presentation
+
+- Improved code-drawn trolley rail into an actual track with sleepers, metal rails, and bolts.
+- Enemy shooter projectile is now a visible fiery bolt with trail instead of a simple circle.
+- Between-run splash/lobby is now the natural home for future loadout, equipment, pet, dungeon choice, quests, and stat allocation.

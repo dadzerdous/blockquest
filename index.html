@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.7</title>
+  <title>Spike Trolley RPG v0.8</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -18,12 +18,42 @@
       <canvas id="gameCanvas" width="900" height="1400"></canvas>
 
       <div id="message">TAP / CLICK TO LAUNCH</div>
-      <button id="statsButton">⭐ STATS</button>
       <button id="glueButton" class="hidden">🧲 GLUE <span id="glueButtonCount">0</span></button>
-      <div id="versionBadge">v0.7</div>
+      <div id="versionBadge">v0.8</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
 
 
+
+
+      <div id="runLobby">
+        <div class="lobbyPanel">
+          <div class="eyebrow">SPIKE TROLLEY RPG</div>
+          <h1 id="lobbyTitle">Goblin Outpost</h1>
+          <p id="lobbySubtitle">Prepare your adventurer, then begin a run.</p>
+
+          <div class="lobbySummary">
+            <div>
+              <span>LEVEL</span>
+              <strong id="lobbyLevel">1</strong>
+            </div>
+            <div>
+              <span>XP</span>
+              <strong id="lobbyXp">0 / 100</strong>
+            </div>
+            <div>
+              <span>BEST ROOM</span>
+              <strong id="bestRoom">0</strong>
+            </div>
+          </div>
+
+          <div class="lobbyActions">
+            <button id="startRunButton" class="primaryLobbyButton">START RUN</button>
+            <button id="openStatsButton" class="secondaryLobbyButton">⭐ ALLOCATE STATS</button>
+          </div>
+
+          <div id="lastRunSummary" class="lastRunSummary hidden"></div>
+        </div>
+      </div>
 
       <div id="statsOverlay" class="hidden">
         <div class="upgradePanel statsPanel">
@@ -52,7 +82,7 @@
               <button data-stat="defense" data-dir="-1">−</button>
               <strong id="statDefense">0</strong>
               <button data-stat="defense" data-dir="1">+</button>
-              <small>Every 3 points blocks 1 damage per room</small>
+              <small>+1 armor HP each room</small>
             </div>
             <div class="statRow">
               <span>👟 Agility</span>
@@ -66,14 +96,14 @@
               <button data-stat="power" data-dir="-1">−</button>
               <strong id="statPower">0</strong>
               <button data-stat="power" data-dir="1">+</button>
-              <small>+1 damage every 3 points</small>
+              <small>+10% ball damage</small>
             </div>
             <div class="statRow">
               <span>🎯 Control</span>
               <button data-stat="control" data-dir="-1">−</button>
               <strong id="statControl">0</strong>
               <button data-stat="control" data-dir="1">+</button>
-              <small>+4% trolley width</small>
+              <small>+3% trolley width</small>
             </div>
             <div class="statRow">
               <span>🍀 Fortune</span>
@@ -84,7 +114,7 @@
             </div>
           </div>
 
-          <button id="closeStats" class="leaveShop">BACK TO GAME</button>
+          <button id="closeStats" class="leaveShop">BACK</button>
         </div>
       </div>
 

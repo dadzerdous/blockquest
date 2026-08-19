@@ -6,7 +6,15 @@ const heroShieldEl = document.getElementById("heroShield");
 const goldHudEl = document.getElementById("goldHud");
 const levelHudEl = document.getElementById("levelHud");
 const statsOverlay = document.getElementById("statsOverlay");
-const statsButton = document.getElementById("statsButton");
+const runLobby = document.getElementById("runLobby");
+const startRunButton = document.getElementById("startRunButton");
+const openStatsButton = document.getElementById("openStatsButton");
+const lobbyLevelEl = document.getElementById("lobbyLevel");
+const lobbyXpEl = document.getElementById("lobbyXp");
+const bestRoomEl = document.getElementById("bestRoom");
+const lastRunSummaryEl = document.getElementById("lastRunSummary");
+const lobbyTitleEl = document.getElementById("lobbyTitle");
+const lobbySubtitleEl = document.getElementById("lobbySubtitle");
 const closeStatsBtn = document.getElementById("closeStats");
 const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
@@ -42,6 +50,12 @@ trolleyImage.src = "assets/trolley1.png";
 const gobImage = new Image();
 gobImage.src = "assets/gob1.png";
 
+const brick1Image = new Image();
+brick1Image.src = "assets/brick1.png";
+
+const brick2Image = new Image();
+brick2Image.src = "assets/brick2.png";
+
 let gameState = "waiting";
 let lastTime = 0;
 let keys = {};
@@ -55,6 +69,7 @@ const progression = JSON.parse(localStorage.getItem("spikeTrolleyProgression") |
   xp: 0,
   level: 1,
   statPoints: 0,
+  bestRoom: 0,
   stats: {
     vitality: 0,
     defense: 0,
@@ -65,7 +80,10 @@ const progression = JSON.parse(localStorage.getItem("spikeTrolleyProgression") |
   }
 };
 
-let defenseWardReady = false;
+
+if (typeof progression.bestRoom !== "number") progression.bestRoom = 0;
+
+let armorPoints = 0;
 let stateBeforeStats = "waiting";
 
 function xpNeededForLevel(level) {
@@ -91,15 +109,25 @@ function addXP(amount) {
 }
 
 function applyPermanentStats() {
-  player.maxHp = 5 + progression.stats.vitality;
+  const s = progression.stats;
 
+  // Every point matters immediately.
+  player.maxHp = 5 + s.vitality;
+
+  // Defense is literal armor HP refreshed at the start of every room.
+  armorPoints = s.defense;
+
+  // +3% movement per point.
+  player.speed = player.baseSpeed * (1 + s.agility * 0.03);
+
+  // +10% ball damage per point.
+  ball.baseDamageMultiplier = 1 + s.power * 0.10;
+
+  // +3% trolley width per point.
+  player.width = player.baseWidth * (1 + s.control * 0.03);
+
+  // Fortune remains a direct +5% treasure reward per point.
   if (player.hp > player.maxHp) player.hp = player.maxHp;
-
-  player.speed = player.baseSpeed * (1 + progression.stats.agility * 0.03);
-  player.width = player.baseWidth * (1 + progression.stats.control * 0.04);
-
-  // Run upgrades are applied separately on top of these baselines.
-  ball.damage = Math.max(ball.damage, 1 + Math.floor(progression.stats.power / 3));
 }
 
 function updateStatsUI() {
@@ -149,7 +177,8 @@ const ball = {
   vx: 0,
   vy: 0,
   launched: false,
-  damage: 1
+  damage: 1,
+  baseDamageMultiplier: 1
 };
 
 let bricks = [];
@@ -256,6 +285,7 @@ function resetRun() {
   applyPermanentStats();
   player.hp = player.maxHp;
   player.x = WORLD_WIDTH / 2;
+
   ball.launched = false;
   ball.vx = 0;
   ball.vy = 0;
@@ -266,8 +296,11 @@ function resetRun() {
 
   upgradeOverlay.classList.add("hidden");
   shopOverlay.classList.add("hidden");
+  statsOverlay.classList.add("hidden");
 
-  startRoom();
+  updateHUD();
+  updateStatsUI();
+  updateLobbyUI();
 }
 
 function startRoom() {
@@ -284,7 +317,7 @@ function startRoom() {
   enemyProjectiles = [];
   attackTimer = 0;
   shieldReady = hasOvershield;
-  defenseWardReady = Math.floor(progression.stats.defense / 3) > 0;
+  armorPoints = progression.stats.defense;
 
   gameState = "waiting";
 
@@ -298,7 +331,7 @@ function startRoom() {
 
 function launchBall() {
   if (gameState === "lost") {
-    resetRun();
+    returnToLobby(false);
     return;
   }
 
@@ -350,7 +383,7 @@ canvas.addEventListener("pointerdown", event => {
   setPointerPosition(event);
 
   if (gameState === "lost") {
-    resetRun();
+    returnToLobby(false);
     return;
   }
 
@@ -371,17 +404,23 @@ function setPointerPosition(event) {
   pointerX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
 }
 
-statsButton.addEventListener("click", () => {
-  if (gameState === "upgrade" || gameState === "shop" || gameState === "lost") return;
-  stateBeforeStats = gameState;
-  gameState = "stats";
+openStatsButton.addEventListener("click", () => {
+  runLobby.classList.add("hidden");
   statsOverlay.classList.remove("hidden");
   updateStatsUI();
 });
 
 closeStatsBtn.addEventListener("click", () => {
   statsOverlay.classList.add("hidden");
-  gameState = stateBeforeStats;
+  runLobby.classList.remove("hidden");
+  updateLobbyUI();
+});
+
+startRunButton.addEventListener("click", () => {
+  runLobby.classList.add("hidden");
+  lastRunSummaryEl.classList.add("hidden");
+  resetRun();
+  startRoom();
 });
 
 document.querySelectorAll("[data-stat]").forEach(button => {
@@ -670,7 +709,7 @@ function checkBrickCollisions() {
 }
 
 function damageBrick(brick) {
-  brick.hp -= ball.damage;
+  brick.hp -= ball.damage * ball.baseDamageMultiplier;
   brick.hitFlash = 0.12;
 
   createParticles(
@@ -775,8 +814,8 @@ function hurtPlayer() {
     return;
   }
 
-  if (defenseWardReady) {
-    defenseWardReady = false;
+  if (armorPoints > 0) {
+    armorPoints = Math.max(0, armorPoints - 1);
     player.invincibleTimer = 0.35;
     createParticles(player.x, player.y, 18, "#c7cbd4");
     updateHUD();
@@ -816,6 +855,37 @@ function checkVictory() {
       }
     }, 350);
   }
+}
+
+function updateLobbyUI() {
+  lobbyLevelEl.textContent = progression.level;
+  lobbyXpEl.textContent = `${progression.xp} / ${xpNeededForLevel(progression.level)}`;
+  bestRoomEl.textContent = progression.bestRoom || 0;
+}
+
+function returnToLobby(victory = false) {
+  progression.bestRoom = Math.max(progression.bestRoom || 0, roomNumber);
+  saveProgression();
+  updateStatsUI();
+  updateLobbyUI();
+
+  const xpNeed = xpNeededForLevel(progression.level);
+  lobbyTitleEl.textContent = victory ? "Run Complete!" : "Run Ended";
+  lobbySubtitleEl.textContent = victory
+    ? "Your adventure continues."
+    : "Spend your earned stat points, adjust your build, and try again.";
+
+  lastRunSummaryEl.innerHTML =
+    `Reached Room <strong>${roomNumber}</strong><br>` +
+    `Level <strong>${progression.level}</strong> — ${progression.xp}/${xpNeed} XP`;
+
+  lastRunSummaryEl.classList.remove("hidden");
+  runLobby.classList.remove("hidden");
+
+  gameState = "lobby";
+  ball.launched = false;
+  ballStuck = false;
+  enemyProjectiles = [];
 }
 
 function createParticles(x, y, count, color = "#f7d98a") {
@@ -869,7 +939,7 @@ function updateHUD() {
   heroHpEl.textContent = `❤️ ${player.hp} / ${player.maxHp}`;
   heroShieldEl.textContent =
     (hasOvershield ? (shieldReady ? " 💙" : " ♡") : "") +
-    (defenseWardReady ? " 🛡️" : "");
+    (armorPoints > 0 ? ` 🛡️${armorPoints}` : "");
   goldHudEl.textContent = `💰 ${gold}`;
 
   const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
@@ -925,19 +995,40 @@ function drawBackground() {
 }
 
 function drawRail() {
-  const railY = player.y + 62;
+  const railY = player.y + 70;
 
-  ctx.fillStyle = "#57515e";
-  ctx.fillRect(35, railY, WORLD_WIDTH - 70, 16);
+  // Dark bed beneath the track.
+  ctx.fillStyle = "rgba(10, 9, 12, .72)";
+  ctx.fillRect(22, railY - 10, WORLD_WIDTH - 44, 70);
 
-  ctx.fillStyle = "#8c8792";
+  // Wooden sleepers.
+  for (let x = 25; x < WORLD_WIDTH - 25; x += 74) {
+    ctx.fillStyle = "#5b3c29";
+    ctx.fillRect(x, railY + 12, 50, 18);
 
-  for (let x = 35; x < WORLD_WIDTH - 35; x += 38) {
+    ctx.strokeStyle = "#2d2019";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, railY + 12, 50, 18);
+  }
+
+  // Twin metal rails.
+  ctx.fillStyle = "#b5b1ad";
+  ctx.fillRect(28, railY, WORLD_WIDTH - 56, 10);
+  ctx.fillRect(28, railY + 36, WORLD_WIDTH - 56, 10);
+
+  ctx.fillStyle = "#55525a";
+  ctx.fillRect(28, railY + 8, WORLD_WIDTH - 56, 5);
+  ctx.fillRect(28, railY + 44, WORLD_WIDTH - 56, 5);
+
+  // Rail bolts.
+  ctx.fillStyle = "#d0c9be";
+  for (let x = 48; x < WORLD_WIDTH - 40; x += 74) {
     ctx.beginPath();
-    ctx.moveTo(x, railY + 16);
-    ctx.lineTo(x + 18, railY + 50);
-    ctx.lineTo(x + 36, railY + 16);
-    ctx.closePath();
+    ctx.arc(x, railY + 5, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x, railY + 41, 4, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -1120,26 +1211,34 @@ function drawBricks(dt) {
       ctx.fillText("💰", brick.x + brick.width / 2, brick.y + 44);
       ctx.textAlign = "start";
     } else {
-      ctx.fillStyle = brick.hitFlash > 0
-        ? "#ffffff"
-        : brick.type === "H"
-          ? "#514b58"
-          : "#5e5664";
+      const damaged = brick.hp <= brick.maxHp * 0.5;
+      const img = damaged ? brick2Image : brick1Image;
 
-      ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+      if (img.complete && img.naturalWidth > 0) {
+        ctx.save();
 
-      ctx.strokeStyle = "#8e8495";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+        if (brick.hitFlash > 0) {
+          ctx.globalAlpha = 0.62;
+        }
 
-      ctx.strokeStyle = "rgba(255,255,255,.12)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(brick.x + 12, brick.y + 18);
-      ctx.lineTo(brick.x + brick.width - 12, brick.y + 18);
-      ctx.moveTo(brick.x + brick.width / 2, brick.y + 18);
-      ctx.lineTo(brick.x + brick.width / 2, brick.y + brick.height - 10);
-      ctx.stroke();
+        ctx.drawImage(
+          img,
+          brick.x,
+          brick.y,
+          brick.width,
+          brick.height
+        );
+
+        ctx.restore();
+
+        if (brick.hitFlash > 0) {
+          ctx.fillStyle = "rgba(255,255,255,.38)";
+          ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+        }
+      } else {
+        ctx.fillStyle = damaged ? "#7b3f31" : "#b35042";
+        ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+      }
     }
 
     if (brick.maxHp > 1) {
@@ -1168,15 +1267,54 @@ function drawBricks(dt) {
 }
 function drawProjectiles() {
   for (const shot of enemyProjectiles) {
-    ctx.fillStyle = "#ff704d";
+    ctx.save();
+
+    // trail
+    const trail = ctx.createLinearGradient(
+      shot.x,
+      shot.y - 38,
+      shot.x,
+      shot.y + 10
+    );
+    trail.addColorStop(0, "rgba(255, 69, 35, 0)");
+    trail.addColorStop(1, "rgba(255, 126, 51, .8)");
+
+    ctx.strokeStyle = trail;
+    ctx.lineWidth = 12;
     ctx.beginPath();
-    ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
+    ctx.moveTo(shot.x, shot.y - 34);
+    ctx.lineTo(shot.x, shot.y - 2);
+    ctx.stroke();
+
+    // outer bolt
+    ctx.fillStyle = "#ff5e35";
+    ctx.beginPath();
+    ctx.ellipse(
+      shot.x,
+      shot.y,
+      shot.radius * .8,
+      shot.radius * 1.35,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
-    ctx.fillStyle = "#ffd56d";
+    // hot center
+    ctx.fillStyle = "#ffd55a";
     ctx.beginPath();
-    ctx.arc(shot.x, shot.y, shot.radius * 0.45, 0, Math.PI * 2);
+    ctx.ellipse(
+      shot.x,
+      shot.y - 2,
+      shot.radius * .35,
+      shot.radius * .75,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
+
+    ctx.restore();
   }
 }
 
@@ -1226,4 +1364,7 @@ function gameLoop(timestamp) {
 
 updateStatsUI();
 resetRun();
+gameState = "lobby";
+runLobby.classList.remove("hidden");
+updateLobbyUI();
 requestAnimationFrame(gameLoop);
