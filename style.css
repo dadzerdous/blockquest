@@ -503,3 +503,34 @@ body {
 .armorHud {
   color: #d8dde7;
 }
+
+
+#runeHud {
+  position: absolute;
+  z-index: 15;
+  left: 10px;
+  top: 8%;
+  max-width: 55%;
+  padding: 5px 8px;
+  border: 1px solid rgba(205, 190, 222, .42);
+  border-radius: 8px;
+  background: rgba(17, 14, 22, .72);
+  color: #bdb4c6;
+  font-size: clamp(8px, 1.2vh, 10px);
+  font-weight: 900;
+  pointer-events: none;
+}
+
+#runeHudText {
+  color: #f2df9c;
+}
+
+.runeChoices {
+  grid-template-columns: 1fr;
+  max-height: 68vh;
+  overflow-y: auto;
+}
+
+.fireBallGlow {
+  filter: drop-shadow(0 0 8px rgba(255, 100, 35, .85));
+}

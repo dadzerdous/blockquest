@@ -29,6 +29,12 @@ const shopOverlay = document.getElementById("shopOverlay");
 const powerLevelEl = document.getElementById("powerLevel");
 const widthLevelEl = document.getElementById("widthLevel");
 const speedLevelEl = document.getElementById("speedLevel");
+const runeHudTextEl = document.getElementById("runeHudText");
+const emberLevelEl = document.getElementById("emberLevel");
+const impactLevelEl = document.getElementById("impactLevel");
+const expansionLevelEl = document.getElementById("expansionLevel");
+const hasteLevelEl = document.getElementById("hasteLevel");
+const wardLevelEl = document.getElementById("wardLevel");
 
 const shieldOwnedEl = document.getElementById("shieldOwned");
 const glueCountEl = document.getElementById("glueCount");
@@ -62,6 +68,14 @@ let keys = {};
 let pointerActive = false;
 let pointerX = WORLD_WIDTH / 2;
 let roomNumber = 1;
+
+let runes = {
+  ember: 0,
+  impact: 0,
+  expansion: 0,
+  haste: 0,
+  ward: 0
+};
 
 let gold = 0;
 
@@ -188,19 +202,19 @@ let attackTimer = 0;
 
 const roomLayouts = [
   [
-    "BBBBB",
+    "BBIBB",
     "BMMMB",
-    "BTMBB",
+    "BTMIB",
     "BBSBB"
   ],
   [
     "BMBMB",
-    "BBMBB",
+    "BIMIB",
     "MBTBM",
     "BBSBB"
   ],
   [
-    "BBMBB",
+    "IIMII",
     "BHBHB",
     "MMTMM",
     "BBSBB"
@@ -227,6 +241,7 @@ function buildRoom() {
       let isMob = false;
       let shooter = false;
       let treasure = false;
+      let ice = false;
 
       if (type === "B") hp = 2;
       if (type === "H") hp = 4;
@@ -247,6 +262,11 @@ function buildRoom() {
         treasure = true;
       }
 
+      if (type === "I") {
+        hp = 4;
+        ice = true;
+      }
+
       bricks.push({
         x: startX + col * (brickWidth + gap),
         y: startY + row * (brickHeight + gap),
@@ -258,6 +278,7 @@ function buildRoom() {
         isMob,
         shooter,
         treasure,
+        ice,
         hitFlash: 0,
         type
       });
@@ -271,6 +292,13 @@ function buildRoom() {
 function resetRun() {
   roomNumber = 1;
   gold = 0;
+  runes = {
+    ember: 0,
+    impact: 0,
+    expansion: 0,
+    haste: 0,
+    ward: 0
+  };
   hasOvershield = false;
   shieldReady = false;
   shieldShatterTimer = 0;
@@ -317,7 +345,7 @@ function startRoom() {
   enemyProjectiles = [];
   attackTimer = 0;
   shieldReady = hasOvershield;
-  armorPoints = progression.stats.defense;
+  armorPoints = progression.stats.defense + runes.ward;
 
   gameState = "waiting";
 
@@ -445,8 +473,8 @@ document.querySelectorAll("[data-stat]").forEach(button => {
   });
 });
 
-document.querySelectorAll(".upgradeCard[data-upgrade]").forEach(button => {
-  button.addEventListener("click", () => chooseUpgrade(button.dataset.upgrade));
+document.querySelectorAll(".upgradeCard[data-rune]").forEach(button => {
+  button.addEventListener("click", () => chooseRune(button.dataset.rune));
 });
 
 document.querySelectorAll(".shopCard").forEach(button => {
@@ -456,15 +484,30 @@ document.querySelectorAll(".shopCard").forEach(button => {
 leaveShopBtn.addEventListener("click", leaveShop);
 glueButton.addEventListener("click", armGlue);
 
-function chooseUpgrade(type) {
+function chooseRune(type) {
   if (gameState !== "upgrade") return;
 
-  if (type === "power") ball.damage += 1;
-  if (type === "width") player.width = Math.min(400, player.width * 1.15);
-  if (type === "speed") player.speed = Math.min(1100, player.speed * 1.15);
+  runes[type] += 1;
+
+  if (type === "impact") {
+    ball.damage += 1;
+  }
+
+  if (type === "expansion") {
+    player.width *= 1.15;
+  }
+
+  if (type === "haste") {
+    player.speed *= 1.15;
+  }
+
+  if (type === "ward") {
+    armorPoints += 1;
+  }
 
   upgradeOverlay.classList.add("hidden");
-  updateUpgradeText();
+  updateRuneText();
+  updateHUD();
 
   if (roomNumber % 3 === 0) {
     openShop();
@@ -475,9 +518,29 @@ function chooseUpgrade(type) {
 }
 
 function updateUpgradeText() {
-  powerLevelEl.textContent = `Damage: ${ball.damage}`;
-  widthLevelEl.textContent = `Width: ${Math.round(player.width)}`;
-  speedLevelEl.textContent = `Speed: ${Math.round(player.speed)}`;
+  updateRuneText();
+}
+
+function updateRuneText() {
+  if (emberLevelEl) {
+    emberLevelEl.textContent = runes.ember > 0
+      ? `Fire active${runes.ember > 1 ? ` — explosion +${runes.ember}` : ""}`
+      : "Fire: inactive";
+  }
+
+  if (impactLevelEl) impactLevelEl.textContent = `Bonus damage: +${runes.impact}`;
+  if (expansionLevelEl) expansionLevelEl.textContent = `Width bonus: ${Math.round((Math.pow(1.15, runes.expansion) - 1) * 100)}%`;
+  if (hasteLevelEl) hasteLevelEl.textContent = `Speed bonus: ${Math.round((Math.pow(1.15, runes.haste) - 1) * 100)}%`;
+  if (wardLevelEl) wardLevelEl.textContent = `Ward: +${runes.ward}`;
+
+  const active = [];
+  if (runes.ember) active.push(`🔥${runes.ember}`);
+  if (runes.impact) active.push(`💥${runes.impact}`);
+  if (runes.expansion) active.push(`↔️${runes.expansion}`);
+  if (runes.haste) active.push(`🏃${runes.haste}`);
+  if (runes.ward) active.push(`💙${runes.ward}`);
+
+  runeHudTextEl.textContent = active.length ? active.join("  ") : "None";
 }
 
 function openShop() {
@@ -709,8 +772,22 @@ function checkBrickCollisions() {
 }
 
 function damageBrick(brick) {
-  brick.hp -= ball.damage * ball.baseDamageMultiplier;
+  let hitDamage = ball.damage * ball.baseDamageMultiplier;
+
+  if (brick.ice && runes.ember > 0) {
+    hitDamage *= 2;
+  }
+
+  brick.hp -= hitDamage;
   brick.hitFlash = 0.12;
+
+  if (runes.ember > 0 && brick.ice) {
+    fireExplosion(
+      brick.x + brick.width / 2,
+      brick.y + brick.height / 2,
+      brick
+    );
+  }
 
   createParticles(
     brick.x + brick.width / 2,
@@ -757,6 +834,50 @@ function damageBrick(brick) {
   }
 
   updateHUD();
+}
+
+function fireExplosion(x, y, sourceBrick) {
+  const radius = 155 + Math.max(0, runes.ember - 1) * 18;
+  const splashDamage = 0.75 + Math.max(0, runes.ember - 1) * 0.25;
+
+  createParticles(x, y, 28, "#ff7a35");
+
+  for (const target of bricks) {
+    if (!target.alive || target === sourceBrick) continue;
+
+    const tx = target.x + target.width / 2;
+    const ty = target.y + target.height / 2;
+    const dist = Math.hypot(tx - x, ty - y);
+
+    if (dist <= radius) {
+      target.hp -= splashDamage;
+      target.hitFlash = 0.16;
+
+      createParticles(tx, ty, 7, "#ffb24a");
+
+      if (target.hp <= 0) {
+        target.hp = 0;
+        target.alive = false;
+
+        if (target.isMob) {
+          const xpReward = target.shooter ? 10 : 5;
+          addXP(xpReward);
+          createFloatingText(tx, ty, `+${xpReward} XP`, "#d8c8ff");
+        }
+
+        if (target.treasure) {
+          const baseGold = 8;
+          const fortuneBonus = 1 + progression.stats.fortune * 0.05;
+          const reward = Math.max(1, Math.round(baseGold * fortuneBonus));
+          gold += reward;
+          createFloatingGold(tx, ty, reward);
+        }
+      }
+    }
+  }
+
+  updateHUD();
+  checkVictory();
 }
 
 function updateEnemyAttacks(dt) {
@@ -1151,6 +1272,40 @@ function drawDriver(x, y) {
 }
 
 function drawBall() {
+  if (runes.ember > 0) {
+    ctx.save();
+
+    const glow = ctx.createRadialGradient(
+      ball.x,
+      ball.y,
+      2,
+      ball.x,
+      ball.y,
+      ball.radius * 2.3
+    );
+    glow.addColorStop(0, "rgba(255, 244, 155, 1)");
+    glow.addColorStop(.38, "rgba(255, 135, 45, .95)");
+    glow.addColorStop(1, "rgba(255, 60, 20, 0)");
+
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius * 2.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffb33e";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#fff1a8";
+    ctx.beginPath();
+    ctx.arc(ball.x - 4, ball.y - 5, ball.radius * .45, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+    return;
+  }
+
   ctx.fillStyle = ballStuck ? "#ffe892" : "#f4e9c8";
   ctx.beginPath();
   ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
@@ -1210,6 +1365,38 @@ function drawBricks(dt) {
       ctx.textAlign = "center";
       ctx.fillText("💰", brick.x + brick.width / 2, brick.y + 44);
       ctx.textAlign = "start";
+    } else if (brick.ice) {
+      const damaged = brick.hp <= brick.maxHp * 0.5;
+
+      ctx.fillStyle = brick.hitFlash > 0
+        ? "#ffffff"
+        : damaged
+          ? "#78a9c7"
+          : "#b9e8f7";
+
+      ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+
+      ctx.strokeStyle = "#e8fbff";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+
+      ctx.strokeStyle = "rgba(65, 125, 165, .72)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(brick.x + 15, brick.y + 12);
+      ctx.lineTo(brick.x + brick.width * .48, brick.y + brick.height * .55);
+      ctx.lineTo(brick.x + brick.width - 18, brick.y + 18);
+      ctx.moveTo(brick.x + brick.width * .48, brick.y + brick.height * .55);
+      ctx.lineTo(brick.x + brick.width * .62, brick.y + brick.height - 8);
+      ctx.stroke();
+
+      if (runes.ember > 0) {
+        ctx.fillStyle = "#ff9d3f";
+        ctx.font = "bold 18px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("🔥 WEAK", brick.x + brick.width / 2, brick.y + 24);
+        ctx.textAlign = "start";
+      }
     } else {
       const damaged = brick.hp <= brick.maxHp * 0.5;
       const img = damaged ? brick2Image : brick1Image;
@@ -1254,7 +1441,9 @@ function drawBricks(dt) {
         ? "#e45757"
         : brick.treasure
           ? "#ffe77c"
-          : "#bcae9b";
+          : brick.ice
+            ? "#8edaf0"
+            : "#bcae9b";
 
       ctx.fillRect(
         brick.x + 10,
@@ -1363,6 +1552,7 @@ function gameLoop(timestamp) {
 }
 
 updateStatsUI();
+updateRuneText();
 resetRun();
 gameState = "lobby";
 runLobby.classList.remove("hidden");

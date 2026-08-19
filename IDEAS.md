@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.8**
+Current prototype: **v0.9**
 
 ## Current Direction
 
@@ -360,3 +360,41 @@ Future elements can reuse this state-driven art approach for ice, fire, armor, c
 - Improved code-drawn trolley rail into an actual track with sleepers, metal rails, and bolts.
 - Enemy shooter projectile is now a visible fiery bolt with trail instead of a simple circle.
 - Between-run splash/lobby is now the natural home for future loadout, equipment, pet, dungeon choice, quests, and stat allocation.
+
+
+## v0.9 — First Rune / Element Prototype
+
+Run upgrades are now presented as temporary **Runes**:
+
+- Ember Rune — gives the ball Fire.
+- Impact Rune — +1 ball damage.
+- Expansion Rune — +15% trolley width.
+- Haste Rune — +15% trolley speed.
+- Ward Rune — +1 armor refreshed each room.
+
+Added the first elemental environment test:
+
+- Ice bricks have 4 HP.
+- Fire deals double damage to Ice.
+- Hitting Ice with Fire creates an explosion that damages nearby bricks and mobs.
+- Additional Ember Runes increase the explosion.
+
+This is intentionally a prototype of runes before the equipment/socket system exists.
+
+### Rune Direction — Hades-like Equipment Context
+
+Long-term, a rune's effect can depend on **which equipment slot receives it** rather than every rune having only one universal effect.
+
+Example Fire possibilities:
+
+- Fire + Ball → fire damage / ignition / explosions.
+- Fire + Boots → speed, flame trail, or movement effect.
+- Fire + Helmet → offensive effect such as fiery/laser eyes.
+- Fire + Chest → retaliation or burning defense.
+- Fire + Ring/Amulet → elemental synergy/modifier.
+
+Do not lock these exact effects yet. The important design direction is:
+
+**Rune + Equipment Slot = specialized effect.**
+
+The current v0.9 rune choices are a temporary bridge until equipment exists.
