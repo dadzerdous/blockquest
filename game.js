@@ -33,14 +33,23 @@ const player = {
   maxHp: 5,
   invincibleTimer: 0,
   facing: 1,
-  runTimer: 0
+  runTimer: 0,
+
+  // The player directly controls the runner on top of the trolley.
+  // His position relative to the center pushes the trolley.
+  driverOffset: 0,
+  driverSpeed: 360,
+  trolleyVelocity: 0,
+  trolleyAcceleration: 1150,
+  trolleyDrag: 3.2,
+  trolleyMaxSpeed: 620
 };
 
 const ball = {
   x: player.x,
   y: player.y - 60,
   radius: 16,
-  speed: 620,
+  speed: 470,
   vx: 0,
   vy: 0,
   launched: false,
@@ -99,6 +108,8 @@ function resetRun() {
   player.speed = player.baseSpeed;
   player.hp = player.maxHp;
   player.x = WORLD_WIDTH / 2;
+  player.driverOffset = 0;
+  player.trolleyVelocity = 0;
 
   ball.damage = 1;
   ball.launched = false;
@@ -214,6 +225,8 @@ function chooseUpgrade(type) {
 
   if (type === "speed") {
     player.speed = Math.min(1100, player.speed * 1.15);
+    player.trolleyMaxSpeed = Math.min(1100, player.trolleyMaxSpeed * 1.15);
+    player.driverSpeed = Math.min(700, player.driverSpeed * 1.08);
   }
 
   roomNumber += 1;
@@ -234,27 +247,71 @@ function updatePlayer(dt) {
   if (keys["arrowleft"] || keys["a"]) move -= 1;
   if (keys["arrowright"] || keys["d"]) move += 1;
 
+  // Touch/mouse dragging controls where the runner tries to stand
+  // on the trolley, not the trolley directly.
   if (pointerActive && gameState !== "upgrade") {
-    const difference = pointerX - player.x;
+    const desiredOffset = pointerX - player.x;
+    const maxDriverOffset = Math.max(28, player.width / 2 - 24);
+    const clampedDesired = Math.max(
+      -maxDriverOffset,
+      Math.min(maxDriverOffset, desiredOffset)
+    );
 
-    if (Math.abs(difference) > 10) {
-      move = Math.max(-1, Math.min(1, difference / 120));
+    const diff = clampedDesired - player.driverOffset;
+
+    if (Math.abs(diff) > 5) {
+      move = Math.max(-1, Math.min(1, diff / 45));
     }
   }
 
-  player.velocityX = move * player.speed;
-  player.x += player.velocityX * dt;
+  const maxDriverOffset = Math.max(28, player.width / 2 - 24);
 
-  const halfWidth = player.width / 2;
-
-  player.x = Math.max(
-    halfWidth + 30,
-    Math.min(WORLD_WIDTH - halfWidth - 30, player.x)
+  player.driverOffset += move * player.driverSpeed * dt;
+  player.driverOffset = Math.max(
+    -maxDriverOffset,
+    Math.min(maxDriverOffset, player.driverOffset)
   );
 
-  if (Math.abs(player.velocityX) > 5) {
-    player.facing = player.velocityX > 0 ? 1 : -1;
-    player.runTimer += dt * Math.abs(player.velocityX) / 80;
+  // The farther the runner is from center, the harder he pushes the trolley.
+  const push = maxDriverOffset > 0
+    ? player.driverOffset / maxDriverOffset
+    : 0;
+
+  player.trolleyVelocity += push * player.trolleyAcceleration * dt;
+
+  // Natural rolling resistance keeps the trolley controllable.
+  player.trolleyVelocity *= Math.exp(-player.trolleyDrag * dt);
+
+  const effectiveMaxSpeed = Math.min(
+    player.trolleyMaxSpeed,
+    player.speed
+  );
+
+  player.trolleyVelocity = Math.max(
+    -effectiveMaxSpeed,
+    Math.min(effectiveMaxSpeed, player.trolleyVelocity)
+  );
+
+  player.velocityX = player.trolleyVelocity;
+  player.x += player.trolleyVelocity * dt;
+
+  const halfWidth = player.width / 2;
+  const minX = halfWidth + 30;
+  const maxX = WORLD_WIDTH - halfWidth - 30;
+
+  if (player.x < minX) {
+    player.x = minX;
+    if (player.trolleyVelocity < 0) player.trolleyVelocity = 0;
+  }
+
+  if (player.x > maxX) {
+    player.x = maxX;
+    if (player.trolleyVelocity > 0) player.trolleyVelocity = 0;
+  }
+
+  if (Math.abs(move) > 0.02) {
+    player.facing = move > 0 ? 1 : -1;
+    player.runTimer += dt * (5 + Math.abs(move) * 8);
   }
 
   if (player.invincibleTimer > 0) {
@@ -608,7 +665,7 @@ function drawPlayer() {
     player.height
   );
 
-  drawDriver(x, y - 28);
+  drawDriver(x + player.driverOffset, y - 28);
   ctx.restore();
 }
 
