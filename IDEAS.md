@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.6**
+Current prototype: **v0.7**
 
 ## Current Direction
 
@@ -251,3 +251,79 @@ The art is now drawn by the game code while gameplay collision remains separate.
 ### Progression Note
 
 Overall XP / permanent growth is still planned, especially so failed runs do not feel completely wasted, but **no XP system is implemented in v0.6**. We are deliberately waiting until the immediate combat/run structure is a little clearer.
+
+
+## v0.7 Progression Foundation
+
+Implemented:
+
+- `assets/gob1.png` as the first reusable mob block.
+- Goblin variants can initially be created with hue changes.
+- Mobs award **XP, not gold**.
+- Room clears award bonus XP.
+- XP and Adventurer Level persist through failed runs and browser refreshes.
+- Each level grants one freely reallocatable permanent stat point.
+- Current prototype stats:
+  - Vitality — max HP.
+  - Defense — milestone defensive ward.
+  - Agility — trolley speed.
+  - Power — milestone ball damage.
+  - Control — trolley width for now; trajectory functionality remains planned.
+  - Fortune — increases treasure gold.
+- Visible yellow treasure blocks contain gold.
+- Treasure blocks are optional; killing all mobs still clears the room.
+
+### Gold Philosophy
+
+Normal mobs should **not** be a predictable fixed gold faucet. Gold should primarily come from optional treasure, rooms, events, shops, challenges, and other run decisions so the run economy can vary.
+
+### Hidden Treasure
+
+Some future ordinary-looking blocks can conceal permanent equipment discoveries.
+
+A dungeon/world may contain a limited hand-placed hidden equipment treasure, potentially one major secret per world.
+
+Late-game equipment such as a special ring may reveal or highlight hidden treasure blocks.
+
+### Boss "Killed By" Rewards
+
+Every boss should have special rewards tied to **how the boss was defeated**, not only whether it was defeated.
+
+Examples can include:
+- Killed by Fire.
+- Killed by Ice/Shatter.
+- Killed with an extremely small trolley.
+- Killed without taking damage.
+- Killed with a particular equipment setup.
+- Killed by a pet or environmental interaction.
+
+These rewards can feed quests/challenges, equipment discoveries, cosmetics, runes, pets, or other unlocks.
+
+### Quests / Challenges
+
+Plan for a broad challenge system that rewards unusual ways of playing rather than only repetitive kill counts.
+
+Examples:
+- Clear a room with a tiny trolley.
+- Beat a stage fully equipped.
+- Destroy all environmental blocks before the final mob.
+- Beat a boss without taking damage.
+- Complete elemental or equipment-specific challenges.
+
+### Runes
+
+Planned as temporary run-build pieces, potentially chosen between rooms and socketed into equipment.
+
+Runes are **not permanent equipment**.
+
+They may become the primary source of elemental effects:
+
+- Ember Rune — Fire.
+- Frost Rune — Ice.
+- Impact Rune — damage.
+- Expansion Rune — trolley width.
+- Ward Rune — defense.
+
+Equipment can determine socket capacity and interact with particular rune types.
+
+This may replace the need for a traditional permanent skill tree. Do not implement a skill tree until the other systems prove one is needed.

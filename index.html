@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.6</title>
+  <title>Spike Trolley RPG v0.7</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="gameShell">
     <div id="gameWrap">
       <div id="hud">
-        <div>HERO <span id="heroHp">❤️ 5 / 5</span><span id="heroShield"></span><span id="goldHud">💰 0</span></div>
+        <div>HERO <span id="heroHp">❤️ 5 / 5</span><span id="heroShield"></span><span id="goldHud">💰 0</span><span id="levelHud">⭐ Lv 1</span></div>
         <div id="roomTitle">ROOM 1 — GOBLIN OUTPOST</div>
         <div>ENEMIES <span id="enemyCount">0</span></div>
       </div>
@@ -18,10 +18,75 @@
       <canvas id="gameCanvas" width="900" height="1400"></canvas>
 
       <div id="message">TAP / CLICK TO LAUNCH</div>
+      <button id="statsButton">⭐ STATS</button>
       <button id="glueButton" class="hidden">🧲 GLUE <span id="glueButtonCount">0</span></button>
-      <div id="versionBadge">v0.6</div>
+      <div id="versionBadge">v0.7</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
 
+
+
+      <div id="statsOverlay" class="hidden">
+        <div class="upgradePanel statsPanel">
+          <div class="eyebrow">ADVENTURER</div>
+          <h1>Permanent Stats</h1>
+          <p>XP survives failed runs. Reallocate your earned points freely.</p>
+
+          <div class="xpBox">
+            <strong id="levelText">Level 1</strong>
+            <div class="xpBar"><div id="xpFill"></div></div>
+            <small id="xpText">0 / 100 XP</small>
+          </div>
+
+          <div id="availablePoints" class="pointsLine">Available Points: 0</div>
+
+          <div class="statRows">
+            <div class="statRow">
+              <span>❤️ Vitality</span>
+              <button data-stat="vitality" data-dir="-1">−</button>
+              <strong id="statVitality">0</strong>
+              <button data-stat="vitality" data-dir="1">+</button>
+              <small>Max HP</small>
+            </div>
+            <div class="statRow">
+              <span>🛡️ Defense</span>
+              <button data-stat="defense" data-dir="-1">−</button>
+              <strong id="statDefense">0</strong>
+              <button data-stat="defense" data-dir="1">+</button>
+              <small>Every 3 points blocks 1 damage per room</small>
+            </div>
+            <div class="statRow">
+              <span>👟 Agility</span>
+              <button data-stat="agility" data-dir="-1">−</button>
+              <strong id="statAgility">0</strong>
+              <button data-stat="agility" data-dir="1">+</button>
+              <small>+3% trolley speed</small>
+            </div>
+            <div class="statRow">
+              <span>💪 Power</span>
+              <button data-stat="power" data-dir="-1">−</button>
+              <strong id="statPower">0</strong>
+              <button data-stat="power" data-dir="1">+</button>
+              <small>+1 damage every 3 points</small>
+            </div>
+            <div class="statRow">
+              <span>🎯 Control</span>
+              <button data-stat="control" data-dir="-1">−</button>
+              <strong id="statControl">0</strong>
+              <button data-stat="control" data-dir="1">+</button>
+              <small>+4% trolley width</small>
+            </div>
+            <div class="statRow">
+              <span>🍀 Fortune</span>
+              <button data-stat="fortune" data-dir="-1">−</button>
+              <strong id="statFortune">0</strong>
+              <button data-stat="fortune" data-dir="1">+</button>
+              <small>+5% treasure gold</small>
+            </div>
+          </div>
+
+          <button id="closeStats" class="leaveShop">BACK TO GAME</button>
+        </div>
+      </div>
 
       <div id="shopOverlay" class="hidden">
         <div class="upgradePanel">

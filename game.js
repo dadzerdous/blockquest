@@ -4,6 +4,14 @@ const ctx = canvas.getContext("2d");
 const heroHpEl = document.getElementById("heroHp");
 const heroShieldEl = document.getElementById("heroShield");
 const goldHudEl = document.getElementById("goldHud");
+const levelHudEl = document.getElementById("levelHud");
+const statsOverlay = document.getElementById("statsOverlay");
+const statsButton = document.getElementById("statsButton");
+const closeStatsBtn = document.getElementById("closeStats");
+const levelTextEl = document.getElementById("levelText");
+const xpFillEl = document.getElementById("xpFill");
+const xpTextEl = document.getElementById("xpText");
+const availablePointsEl = document.getElementById("availablePoints");
 const enemyCountEl = document.getElementById("enemyCount");
 const roomTitleEl = document.getElementById("roomTitle");
 const messageEl = document.getElementById("message");
@@ -31,6 +39,9 @@ bgImage.src = "assets/bg1.png";
 const trolleyImage = new Image();
 trolleyImage.src = "assets/trolley1.png";
 
+const gobImage = new Image();
+gobImage.src = "assets/gob1.png";
+
 let gameState = "waiting";
 let lastTime = 0;
 let keys = {};
@@ -39,6 +50,73 @@ let pointerX = WORLD_WIDTH / 2;
 let roomNumber = 1;
 
 let gold = 0;
+
+const progression = JSON.parse(localStorage.getItem("spikeTrolleyProgression") || "null") || {
+  xp: 0,
+  level: 1,
+  statPoints: 0,
+  stats: {
+    vitality: 0,
+    defense: 0,
+    agility: 0,
+    power: 0,
+    control: 0,
+    fortune: 0
+  }
+};
+
+let defenseWardReady = false;
+let stateBeforeStats = "waiting";
+
+function xpNeededForLevel(level) {
+  return 100 + (level - 1) * 50;
+}
+
+function saveProgression() {
+  localStorage.setItem("spikeTrolleyProgression", JSON.stringify(progression));
+}
+
+function addXP(amount) {
+  progression.xp += amount;
+
+  while (progression.xp >= xpNeededForLevel(progression.level)) {
+    progression.xp -= xpNeededForLevel(progression.level);
+    progression.level += 1;
+    progression.statPoints += 1;
+  }
+
+  saveProgression();
+  applyPermanentStats();
+  updateStatsUI();
+}
+
+function applyPermanentStats() {
+  player.maxHp = 5 + progression.stats.vitality;
+
+  if (player.hp > player.maxHp) player.hp = player.maxHp;
+
+  player.speed = player.baseSpeed * (1 + progression.stats.agility * 0.03);
+  player.width = player.baseWidth * (1 + progression.stats.control * 0.04);
+
+  // Run upgrades are applied separately on top of these baselines.
+  ball.damage = Math.max(ball.damage, 1 + Math.floor(progression.stats.power / 3));
+}
+
+function updateStatsUI() {
+  levelHudEl.textContent = `⭐ Lv ${progression.level}`;
+  levelTextEl.textContent = `Level ${progression.level}`;
+
+  const need = xpNeededForLevel(progression.level);
+  xpTextEl.textContent = `${progression.xp} / ${need} XP`;
+  xpFillEl.style.width = `${Math.min(100, progression.xp / need * 100)}%`;
+  availablePointsEl.textContent = `Available Points: ${progression.statPoints}`;
+
+  for (const stat of Object.keys(progression.stats)) {
+    const id = "stat" + stat.charAt(0).toUpperCase() + stat.slice(1);
+    const el = document.getElementById(id);
+    if (el) el.textContent = progression.stats[stat];
+  }
+}
 let hasOvershield = false;
 let shieldReady = false;
 let shieldShatterTimer = 0;
@@ -83,20 +161,20 @@ const roomLayouts = [
   [
     "BBBBB",
     "BMMMB",
-    "BBMBB",
+    "BTMBB",
     "BBSBB"
   ],
   [
     "BMBMB",
     "BBMBB",
-    "MBSBM",
-    "BBBBB"
+    "MBTBM",
+    "BBSBB"
   ],
   [
     "BBMBB",
     "BHBHB",
-    "MM SMM".replace(" ", ""),
-    "BBBBB"
+    "MMTMM",
+    "BBSBB"
   ]
 ];
 
@@ -119,6 +197,7 @@ function buildRoom() {
       let hp = 1;
       let isMob = false;
       let shooter = false;
+      let treasure = false;
 
       if (type === "B") hp = 2;
       if (type === "H") hp = 4;
@@ -134,6 +213,11 @@ function buildRoom() {
         shooter = true;
       }
 
+      if (type === "T") {
+        hp = 2;
+        treasure = true;
+      }
+
       bricks.push({
         x: startX + col * (brickWidth + gap),
         y: startY + row * (brickHeight + gap),
@@ -144,6 +228,7 @@ function buildRoom() {
         alive: true,
         isMob,
         shooter,
+        treasure,
         hitFlash: 0,
         type
       });
@@ -167,10 +252,10 @@ function resetRun() {
 
   player.width = player.baseWidth;
   player.speed = player.baseSpeed;
+  ball.damage = 1;
+  applyPermanentStats();
   player.hp = player.maxHp;
   player.x = WORLD_WIDTH / 2;
-
-  ball.damage = 1;
   ball.launched = false;
   ball.vx = 0;
   ball.vy = 0;
@@ -199,6 +284,7 @@ function startRoom() {
   enemyProjectiles = [];
   attackTimer = 0;
   shieldReady = hasOvershield;
+  defenseWardReady = Math.floor(progression.stats.defense / 3) > 0;
 
   gameState = "waiting";
 
@@ -258,7 +344,7 @@ window.addEventListener("keyup", event => {
 });
 
 canvas.addEventListener("pointerdown", event => {
-  if (gameState === "upgrade" || gameState === "shop") return;
+  if (gameState === "upgrade" || gameState === "shop" || gameState === "stats") return;
 
   pointerActive = true;
   setPointerPosition(event);
@@ -284,6 +370,41 @@ function setPointerPosition(event) {
   const rect = canvas.getBoundingClientRect();
   pointerX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
 }
+
+statsButton.addEventListener("click", () => {
+  if (gameState === "upgrade" || gameState === "shop" || gameState === "lost") return;
+  stateBeforeStats = gameState;
+  gameState = "stats";
+  statsOverlay.classList.remove("hidden");
+  updateStatsUI();
+});
+
+closeStatsBtn.addEventListener("click", () => {
+  statsOverlay.classList.add("hidden");
+  gameState = stateBeforeStats;
+});
+
+document.querySelectorAll("[data-stat]").forEach(button => {
+  button.addEventListener("click", () => {
+    const stat = button.dataset.stat;
+    const dir = Number(button.dataset.dir);
+
+    if (dir > 0) {
+      if (progression.statPoints <= 0) return;
+      progression.statPoints -= 1;
+      progression.stats[stat] += 1;
+    } else {
+      if (progression.stats[stat] <= 0) return;
+      progression.stats[stat] -= 1;
+      progression.statPoints += 1;
+    }
+
+    saveProgression();
+    applyPermanentStats();
+    updateStatsUI();
+    updateHUD();
+  });
+});
 
 document.querySelectorAll(".upgradeCard[data-upgrade]").forEach(button => {
   button.addEventListener("click", () => chooseUpgrade(button.dataset.upgrade));
@@ -564,9 +685,26 @@ function damageBrick(brick) {
     brick.alive = false;
 
     if (brick.isMob) {
-      const reward = brick.shooter ? 5 : 3;
+      const xpReward = brick.shooter ? 10 : 5;
+      addXP(xpReward);
+      createFloatingText(
+        brick.x + brick.width / 2,
+        brick.y + brick.height / 2,
+        `+${xpReward} XP`,
+        "#d8c8ff"
+      );
+    }
+
+    if (brick.treasure) {
+      const baseGold = 8;
+      const fortuneBonus = 1 + progression.stats.fortune * 0.05;
+      const reward = Math.max(1, Math.round(baseGold * fortuneBonus));
       gold += reward;
-      createFloatingGold(brick.x + brick.width / 2, brick.y + brick.height / 2, reward);
+      createFloatingGold(
+        brick.x + brick.width / 2,
+        brick.y + brick.height / 2,
+        reward
+      );
     }
 
     createParticles(
@@ -637,6 +775,14 @@ function hurtPlayer() {
     return;
   }
 
+  if (defenseWardReady) {
+    defenseWardReady = false;
+    player.invincibleTimer = 0.35;
+    createParticles(player.x, player.y, 18, "#c7cbd4");
+    updateHUD();
+    return;
+  }
+
   player.hp -= 1;
   player.invincibleTimer = 0.7;
 
@@ -656,6 +802,7 @@ function checkVictory() {
   const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
 
   if (mobsLeft === 0) {
+    addXP(20);
     gameState = "upgrade";
     ball.launched = false;
     ballStuck = false;
@@ -687,6 +834,10 @@ function createParticles(x, y, count, color = "#f7d98a") {
 }
 
 function createFloatingGold(x, y, amount) {
+  createFloatingText(x, y, `+${amount} 💰`, "#f4d26f");
+}
+
+function createFloatingText(x, y, text, color) {
   particles.push({
     x,
     y,
@@ -694,8 +845,8 @@ function createFloatingGold(x, y, amount) {
     vy: -70,
     life: 1.1,
     size: 22,
-    color: "#f4d26f",
-    text: `+${amount} 💰`
+    color,
+    text
   });
 }
 
@@ -716,7 +867,9 @@ function updateParticles(dt) {
 
 function updateHUD() {
   heroHpEl.textContent = `❤️ ${player.hp} / ${player.maxHp}`;
-  heroShieldEl.textContent = hasOvershield ? (shieldReady ? " 💙" : " ♡") : "";
+  heroShieldEl.textContent =
+    (hasOvershield ? (shieldReady ? " 💙" : " ♡") : "") +
+    (defenseWardReady ? " 🛡️" : "");
   goldHudEl.textContent = `💰 ${gold}`;
 
   const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
@@ -925,34 +1078,60 @@ function drawBricks(dt) {
 
     const ratio = brick.hp / brick.maxHp;
 
-    if (brick.hitFlash > 0) {
-      ctx.fillStyle = "#ffffff";
-    } else if (brick.isMob && brick.shooter) {
-      ctx.fillStyle = "#9c453e";
-    } else if (brick.isMob) {
-      ctx.fillStyle = "#496447";
-    } else if (brick.type === "H") {
-      ctx.fillStyle = "#514b58";
+    if (brick.isMob && gobImage.complete && gobImage.naturalWidth > 0) {
+      ctx.save();
+
+      // Shooter goblins get a red hue shift so gob1.png can serve as
+      // the first reusable mob block asset.
+      if (brick.shooter) {
+        ctx.filter = "hue-rotate(285deg) saturate(1.15)";
+      }
+
+      if (brick.hitFlash > 0) {
+        ctx.globalAlpha = 0.55;
+      }
+
+      ctx.drawImage(
+        gobImage,
+        brick.x,
+        brick.y - 10,
+        brick.width,
+        brick.height + 20
+      );
+
+      ctx.restore();
+
+      if (brick.hitFlash > 0) {
+        ctx.fillStyle = "rgba(255,255,255,.42)";
+        ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+      }
+    } else if (brick.treasure) {
+      // Visible treasure block: intentionally obvious and optional.
+      ctx.fillStyle = brick.hitFlash > 0 ? "#fff8c2" : "#d9ad28";
+      ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+
+      ctx.strokeStyle = "#ffe77c";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+
+      ctx.fillStyle = "#fff0a2";
+      ctx.font = "bold 34px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("💰", brick.x + brick.width / 2, brick.y + 44);
+      ctx.textAlign = "start";
     } else {
-      ctx.fillStyle = "#5e5664";
-    }
+      ctx.fillStyle = brick.hitFlash > 0
+        ? "#ffffff"
+        : brick.type === "H"
+          ? "#514b58"
+          : "#5e5664";
 
-    ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+      ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
 
-    ctx.strokeStyle = brick.isMob ? "#a8c98d" : "#8e8495";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+      ctx.strokeStyle = "#8e8495";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
 
-    if (brick.isMob) {
-      // goblin face
-      ctx.fillStyle = "#f2d46f";
-      ctx.fillRect(brick.x + brick.width * 0.27, brick.y + 23, 10, 8);
-      ctx.fillRect(brick.x + brick.width * 0.65, brick.y + 23, 10, 8);
-
-      ctx.fillStyle = "#26311f";
-      ctx.fillRect(brick.x + brick.width * 0.42, brick.y + 40, 20, 5);
-    } else {
-      // stone seams distinguish environment from mobs
       ctx.strokeStyle = "rgba(255,255,255,.12)";
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -965,9 +1144,19 @@ function drawBricks(dt) {
 
     if (brick.maxHp > 1) {
       ctx.fillStyle = "#251d26";
-      ctx.fillRect(brick.x + 10, brick.y + brick.height - 14, brick.width - 20, 7);
+      ctx.fillRect(
+        brick.x + 10,
+        brick.y + brick.height - 14,
+        brick.width - 20,
+        7
+      );
 
-      ctx.fillStyle = brick.isMob ? "#e45757" : "#bcae9b";
+      ctx.fillStyle = brick.isMob
+        ? "#e45757"
+        : brick.treasure
+          ? "#ffe77c"
+          : "#bcae9b";
+
       ctx.fillRect(
         brick.x + 10,
         brick.y + brick.height - 14,
@@ -975,16 +1164,8 @@ function drawBricks(dt) {
         7
       );
     }
-
-    if (brick.shooter) {
-      ctx.fillStyle = "#ffb56c";
-      ctx.beginPath();
-      ctx.arc(brick.x + brick.width / 2, brick.y + 12, 7, 0, Math.PI * 2);
-      ctx.fill();
-    }
   }
 }
-
 function drawProjectiles() {
   for (const shot of enemyProjectiles) {
     ctx.fillStyle = "#ff704d";
@@ -1043,5 +1224,6 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
+updateStatsUI();
 resetRun();
 requestAnimationFrame(gameLoop);

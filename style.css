@@ -299,3 +299,105 @@ body {
   50% { filter: brightness(2); }
   100% { filter: brightness(1); }
 }
+
+
+#levelHud {
+  color: #d8c8ff;
+}
+
+#statsButton {
+  position: absolute;
+  z-index: 18;
+  right: 10px;
+  top: 8%;
+  padding: 7px 9px;
+  border: 2px solid #75658f;
+  border-radius: 9px;
+  background: rgba(31, 26, 40, .88);
+  color: white;
+  font-size: clamp(8px, 1.3vh, 11px);
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#statsOverlay {
+  position: absolute;
+  z-index: 40;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 4%;
+  background: rgba(8, 7, 12, .94);
+  backdrop-filter: blur(4px);
+}
+
+.statsPanel {
+  max-height: 94%;
+  overflow-y: auto;
+}
+
+.xpBox {
+  margin: 12px 0;
+}
+
+.xpBar {
+  height: 12px;
+  margin: 7px 0 4px;
+  overflow: hidden;
+  border: 1px solid #6f6579;
+  border-radius: 8px;
+  background: #111017;
+}
+
+#xpFill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #8c72c8, #d8c8ff);
+}
+
+.pointsLine {
+  margin: 10px 0;
+  color: #f1d77c;
+  font-weight: 900;
+}
+
+.statRows {
+  display: grid;
+  gap: 7px;
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: 1fr 34px 30px 34px;
+  align-items: center;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid #4e4657;
+  border-radius: 9px;
+  background: #1c1922;
+  text-align: left;
+}
+
+.statRow button {
+  height: 30px;
+  border: 1px solid #776b83;
+  border-radius: 7px;
+  background: #342e3d;
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.statRow strong {
+  text-align: center;
+}
+
+.statRow small {
+  grid-column: 1 / 5;
+  color: #a9a1ae;
+}
+
+.treasureGlow {
+  filter: drop-shadow(0 0 8px #ffd85b);
+}
