@@ -30,6 +30,7 @@ const pathHintEl = document.getElementById("pathHint");
 const comboHudEl = document.getElementById("comboHud");
 const comboCountEl = document.getElementById("comboCount");
 const comboXpEl = document.getElementById("comboXp");
+const roomClearBannerEl = document.getElementById("roomClearBanner");
 const closeStatsBtn = document.getElementById("closeStats");
 const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
@@ -269,6 +270,9 @@ let bricks = [];
 let enemyProjectiles = [];
 let particles = [];
 let attackTimer = 0;
+let pendingShot = null;
+let roomClearTimer = 0;
+let roomClearRewardPending = false;
 let ballsLeft = 3;
 const maxBalls = 3;
 
@@ -329,13 +333,13 @@ const roomLayouts = [
     "BMBMB",
     "BBMBB",
     "MGTBM",
-    "BBSBB"
+    "BBRBB"
   ],
   [
     "BBMBB",
     "BHBHB",
     "MMTGM",
-    "BBSBB"
+    "BBRBB"
   ]
 ];
 
@@ -390,7 +394,7 @@ function buildRoom() {
         iceGoblin = true;
       }
 
-      if (type === "S") {
+      if (type === "R") {
         hp = 5;
         isMob = true;
         shooter = true;
@@ -411,6 +415,8 @@ function buildRoom() {
         alive: true,
         isMob,
         shooter,
+        shooterVariant: type === "R" ? "spread" : (shooter ? "basic" : null),
+        telegraph: 0,
         treasure,
         iceGoblin,
         hitFlash: 0,
@@ -588,7 +594,7 @@ window.addEventListener("keyup", event => {
 canvas.addEventListener("pointerdown", event => {
   if (gameState === "upgrade" || gameState === "shop" || gameState === "stats") return;
 
-  if (gameState === "exitChoice") {
+  if (gameState === "exitChoice" || gameState === "roomClear") {
     pointerActive = true;
     setPointerPosition(event);
     return;
@@ -700,13 +706,7 @@ function chooseRune(type) {
   updateRuneText();
   updateHUD();
 
-  if (roomNumber % 3 === 0) {
-    openShop();
-  } else {
-    roomNumber += 1;
-    currentRoomType = pendingRoomType;
-    startRoom();
-  }
+  beginExitChoice();
 }
 
 function updateUpgradeText() {
@@ -823,6 +823,33 @@ function updateGlueButton() {
   glueButton.disabled = gameState !== "playing" || glueCharges <= 0 || glueArmed;
 }
 
+function updateRoomClear(dt) {
+  if (gameState !== "roomClear") return;
+
+  roomClearTimer -= dt;
+  if (roomClearTimer > 0) return;
+
+  roomClearBannerEl.classList.add("hidden");
+
+  if (roomClearRewardPending) {
+    roomClearRewardPending = false;
+    gameState = "upgrade";
+    updateRuneText();
+    upgradeOverlay.classList.remove("hidden");
+  }
+}
+
+function beginExitChoice() {
+  gameState = "exitChoice";
+  exitChoice.active = true;
+  exitChoice.heroX = player.x;
+  exitChoice.heroY = 1110;
+  exitChoice.facing = player.facing || 1;
+  exitChoice.hopTimer = 0.45;
+  exitChoice.chosen = null;
+  pathHintEl.classList.remove("hidden");
+}
+
 function updateExitChoice(dt) {
   if (gameState !== "exitChoice") return;
 
@@ -866,9 +893,13 @@ function chooseDungeonExit(type) {
   exitChoice.active = false;
   pathHintEl.classList.add("hidden");
 
-  gameState = "upgrade";
-  updateRuneText();
-  upgradeOverlay.classList.remove("hidden");
+  if (roomNumber % 3 === 0) {
+    openShop();
+  } else {
+    roomNumber += 1;
+    currentRoomType = pendingRoomType;
+    startRoom();
+  }
 }
 
 function updatePlayer(dt) {
@@ -1147,10 +1178,28 @@ function fireExplosion(x, y, sourceBrick) {
 function updateEnemyAttacks(dt) {
   if (gameState !== "playing") return;
 
+  // Resolve a warned shot only after its telegraph finishes.
+  if (pendingShot) {
+    const shooter = pendingShot.shooter;
+    if (!shooter.alive) {
+      pendingShot = null;
+      return;
+    }
+
+    shooter.telegraph = Math.max(0, shooter.telegraph - dt);
+    pendingShot.timer -= dt;
+
+    if (pendingShot.timer <= 0) {
+      fireEnemyShot(shooter);
+      shooter.telegraph = 0;
+      pendingShot = null;
+      attackTimer = shooter.shooterVariant === "spread" ? 1.65 : 2.25;
+    }
+    return;
+  }
+
   attackTimer -= dt;
   if (attackTimer > 0) return;
-
-  attackTimer = 2.25;
 
   const attackers = bricks.filter(
     brick => brick.alive && (brick.shooter || brick.iceGoblin)
@@ -1158,20 +1207,35 @@ function updateEnemyAttacks(dt) {
   if (attackers.length === 0) return;
 
   const shooter = attackers[Math.floor(Math.random() * attackers.length)];
-  const isIce = shooter.iceGoblin;
+  const warning = shooter.shooterVariant === "spread" ? 0.42 : 0.62;
 
-  enemyProjectiles.push({
-    x: shooter.x + shooter.width / 2,
-    y: shooter.y + shooter.height,
-    radius: isIce ? 15 : 13,
-    vy: isIce ? 320 : 380,
-    type: isIce ? "ice" : "damage"
-  });
+  shooter.telegraph = warning;
+  pendingShot = { shooter, timer: warning };
+}
+
+function fireEnemyShot(shooter) {
+  const x = shooter.x + shooter.width / 2;
+  const y = shooter.y + shooter.height;
+
+  if (shooter.iceGoblin) {
+    enemyProjectiles.push({x,y,radius:15,vx:0,vy:320,type:"ice"});
+    return;
+  }
+
+  if (shooter.shooterVariant === "spread") {
+    for (const vx of [-150, 0, 150]) {
+      enemyProjectiles.push({x,y,radius:12,vx,vy:350,type:"damage"});
+    }
+    return;
+  }
+
+  enemyProjectiles.push({x,y,radius:13,vx:0,vy:380,type:"damage"});
 }
 
 function updateProjectiles(dt) {
   for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
     const shot = enemyProjectiles[i];
+    shot.x += (shot.vx || 0) * dt;
     shot.y += shot.vy * dt;
 
     if (
@@ -1266,23 +1330,19 @@ function checkVictory() {
   const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
 
   if (mobsLeft === 0 && gameState === "playing") {
+    resetHitCombo();
     addXP(20);
 
-    resetHitCombo();
-    gameState = "exitChoice";
+    gameState = "roomClear";
     ball.launched = false;
     ballStuck = false;
     enemyProjectiles = [];
+    pendingShot = null;
 
-    exitChoice.active = true;
-    exitChoice.heroX = player.x;
-    exitChoice.heroY = 1110;
-    exitChoice.facing = 1;
-    exitChoice.hopTimer = 0.45;
-    exitChoice.chosen = null;
-
+    roomClearTimer = 0.9;
+    roomClearRewardPending = true;
+    roomClearBannerEl.classList.remove("hidden");
     messageEl.style.display = "none";
-    pathHintEl.classList.remove("hidden");
   }
 }
 
@@ -1732,8 +1792,12 @@ function drawBricks(dt) {
 
       // Shooter goblins get a red hue shift so gob1.png can serve as
       // the first reusable mob block asset.
-      if (brick.iceGoblin) {
+      if (brick.telegraph > 0 && Math.floor(brick.telegraph * 16) % 2 === 0) {
+        ctx.filter = "brightness(2.2) saturate(.3)";
+      } else if (brick.iceGoblin) {
         ctx.filter = "hue-rotate(145deg) saturate(1.35) brightness(1.12)";
+      } else if (brick.shooterVariant === "spread") {
+        ctx.filter = "hue-rotate(320deg) saturate(1.7) brightness(.72)";
       } else if (brick.shooter) {
         ctx.filter = "hue-rotate(285deg) saturate(1.15)";
       }
@@ -1898,6 +1962,7 @@ function gameLoop(timestamp) {
   lastTime = timestamp;
 
   updatePlayer(dt);
+  updateRoomClear(dt);
   updateExitChoice(dt);
 
   if (gameState === "playing") {
@@ -1915,7 +1980,7 @@ function gameLoop(timestamp) {
   drawPlayer();
   drawExitChoice();
 
-  if (gameState !== "exitChoice") {
+  if (gameState !== "exitChoice" && gameState !== "roomClear") {
     drawBall();
   }
   drawParticles();

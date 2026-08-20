@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.11.1**
+Current prototype: **v0.12**
 
 ## Current Direction
 
@@ -480,3 +480,58 @@ Keep this open until physical dungeon navigation and equipment feel solid.
 - Mob kills and room-clear XP remain separate.
 - Mounted hero was lowered so he stands on the trolley instead of floating.
 - Hero + trolley now mirror together based on the trolley's movement direction.
+
+
+## v0.12 — Room Clear Flow + Shooter Telegraphs
+
+Flow is now:
+
+**Kill last mob → ROOM CLEARED → Rune reward → physical door decision → next room**
+
+Combat additions:
+
+- Ranged enemies visibly flash before firing.
+- Basic shooters have a longer warning.
+- Dark-red shooters are an upgraded ranged grunt:
+  - More HP.
+  - Shorter warning.
+  - Fire a three-way projectile spread.
+- Ice Goblins retain their slowing projectile.
+- Enemy projectiles now support horizontal velocity for spread attacks.
+
+### Enemy Taxonomy Direction
+
+Color is an **element/variant layer across enemy families**, not a Raider-only naming scheme.
+
+Enemy families can include:
+- Grunt
+- Raider
+- Mystic
+- Barbarian
+- future families
+
+Then colors/elements can modify any family:
+- Red / Fire
+- Blue / Ice
+- Green / Poison
+- Purple / future element/status
+- neutral/armored variants
+
+Example:
+- Fire Grunt
+- Ice Grunt
+- Fire Raider
+- Ice Raider
+- Poison Mystic
+- Fire Barbarian
+
+### Mini-boss Plan
+
+Do NOT introduce ordinary moving Raiders yet.
+
+First moving enemy:
+**Armored Raider mini-boss**
+
+The boss introduces movement through spaces opened by destroyed bricks.
+Defeating it unlocks normal Raider-family enemies in later encounters.
+Those Raiders can then receive the same elemental/color variants as other enemy families.
