@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.14**
+Current prototype: **v0.15**
 
 ## Current Direction
 
@@ -621,3 +621,85 @@ Added persistent global audio settings:
 - Mute/unmute SFX
 
 Audio preferences are global rather than tied to a character profile.
+
+
+## v0.14.1 — Room/Boss Repair + Reward Transition
+
+Fixed:
+- Standard rooms correctly spawn authored enemy types instead of auto-clearing.
+- Neutral Grunts now visibly render grey.
+- Fire, Ice, Green, Dark-Red, and Raider identifiers are correctly built from the room layout.
+- Room 5 Raider is restored as the `R` enemy type.
+- 8-column boss arena now dynamically shrinks its cells and centers itself instead of using 5-column placement math.
+- Armored Raider is visually larger than a normal grunt.
+- Raider movement lane is centered inside the open middle corridor.
+
+Reward flow:
+1. Final mob dies.
+2. Trolley/hero re-center.
+3. ROOM CLEARED rune panel rises onto the screen.
+4. Player chooses rune.
+5. Mounted hero/trolley shakes briefly.
+6. Hero hops off.
+7. Player physically chooses the next door.
+
+### Standard vs Hard Route Direction
+
+Do not define Hard as blindly "double every enemy."
+
+Use a **threat-budget multiplier**:
+- Standard: roughly 1.0x encounter modifier budget.
+- Hard: roughly 1.7–2.0x modifier budget.
+
+Example if the base encounter modifier is:
+- +1 Grey Grunt
+- +1 Fire Grunt
+- +1 Ice Grunt
+
+A Hard version may use:
+- +2 Grey
+- +1 Dark-Red Fire instead of simply +2 Fire
+- +2 Ice
+
+This keeps Hard more dangerous without overcrowding every board or creating unreadable projectile spam.
+
+Hard routes should eventually offer visibly better rewards.
+
+
+## v0.15 — Raider Archetype Retry
+
+Enemy identity is now explicitly split into two layers:
+
+### Archetype = what the enemy DOES
+- **Grunt:** current `gob1.png` prison-block enemy. Stationary.
+- **Raider:** `mob-skel-arch.png`. Mobile archer. Moves horizontally and aims arrows directly at the trolley/player instead of firing straight down.
+- Mystic / Barbarian remain future archetypes.
+
+### Hue = elemental / special power
+The artwork itself does **not** define the element.
+Any archetype can later receive a hue/power modifier.
+
+Examples:
+- Blue Grunt = Ice Grunt.
+- Blue Raider = Ice Raider.
+- Dark-red Raider = Fire/spread variant if designed that way.
+- Purple can later represent the Black Hole power regardless of whether the base enemy is a Grunt, Raider, Mystic, etc.
+
+### Planned Purple / Black Hole Power
+Future concept, not implemented yet:
+- Purple caster fires/creates a black hole.
+- If the player's ball enters the black hole, that ball is trapped.
+- If the caster survives / effect completes, player loses the trapped ball/life.
+- If the player kills the caster while the ball is trapped, the ball is freed.
+- Successful rescue rewards a multiball.
+- Needs strong telegraphing and a fair escape/rescue window.
+
+### Room 5 Mini-Boss
+- Uses `assets/mob-skel-arch.png`.
+- Raider moves horizontally through the center lane.
+- Raider telegraphs bow shots.
+- Arrow aims directly at the player's current position when fired.
+- Armor absorbs damage before HP.
+- Armor break enrages Raider: faster movement and faster arrows.
+- Support Grey Grunts remain in the boss room.
+- Wider board remains dynamically fitted/centered.

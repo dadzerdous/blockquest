@@ -768,3 +768,12 @@ body {
     grid-row: 1;
   }
 }
+
+#upgradeOverlay.rewardRise .upgradePanel {
+  animation: rewardRiseIn .38s ease-out both;
+}
+
+@keyframes rewardRiseIn {
+  from { transform: translateY(90px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}

@@ -94,6 +94,8 @@ heroImage.src = "assets/hero1.png";
 
 const gobImage = new Image();
 gobImage.src = "assets/gob1.png";
+const raiderImage = new Image();
+raiderImage.src = "assets/mob-skel-arch.png";
 
 const brick1Image = new Image();
 brick1Image.src = "assets/brick1.png";
@@ -167,6 +169,9 @@ let roomNumber = 1;
 
 let pendingRoomType = "battle";
 let currentRoomType = "battle";
+
+let postRewardShakeTimer = 0;
+let pendingExitAfterReward = false;
 
 const exitChoice = {
   active: false,
@@ -461,7 +466,7 @@ function updateComboHUD() {
 }
 
 const roomLayouts = [
-  // Battle 1: 2 grey grunts + 1 Fire Grunt. 20 positions.
+  // Room 1 — 2 Grey Grunts + 1 Fire Grunt
   [
     "BBBBB",
     "BMBFB",
@@ -469,7 +474,7 @@ const roomLayouts = [
     "BBBBB"
   ],
 
-  // Battle 2: 2 Ice Grunts + 2 Green Grunts. 20 positions.
+  // Room 2 — 2 Ice Grunts + 2 Green Grunts
   [
     "BBIBB",
     "BGBGB",
@@ -477,7 +482,7 @@ const roomLayouts = [
     "BBBBB"
   ],
 
-  // Battle 3: 5 grunts — 2 Ice, 1 dark-red Fire, 2 grey.
+  // Room 3 — 2 Grey + 2 Ice + 1 Dark-Red Fire
   [
     "BIMIB",
     "BBDBB",
@@ -485,7 +490,7 @@ const roomLayouts = [
     "BBBBB"
   ],
 
-  // Battle 4: grey-grunt endurance room before the mini-boss.
+  // Room 4 — Grey Grunt endurance room
   [
     "BMBMB",
     "BBMBB",
@@ -493,13 +498,12 @@ const roomLayouts = [
     "BBBBB"
   ],
 
-  // Battle 5: 5x8 Armored Raider arena.
-  // Middle row is deliberately open except for side walls and the Raider.
+  // Room 5 — Armored Raider mini-boss arena (5x8)
   [
     "BBBBBBBB",
-    "BMBBBMBB",
-    "B..R...B",
-    "BBMBBMBB",
+    "BMB..MBB",
+    "B...R..B",
+    "BBM..MBB",
     "BBBBBBBB"
   ]
 ];
@@ -507,12 +511,14 @@ const roomLayouts = [
 function buildRoom() {
   bricks = [];
 
-  const layout = roomLayouts[Math.min(roomNumber - 1, roomLayouts.length - 1)];
+  const layout =
+    roomLayouts[Math.min(roomNumber - 1, roomLayouts.length - 1)];
+
   const workingLayout = layout.map(row => row.split(""));
 
-  if (currentRoomType === "treasure") {
-    // A treasure route guarantees more visible treasure while keeping mobs as the clear objective.
+  if (currentRoomType === "treasure" && roomNumber < 5) {
     let converted = 0;
+
     for (let r = 0; r < workingLayout.length && converted < 3; r++) {
       for (let c = 0; c < workingLayout[r].length && converted < 3; c++) {
         if (workingLayout[r][c] === "B") {
@@ -523,67 +529,136 @@ function buildRoom() {
     }
   }
 
-  const brickWidth = 125;
-  const brickHeight = 65;
-  const gap = 12;
-  const cols = 5;
-  const totalWidth = cols * brickWidth + (cols - 1) * gap;
-  const startX = (WORLD_WIDTH - totalWidth) / 2;
+  const rows = workingLayout.length;
+  const cols = Math.max(...workingLayout.map(row => row.length));
+
+  // Dynamically fit the board. Normal rooms keep the larger 5-column bricks.
+  // Wider boss boards shrink their bricks enough to stay centered on mobile.
+  const gap = cols >= 8 ? 8 : 12;
+  const maxBoardWidth = WORLD_WIDTH - 90;
+  const preferredBrickWidth = 125;
+  const brickWidth = Math.min(
+    preferredBrickWidth,
+    (maxBoardWidth - gap * (cols - 1)) / cols
+  );
+
+  const brickHeight = cols >= 8
+    ? Math.max(48, brickWidth * 0.52)
+    : 65;
+
+  const totalWidth =
+    cols * brickWidth +
+    (cols - 1) * gap;
+
+  const startX =
+    (WORLD_WIDTH - totalWidth) / 2;
+
   const startY = 210;
 
   workingLayout.forEach((line, row) => {
-    [...line].forEach((type, col) => {
+    line.forEach((type, col) => {
       if (type === ".") return;
 
-      let hp = 1;
+      let hp = 2;
       let isMob = false;
       let shooter = false;
+      let shooterVariant = null;
       let treasure = false;
       let iceGoblin = false;
       let greenGoblin = false;
+      let fireGoblin = false;
       let darkFireGoblin = false;
       let raiderBoss = false;
 
+      // Environment
       if (type === "B") hp = 2;
       if (type === "H") hp = 4;
 
-      if (type === "M") {
-        hp = 3;
-        isMob = true;
-      }
-
-      if (type === "R") {
-        hp = 5;
-        isMob = true;
-        shooter = true;
-      }
-
+      // Visible treasure is still a normal-looking brick with a yellow hue.
       if (type === "T") {
         hp = 2;
         treasure = true;
       }
 
+      // Grey / neutral grunt
+      if (type === "M") {
+        hp = 5;
+        isMob = true;
+      }
+
+      // Fire grunt
+      if (type === "F") {
+        hp = 4;
+        isMob = true;
+        shooter = true;
+        shooterVariant = "basic";
+        fireGoblin = true;
+      }
+
+      // Ice grunt
+      if (type === "I") {
+        hp = 4;
+        isMob = true;
+        iceGoblin = true;
+      }
+
+      // Green grunt — elemental behavior deliberately undefined for now.
+      if (type === "G") {
+        hp = 4;
+        isMob = true;
+        greenGoblin = true;
+      }
+
+      // Dark-red fire grunt
+      if (type === "D") {
+        hp = 5;
+        isMob = true;
+        shooter = true;
+        shooterVariant = "spread";
+        darkFireGoblin = true;
+      }
+
+      // Armored Raider mini-boss
+      if (type === "R") {
+        hp = 28;
+        isMob = true;
+        raiderBoss = true;
+        shooter = true;
+        shooterVariant = "raiderAim";
+      }
+
       bricks.push({
         x: startX + col * (brickWidth + gap),
         y: startY + row * (brickHeight + gap),
+
+        baseCellCol: col,
+        baseCellRow: row,
+
         width: brickWidth,
         height: brickHeight,
+
         hp,
         maxHp: hp,
+
         alive: true,
         isMob,
         shooter,
-        shooterVariant: type === "R" ? "spread" : (shooter ? "basic" : null),
+        shooterVariant,
         telegraph: 0,
+
         treasure,
         iceGoblin,
         greenGoblin,
+        fireGoblin,
         darkFireGoblin,
         raiderBoss,
+
         armor: raiderBoss ? 12 : 0,
         maxArmor: raiderBoss ? 12 : 0,
+
         moveDir: 1,
         moveSpeed: raiderBoss ? 92 : 0,
+
         hitFlash: 0,
         type
       });
@@ -591,11 +666,17 @@ function buildRoom() {
   });
 
   roomTitleEl.textContent =
-    currentRoomType === "treasure"
-      ? `ROOM ${roomNumber} — TREASURE ROUTE`
-      : `ROOM ${roomNumber} — GOBLIN OUTPOST`;
+    roomNumber === 5
+      ? "ROOM 5 — ARMORED RAIDER ARCHER"
+      : currentRoomType === "treasure"
+        ? `ROOM ${roomNumber} — TREASURE ROUTE`
+        : `ROOM ${roomNumber} — GOBLIN OUTPOST`;
+
   updateHUD();
-  const activeBoss = bricks.find(brick => brick.alive && brick.raiderBoss);
+
+  const activeBoss =
+    bricks.find(brick => brick.alive && brick.raiderBoss);
+
   updateBossHUD(activeBoss);
 }
 
@@ -1065,7 +1146,9 @@ function chooseRune(type) {
   updateRuneText();
   updateHUD();
 
-  beginExitChoice();
+  gameState = "postRewardShake";
+  postRewardShakeTimer = 0.72;
+  pendingExitAfterReward = true;
 }
 
 function updateUpgradeText() {
@@ -1198,10 +1281,22 @@ function updateRoomClear(dt) {
   }
 }
 
+function updatePostRewardShake(dt) {
+  if (gameState !== "postRewardShake") return;
+
+  postRewardShakeTimer -= dt;
+
+  if (postRewardShakeTimer <= 0) {
+    pendingExitAfterReward = false;
+    beginExitChoice();
+  }
+}
+
 function beginExitChoice() {
   gameState = "exitChoice";
   exitChoice.active = true;
-  exitChoice.heroX = player.x;
+  player.x = WORLD_WIDTH / 2;
+  exitChoice.heroX = WORLD_WIDTH / 2;
   exitChoice.heroY = 1110;
   exitChoice.facing = player.facing || 1;
   exitChoice.hopTimer = 0.45;
@@ -1262,7 +1357,7 @@ function chooseDungeonExit(type) {
 }
 
 function updatePlayer(dt) {
-  if (gameState === "exitChoice") {
+  if (gameState === "exitChoice" || gameState === "postRewardShake") {
     player.velocityX = 0;
     return;
   }
@@ -1554,17 +1649,49 @@ function fireExplosion(x, y, sourceBrick) {
 function updateBossMovement(dt) {
   if (gameState !== "playing" || roomNumber !== 5) return;
 
-  const boss = bricks.find(brick => brick.alive && brick.raiderBoss);
+  const boss =
+    bricks.find(brick => brick.alive && brick.raiderBoss);
+
   if (!boss) return;
 
-  // The center lane is open. Destroying side/environment bricks later can expand
-  // this idea into dynamic corridors; for the first boss the Raider owns this lane.
-  const leftLimit = 145;
-  const rightLimit = WORLD_WIDTH - 145 - boss.width;
-  const exposed = boss.armor <= 0;
-  const speed = exposed ? boss.moveSpeed * 1.65 : boss.moveSpeed;
+  const sideWalls =
+    bricks.filter(
+      brick =>
+        brick.alive &&
+        !brick.isMob &&
+        brick.baseCellRow === 2
+    );
 
-  boss.x += boss.moveDir * speed * dt;
+  // Start with the inner arena lane. As side blocks disappear later,
+  // this can be expanded further into the "destroy the cage" mechanic.
+  const leftWall = sideWalls
+    .filter(b => b.x < WORLD_WIDTH / 2)
+    .sort((a,b) => b.x - a.x)[0];
+
+  const rightWall = sideWalls
+    .filter(b => b.x > WORLD_WIDTH / 2)
+    .sort((a,b) => a.x - b.x)[0];
+
+  const leftLimit =
+    leftWall
+      ? leftWall.x + leftWall.width + 6
+      : 55;
+
+  const rightLimit =
+    rightWall
+      ? rightWall.x - boss.width - 6
+      : WORLD_WIDTH - 55 - boss.width;
+
+  const exposed = boss.armor <= 0;
+  const speed =
+    exposed
+      ? boss.moveSpeed * 1.65
+      : boss.moveSpeed;
+
+  boss.x +=
+    boss.moveDir *
+    speed *
+    dt;
 
   if (boss.x <= leftLimit) {
     boss.x = leftLimit;
@@ -1597,39 +1724,44 @@ function updateBossHUD(boss) {
 function updateEnemyAttacks(dt) {
   if (gameState !== "playing") return;
 
-  // Resolve a warned shot only after its telegraph finishes.
-  if (pendingShot) {
-    const shooter = pendingShot.shooter;
-    if (!shooter.alive) {
-      pendingShot = null;
-      return;
+  for (const enemy of bricks) {
+    if (!enemy.alive || !(enemy.shooter || enemy.iceGoblin || enemy.raiderBoss)) continue;
+
+    enemy.fireCooldown = (enemy.fireCooldown || 0) - dt;
+
+    if (enemy.fireCharge > 0) {
+      enemy.fireCharge -= dt;
+      enemy.telegraph = enemy.fireCharge;
+
+      if (enemy.fireCharge <= 0) {
+        enemy.telegraph = 0;
+        fireEnemyShot(enemy);
+
+        if (enemy.raiderBoss) {
+          enemy.fireCooldown = enemy.armor > 0 ? 2.25 : 1.55;
+        } else if (enemy.shooterVariant === "spread") {
+          enemy.fireCooldown = 1.35;
+        } else if (enemy.iceGoblin) {
+          enemy.fireCooldown = 2.6;
+        } else {
+          enemy.fireCooldown = 2.2;
+        }
+      }
+
+      continue;
     }
 
-    shooter.telegraph = Math.max(0, shooter.telegraph - dt);
-    pendingShot.timer -= dt;
-
-    if (pendingShot.timer <= 0) {
-      fireEnemyShot(shooter);
-      shooter.telegraph = 0;
-      pendingShot = null;
-      attackTimer = shooter.shooterVariant === "spread" ? 1.65 : 2.25;
+    if (enemy.fireCooldown <= 0) {
+      if (enemy.raiderBoss) {
+        enemy.fireCharge = 0.75;
+      } else if (enemy.shooterVariant === "spread") {
+        enemy.fireCharge = 0.42;
+      } else {
+        enemy.fireCharge = 0.65;
+      }
+      enemy.telegraph = enemy.fireCharge;
     }
-    return;
   }
-
-  attackTimer -= dt;
-  if (attackTimer > 0) return;
-
-  const attackers = bricks.filter(
-    brick => brick.alive && (brick.shooter || brick.iceGoblin)
-  );
-  if (attackers.length === 0) return;
-
-  const shooter = attackers[Math.floor(Math.random() * attackers.length)];
-  const warning = shooter.shooterVariant === "spread" ? 0.42 : 0.62;
-
-  shooter.telegraph = warning;
-  pendingShot = { shooter, timer: warning };
 }
 
 function fireEnemyShot(shooter) {
@@ -1759,7 +1891,8 @@ function loseBallFromHP() {
 }
 
 function checkVictory() {
-  const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
+  const mobsLeft =
+    bricks.filter(brick => brick.alive && brick.isMob).length;
 
   if (mobsLeft === 0 && gameState === "playing") {
     addXP(roomNumber === 5 ? 75 : 20);
@@ -1768,6 +1901,7 @@ function checkVictory() {
       progression.raiderUnlocked = true;
       saveProgression();
     }
+
     resetHitCombo();
 
     ball.launched = false;
@@ -1775,10 +1909,23 @@ function checkVictory() {
     enemyProjectiles = [];
     bossHudEl.classList.add("hidden");
 
+    // Re-center the mounted hero/trolley before presenting the reward.
+    player.x = WORLD_WIDTH / 2;
+    player.velocityX = 0;
+    ball.x = player.x;
+    ball.y = player.y - 58;
+
     gameState = "upgrade";
     messageEl.style.display = "none";
+
     updateRuneText();
+
+    upgradeOverlay.classList.add("rewardRise");
     upgradeOverlay.classList.remove("hidden");
+
+    setTimeout(() => {
+      upgradeOverlay.classList.remove("rewardRise");
+    }, 450);
   }
 }
 
@@ -2027,8 +2174,13 @@ function drawRail() {
 }
 
 function drawPlayer() {
-  const x = player.x;
-  const y = player.y;
+  let x = player.x;
+  let y = player.y;
+
+  if (gameState === "postRewardShake") {
+    x += Math.sin(performance.now() * 0.075) * 8;
+    y += Math.cos(performance.now() * 0.11) * 2;
+  }
 
   ctx.save();
 
@@ -2231,26 +2383,49 @@ function drawBricks(dt) {
       // Shooter goblins get a red hue shift so gob1.png can serve as
       // the first reusable mob block asset.
       if (brick.telegraph > 0 && Math.floor(brick.telegraph * 16) % 2 === 0) {
-        ctx.filter = "brightness(2.2) saturate(.3)";
+        ctx.filter = "brightness(2.1) saturate(.35)";
+      } else if (brick.raiderBoss) {
+        ctx.filter = brick.armor > 0
+          ? "grayscale(.45) brightness(.82) contrast(1.25)"
+          : "none";
+      } else if (brick.darkFireGoblin) {
+        ctx.filter = "hue-rotate(320deg) saturate(2) brightness(.66)";
+      } else if (brick.fireGoblin || brick.shooter) {
+        ctx.filter = "hue-rotate(300deg) saturate(1.8) brightness(.95)";
       } else if (brick.iceGoblin) {
-        ctx.filter = "hue-rotate(145deg) saturate(1.35) brightness(1.12)";
-      } else if (brick.shooterVariant === "spread") {
-        ctx.filter = "hue-rotate(320deg) saturate(1.7) brightness(.72)";
-      } else if (brick.shooter) {
-        ctx.filter = "hue-rotate(285deg) saturate(1.15)";
+        ctx.filter = "hue-rotate(145deg) saturate(1.45) brightness(1.14)";
+      } else if (brick.greenGoblin) {
+        // Keep green family close to the source sprite for now.
+        ctx.filter = "hue-rotate(12deg) saturate(1.15) brightness(1.02)";
+      } else {
+        // Neutral/grey grunt.
+        ctx.filter = "grayscale(.92) brightness(.88) contrast(1.15)";
       }
 
       if (brick.hitFlash > 0) {
         ctx.globalAlpha = 0.55;
       }
 
-      ctx.drawImage(
-        gobImage,
-        brick.x,
-        brick.y - 10,
-        brick.width,
-        brick.height + 20
-      );
+      if (brick.raiderBoss) {
+        const bossW = brick.width * 1.48;
+        const bossH = brick.height * 1.82;
+
+        ctx.drawImage(
+          raiderImage,
+          brick.x + brick.width / 2 - bossW / 2,
+          brick.y + brick.height / 2 - bossH / 2 - 8,
+          bossW,
+          bossH
+        );
+      } else {
+        ctx.drawImage(
+          gobImage,
+          brick.x,
+          brick.y - 10,
+          brick.width,
+          brick.height + 20
+        );
+      }
 
       ctx.restore();
 
@@ -2326,49 +2501,29 @@ function drawProjectiles() {
   for (const shot of enemyProjectiles) {
     ctx.save();
 
-    if (shot.type === "ice") {
-      const trail = ctx.createLinearGradient(shot.x, shot.y - 42, shot.x, shot.y + 8);
-      trail.addColorStop(0, "rgba(125,225,255,0)");
-      trail.addColorStop(1, "rgba(125,225,255,.8)");
-      ctx.strokeStyle = trail;
-      ctx.lineWidth = 11;
+    if (shot.type === "arrow") {
+      ctx.translate(shot.x, shot.y);
+      ctx.rotate(shot.angle || Math.atan2(shot.vy, shot.vx));
+      ctx.strokeStyle = "#d7c6a1";
+      ctx.fillStyle = "#d7c6a1";
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.moveTo(shot.x, shot.y - 38);
-      ctx.lineTo(shot.x, shot.y - 3);
+      ctx.moveTo(-18, 0);
+      ctx.lineTo(16, 0);
       ctx.stroke();
 
-      ctx.fillStyle = "#8edff5";
       ctx.beginPath();
-      ctx.moveTo(shot.x, shot.y + shot.radius);
-      ctx.lineTo(shot.x - shot.radius * .7, shot.y - shot.radius * .35);
-      ctx.lineTo(shot.x, shot.y - shot.radius);
-      ctx.lineTo(shot.x + shot.radius * .7, shot.y - shot.radius * .35);
+      ctx.moveTo(18, 0);
+      ctx.lineTo(7, -7);
+      ctx.lineTo(7, 7);
       ctx.closePath();
       ctx.fill();
-
-      ctx.fillStyle = "#e8fbff";
-      ctx.beginPath();
-      ctx.arc(shot.x, shot.y - 3, shot.radius * .32, 0, Math.PI * 2);
-      ctx.fill();
     } else {
-      const trail = ctx.createLinearGradient(shot.x, shot.y - 38, shot.x, shot.y + 10);
-      trail.addColorStop(0, "rgba(255,69,35,0)");
-      trail.addColorStop(1, "rgba(255,126,51,.8)");
-      ctx.strokeStyle = trail;
-      ctx.lineWidth = 12;
+      ctx.fillStyle = shot.type === "ice" ? "#91e9ff" : "#ff5d4c";
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = ctx.fillStyle;
       ctx.beginPath();
-      ctx.moveTo(shot.x, shot.y - 34);
-      ctx.lineTo(shot.x, shot.y - 2);
-      ctx.stroke();
-
-      ctx.fillStyle = "#ff5e35";
-      ctx.beginPath();
-      ctx.ellipse(shot.x, shot.y, shot.radius * .8, shot.radius * 1.35, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "#ffd55a";
-      ctx.beginPath();
-      ctx.ellipse(shot.x, shot.y - 2, shot.radius * .35, shot.radius * .75, 0, 0, Math.PI * 2);
+      ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -2401,6 +2556,7 @@ function gameLoop(timestamp) {
 
   updatePlayer(dt);
   updateRoomClear(dt);
+  updatePostRewardShake(dt);
   updateExitChoice(dt);
 
   if (gameState === "playing") {
@@ -2435,4 +2591,89 @@ resetRun();
 gameState = "lobby";
 runLobby.classList.remove("hidden");
 updateLobbyUI();
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(gameLoop);function fireEnemyShot(enemy) {
+  const x = enemy.x + enemy.width / 2;
+  const y = enemy.y + enemy.height;
+
+  if (enemy.raiderBoss) {
+    // Raider archetype: bows aim directly at the trolley instead of firing straight down.
+    const targetX = player.x;
+    const targetY = player.y - 20;
+    const dx = targetX - x;
+    const dy = targetY - y;
+    const len = Math.hypot(dx, dy) || 1;
+    const speed = enemy.armor > 0 ? 360 : 430;
+
+    enemyProjectiles.push({
+      x, y,
+      radius: 11,
+      vx: dx / len * speed,
+      vy: dy / len * speed,
+      type: "arrow",
+      angle: Math.atan2(dy, dx)
+    });
+    return;
+  }
+
+  const isIce = enemy.iceGoblin;
+  const darkRed = enemy.shooterVariant === "spread";
+
+  if (darkRed) {
+    for (const vx of [-125, 0, 125]) {
+      enemyProjectiles.push({
+        x, y, radius: 13, vx, vy: 390, type: "damage"
+      });
+    }
+    return;
+  }
+
+  enemyProjectiles.push({
+    x, y,
+    radius: isIce ? 15 : 13,
+    vx: 0,
+    vy: isIce ? 320 : 380,
+    type: isIce ? "ice" : "damage"
+  });
+};
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(gameSettings));
+}
+
+function applySoundSettings() {
+  bgMusic.volume = gameSettings.musicMuted
+    ? 0
+    : gameSettings.musicVolume / 100;
+
+  hitSound.volume = gameSettings.sfxMuted
+    ? 0
+    : gameSettings.sfxVolume / 100;
+
+  musicVolumeInput.value = gameSettings.musicVolume;
+  sfxVolumeInput.value = gameSettings.sfxVolume;
+  musicVolumeText.textContent = `${gameSettings.musicVolume}%`;
+  sfxVolumeText.textContent = `${gameSettings.sfxVolume}%`;
+
+  muteMusicButton.textContent = gameSettings.musicMuted
+    ? "UNMUTE MUSIC"
+    : "MUTE MUSIC";
+
+  muteSfxButton.textContent = gameSettings.sfxMuted
+    ? "UNMUTE SFX"
+    : "MUTE SFX";
+}
+
+bgMusic.loop = true;
+
+
+
+hitSound.preload = "auto";
+
+function playHitSound() {
+  try {
+    hitSound.currentTime = 0;
+    hitSound.play().catch(() => {});
+  } catch (_) {}
+}
+
+
