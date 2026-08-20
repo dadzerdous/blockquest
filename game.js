@@ -59,9 +59,6 @@ const messageEl = document.getElementById("message");
 
 const upgradeOverlay = document.getElementById("upgradeOverlay");
 const shopOverlay = document.getElementById("shopOverlay");
-const powerLevelEl = document.getElementById("powerLevel");
-const widthLevelEl = document.getElementById("widthLevel");
-const speedLevelEl = document.getElementById("speedLevel");
 const runeHudTextEl = document.getElementById("runeHudText");
 const emberLevelEl = document.getElementById("emberLevel");
 const impactLevelEl = document.getElementById("impactLevel");
@@ -104,7 +101,7 @@ const brick2Image = new Image();
 brick2Image.src = "assets/brick2.png";
 const SETTINGS_KEY = "spikeTrolleySettings";
 
-let gameSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {
+let gameSettings = safeParseJSON(localStorage.getItem(SETTINGS_KEY)) || {
   musicVolume: 34,
   sfxVolume: 70,
   musicMuted: false,
@@ -223,27 +220,51 @@ function createFreshProgression(profileIndex = 1) {
   };
 }
 
+function safeParseJSON(raw, fallback = null) {
+  if (!raw) return fallback;
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.warn("Ignoring invalid saved JSON:", error);
+    return fallback;
+  }
+}
+
 function profileKey(index) {
   return `spikeTrolleyProfile${index}`;
 }
 
 function migrateLegacySave() {
-  const legacy = localStorage.getItem(LEGACY_SAVE_KEY);
+  const legacyRaw = localStorage.getItem(LEGACY_SAVE_KEY);
   const slot1 = localStorage.getItem(profileKey(1));
 
-  if (legacy && !slot1) {
-    const migrated = JSON.parse(legacy);
-    migrated.profileName = migrated.profileName || "Adventurer 1";
-    localStorage.setItem(profileKey(1), JSON.stringify(migrated));
+  if (legacyRaw && !slot1) {
+    const migrated = safeParseJSON(legacyRaw);
+
+    if (!migrated) return;
+
+    migrated.profileName =
+      migrated.profileName || "Adventurer 1";
+
+    localStorage.setItem(
+      profileKey(1),
+      JSON.stringify(migrated)
+    );
   }
 }
 
 function loadProfile(index) {
-  const raw = localStorage.getItem(profileKey(index));
-  if (!raw) return null;
+  const raw =
+    localStorage.getItem(profileKey(index));
 
-  const loaded = JSON.parse(raw);
+  const loaded =
+    safeParseJSON(raw);
+
+  if (!loaded) return null;
+
   normalizeProgression(loaded, index);
+
   return loaded;
 }
 
@@ -300,7 +321,7 @@ const equipmentCatalog = {
   ball:{
     iron:{name:"Iron Ball",effect:"Standard rebound."},
     piercing:{name:"Piercing Ball",effect:"Excess damage carries through destroyed blocks."},
-    cinder:{name:"Cinder Ball",effect:"With Fire, every hit splashes adjacent targets."}
+    cinder:{name:"Cinder Ball",effect:"Fire splash on every hit; also counts as Fire vs Ice."}
   }
 };
 let patchBoughtThisVisit = false;
@@ -406,7 +427,8 @@ const ball = {
   damage: 1,
   baseDamageMultiplier: 1,
   equipmentSpeedMultiplier: 1,
-  equipmentDamageMultiplier: 1
+  equipmentDamageMultiplier: 1,
+  pierceDamageRemaining: 0
 };
 
 let bricks = [];
@@ -512,11 +534,13 @@ function buildRoom() {
   bricks = [];
 
   const layout =
-    roomLayouts[Math.min(roomNumber - 1, roomLayouts.length - 1)];
+    roomNumber <= roomLayouts.length
+      ? roomLayouts[roomNumber - 1]
+      : roomLayouts[3]; // temporary post-boss fallback: Room 4, never repeat boss
 
   const workingLayout = layout.map(row => row.split(""));
 
-  if (currentRoomType === "treasure" && roomNumber < 5) {
+  if (currentRoomType === "treasure" && roomNumber !== 5) {
     let converted = 0;
 
     for (let r = 0; r < workingLayout.length && converted < 3; r++) {
@@ -802,9 +826,10 @@ function launchBall() {
     ballStuck = false;
     stuckTimer = 0;
     const angle = -Math.PI / 3;
-    ball.vx = Math.cos(angle) * ball.speed;
-    ball.vy = Math.sin(angle) * ball.speed;
+    ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier;
+    ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier;
     ball.launched = true;
+    ball.pierceDamageRemaining = 0;
     gameState = "playing";
     messageEl.style.display = "none";
     return;
@@ -813,10 +838,11 @@ function launchBall() {
   if (gameState !== "waiting" || ball.launched) return;
 
   ball.launched = true;
+  ball.pierceDamageRemaining = 0;
 
   const angle = -Math.PI / 3;
-  ball.vx = Math.cos(angle) * ball.speed;
-  ball.vy = Math.sin(angle) * ball.speed;
+  ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier;
+  ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier;
 
   gameState = "playing";
   messageEl.style.display = "none";
@@ -1151,9 +1177,7 @@ function chooseRune(type) {
   pendingExitAfterReward = true;
 }
 
-function updateUpgradeText() {
-  updateRuneText();
-}
+
 
 function updateRuneText() {
   if (emberLevelEl) {
@@ -1458,6 +1482,7 @@ function checkPaddleCollision() {
     ball.y - ball.radius < bottom
   ) {
     resetHitCombo();
+    ball.pierceDamageRemaining = 0;
     ball.y = top - ball.radius;
 
     if (glueArmed) {
@@ -1477,8 +1502,8 @@ function checkPaddleCollision() {
     const maxAngle = Math.PI * 0.38;
     const angle = relativeHit * maxAngle;
 
-    ball.vx = Math.sin(angle) * ball.speed;
-    ball.vy = -Math.cos(angle) * ball.speed;
+    ball.vx = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier;
+    ball.vy = -Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier;
 
     playHitSound();
     createParticles(ball.x, ball.y, 8, "#f7d98a");
@@ -1495,16 +1520,61 @@ function checkBrickCollisions() {
       ball.y + ball.radius > brick.y &&
       ball.y - ball.radius < brick.y + brick.height
     ) {
-      damageBrick(brick);
+      const equippedPiercing =
+        progression.equipment.ball === "piercing";
 
-      const overlapLeft = ball.x + ball.radius - brick.x;
-      const overlapRight = brick.x + brick.width - (ball.x - ball.radius);
-      const overlapTop = ball.y + ball.radius - brick.y;
-      const overlapBottom = brick.y + brick.height - (ball.y - ball.radius);
+      const baseHitDamage =
+        ball.damage *
+        ball.baseDamageMultiplier *
+        ball.equipmentDamageMultiplier;
 
-      const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+      let damageToApply = baseHitDamage;
 
-      if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+      if (equippedPiercing) {
+        if (ball.pierceDamageRemaining <= 0) {
+          ball.pierceDamageRemaining = baseHitDamage;
+        }
+
+        damageToApply = ball.pierceDamageRemaining;
+      }
+
+      const hpBefore = brick.hp + (brick.raiderBoss ? brick.armor : 0);
+
+      damageBrick(brick, damageToApply);
+
+      if (equippedPiercing) {
+        ball.pierceDamageRemaining =
+          Math.max(0, damageToApply - hpBefore);
+
+        if (ball.pierceDamageRemaining > 0) {
+          // Ball continues through this destroyed target.
+          continue;
+        }
+
+        ball.pierceDamageRemaining = 0;
+      }
+
+      const overlapLeft =
+        ball.x + ball.radius - brick.x;
+      const overlapRight =
+        brick.x + brick.width - (ball.x - ball.radius);
+      const overlapTop =
+        ball.y + ball.radius - brick.y;
+      const overlapBottom =
+        brick.y + brick.height - (ball.y - ball.radius);
+
+      const minOverlap =
+        Math.min(
+          overlapLeft,
+          overlapRight,
+          overlapTop,
+          overlapBottom
+        );
+
+      if (
+        minOverlap === overlapLeft ||
+        minOverlap === overlapRight
+      ) {
         ball.vx *= -1;
       } else {
         ball.vy *= -1;
@@ -1515,12 +1585,17 @@ function checkBrickCollisions() {
   }
 }
 
-function damageBrick(brick) {
+function damageBrick(brick, overrideDamage = null) {
   playHitSound();
   registerComboHit();
-  let hitDamage = ball.damage * ball.baseDamageMultiplier * ball.equipmentDamageMultiplier;
+  let hitDamage =
+    overrideDamage !== null
+      ? overrideDamage
+      : ball.damage *
+        ball.baseDamageMultiplier *
+        ball.equipmentDamageMultiplier;
 
-  if (brick.iceGoblin && runes.ember > 0) {
+  if (brick.iceGoblin && (runes.ember > 0 || progression.equipment.ball === "cinder")) {
     hitDamage *= 2;
   }
 
@@ -1545,8 +1620,8 @@ function damageBrick(brick) {
   brick.hitFlash = 0.12;
 
   if (
-    runes.ember > 0 &&
-    (brick.iceGoblin || progression.equipment.ball === "cinder")
+    runes.ember > 0 ||
+    progression.equipment.ball === "cinder"
   ) {
     fireExplosion(
       brick.x + brick.width / 2,
@@ -1814,6 +1889,7 @@ function loseBall() {
   if (gameState === "lost") return;
 
   resetHitCombo();
+  ball.pierceDamageRemaining = 0;
 
   ballsLeft = Math.max(0, ballsLeft - 1);
   ball.launched = false;
@@ -2178,8 +2254,8 @@ function drawPlayer() {
   let y = player.y;
 
   if (gameState === "postRewardShake") {
-    x += Math.sin(performance.now() * 0.075) * 8;
-    y += Math.cos(performance.now() * 0.11) * 2;
+    x += Math.sin(performance.now() * 0.022) * 8;
+    y += Math.cos(performance.now() * 0.028) * 2;
   }
 
   ctx.save();
@@ -2369,6 +2445,40 @@ function drawBall() {
   ctx.stroke();
 }
 
+function drawMobImage(image, brick, scaleX = 1, scaleY = 1, yOffset = 0) {
+  if (!(image.complete && image.naturalWidth > 0)) return false;
+
+  const targetW = brick.width * scaleX;
+  const targetH = brick.height * scaleY;
+
+  const imageRatio =
+    image.naturalWidth / image.naturalHeight;
+
+  const targetRatio =
+    targetW / targetH;
+
+  let drawW;
+  let drawH;
+
+  if (imageRatio > targetRatio) {
+    drawW = targetW;
+    drawH = targetW / imageRatio;
+  } else {
+    drawH = targetH;
+    drawW = targetH * imageRatio;
+  }
+
+  ctx.drawImage(
+    image,
+    brick.x + brick.width / 2 - drawW / 2,
+    brick.y + brick.height / 2 - drawH / 2 + yOffset,
+    drawW,
+    drawH
+  );
+
+  return true;
+}
+
 function drawBricks(dt) {
   for (const brick of bricks) {
     if (!brick.alive) continue;
@@ -2407,23 +2517,20 @@ function drawBricks(dt) {
       }
 
       if (brick.raiderBoss) {
-        const bossW = brick.width * 1.48;
-        const bossH = brick.height * 1.82;
-
-        ctx.drawImage(
+        drawMobImage(
           raiderImage,
-          brick.x + brick.width / 2 - bossW / 2,
-          brick.y + brick.height / 2 - bossH / 2 - 8,
-          bossW,
-          bossH
+          brick,
+          1.55,
+          1.85,
+          -6
         );
       } else {
-        ctx.drawImage(
+        drawMobImage(
           gobImage,
-          brick.x,
-          brick.y - 10,
-          brick.width,
-          brick.height + 20
+          brick,
+          1.0,
+          1.20,
+          -3
         );
       }
 
@@ -2591,89 +2698,18 @@ resetRun();
 gameState = "lobby";
 runLobby.classList.remove("hidden");
 updateLobbyUI();
-requestAnimationFrame(gameLoop);function fireEnemyShot(enemy) {
-  const x = enemy.x + enemy.width / 2;
-  const y = enemy.y + enemy.height;
-
-  if (enemy.raiderBoss) {
-    // Raider archetype: bows aim directly at the trolley instead of firing straight down.
-    const targetX = player.x;
-    const targetY = player.y - 20;
-    const dx = targetX - x;
-    const dy = targetY - y;
-    const len = Math.hypot(dx, dy) || 1;
-    const speed = enemy.armor > 0 ? 360 : 430;
-
-    enemyProjectiles.push({
-      x, y,
-      radius: 11,
-      vx: dx / len * speed,
-      vy: dy / len * speed,
-      type: "arrow",
-      angle: Math.atan2(dy, dx)
-    });
-    return;
-  }
-
-  const isIce = enemy.iceGoblin;
-  const darkRed = enemy.shooterVariant === "spread";
-
-  if (darkRed) {
-    for (const vx of [-125, 0, 125]) {
-      enemyProjectiles.push({
-        x, y, radius: 13, vx, vy: 390, type: "damage"
-      });
-    }
-    return;
-  }
-
-  enemyProjectiles.push({
-    x, y,
-    radius: isIce ? 15 : 13,
-    vx: 0,
-    vy: isIce ? 320 : 380,
-    type: isIce ? "ice" : "damage"
-  });
-};
-
-function saveSettings() {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(gameSettings));
-}
-
-function applySoundSettings() {
-  bgMusic.volume = gameSettings.musicMuted
-    ? 0
-    : gameSettings.musicVolume / 100;
-
-  hitSound.volume = gameSettings.sfxMuted
-    ? 0
-    : gameSettings.sfxVolume / 100;
-
-  musicVolumeInput.value = gameSettings.musicVolume;
-  sfxVolumeInput.value = gameSettings.sfxVolume;
-  musicVolumeText.textContent = `${gameSettings.musicVolume}%`;
-  sfxVolumeText.textContent = `${gameSettings.sfxVolume}%`;
-
-  muteMusicButton.textContent = gameSettings.musicMuted
-    ? "UNMUTE MUSIC"
-    : "MUTE MUSIC";
-
-  muteSfxButton.textContent = gameSettings.sfxMuted
-    ? "UNMUTE SFX"
-    : "MUTE SFX";
-}
-
-bgMusic.loop = true;
+requestAnimationFrame(gameLoop);;
 
 
 
-hitSound.preload = "auto";
 
-function playHitSound() {
-  try {
-    hitSound.currentTime = 0;
-    hitSound.play().catch(() => {});
-  } catch (_) {}
-}
+
+
+
+
+
+
+
+
 
 

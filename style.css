@@ -305,21 +305,6 @@ body {
   color: #d8c8ff;
 }
 
-#statsButton {
-  position: absolute;
-  z-index: 18;
-  right: 10px;
-  top: 8%;
-  padding: 7px 9px;
-  border: 2px solid #75658f;
-  border-radius: 9px;
-  background: rgba(31, 26, 40, .88);
-  color: white;
-  font-size: clamp(8px, 1.3vh, 11px);
-  font-weight: 900;
-  cursor: pointer;
-  touch-action: manipulation;
-}
 
 #statsOverlay {
   position: absolute;

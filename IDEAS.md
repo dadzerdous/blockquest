@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.15**
+Current prototype: **v0.15.1**
 
 ## Current Direction
 
@@ -703,3 +703,36 @@ Future concept, not implemented yet:
 - Armor break enrages Raider: faster movement and faster arrows.
 - Support Grey Grunts remain in the boss room.
 - Wider board remains dynamically fitted/centered.
+
+
+## v0.15.1 — Stabilization / Claude Audit Cleanup
+
+Fixed from external code audit:
+
+- Rooms 6+ no longer repeat the Room 5 mini-boss arena.
+  - Temporary fallback is the authored Room 4 formation until Rooms 6–10 are designed.
+  - Treasure routes continue working after Room 5.
+- Removed duplicate top-level function definitions left by iterative patching.
+- Heavy / Quick Gloves now actually affect ball speed.
+- Piercing Ball now uses a damage pool:
+  - excess damage carries through destroyed targets,
+  - ball continues until remaining damage is exhausted,
+  - then the normal bounce occurs.
+- Profile/localStorage JSON loading is protected against malformed save data.
+- Shop gold display restored.
+- Cinder Ball now grants Fire Splash by itself and counts as Fire against Ice enemies.
+- Removed a few dead upgrade/stat remnants from older builds.
+- Post-reward shake has the same anticipation duration but fewer oscillations.
+
+### Mob Art Sizing
+Source PNG dimensions no longer matter.
+
+All enemy art is fit into code-defined gameplay rectangles while preserving image aspect ratio:
+- Grunt uses the same block/collision footprint regardless of PNG resolution.
+- Raider can be rendered larger than its collision cell intentionally.
+- Future Mystic, Barbarian, etc. can each have unique source dimensions without requiring manual image resizing.
+
+### Temporary Content Rule
+Room 5 remains the only Armored Raider mini-boss.
+Rooms 6+ temporarily reuse Room 4 rather than accidentally respawning a broken boss.
+The next content pass should author Rooms 6–10.
