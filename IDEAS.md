@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.9**
+Current prototype: **v0.10**
 
 ## Current Direction
 
@@ -398,3 +398,17 @@ Do not lock these exact effects yet. The important design direction is:
 **Rune + Equipment Slot = specialized effect.**
 
 The current v0.9 rune choices are a temporary bridge until equipment exists.
+
+
+## v0.10 — Equipment Foundation
+
+- Added a between-run Loadout screen.
+- Gloves: Adventurer, Heavy (slower/+damage), Quick (faster/-damage).
+- Balls: Iron, Piercing, Cinder.
+- Piercing begins testing damage carry-through instead of immediate rebound when excess damage remains.
+- Cinder makes Fire splash adjacent targets on every hit.
+- Removed Ice bricks. Ice Goblins are now the first elemental enemy and are weak to Fire.
+- Treasure blocks now reuse normal brick art with a yellow/gold hue.
+- Shop now displays current gold.
+- Patch Up is intended to be limited to one purchase per shop visit.
+- Next major system: physical room exits/path decisions controlled by the adventurer.

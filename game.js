@@ -15,6 +15,15 @@ const bestRoomEl = document.getElementById("bestRoom");
 const lastRunSummaryEl = document.getElementById("lastRunSummary");
 const lobbyTitleEl = document.getElementById("lobbyTitle");
 const lobbySubtitleEl = document.getElementById("lobbySubtitle");
+const openLoadoutButton = document.getElementById("openLoadoutButton");
+const loadoutOverlay = document.getElementById("loadoutOverlay");
+const closeLoadoutButton = document.getElementById("closeLoadout");
+const equipmentPicker = document.getElementById("equipmentPicker");
+const glovesNameEl = document.getElementById("glovesName");
+const glovesEffectEl = document.getElementById("glovesEffect");
+const ballNameEl = document.getElementById("ballName");
+const ballEffectEl = document.getElementById("ballEffect");
+const shopGoldEl = document.getElementById("shopGold");
 const closeStatsBtn = document.getElementById("closeStats");
 const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
@@ -98,6 +107,28 @@ const progression = JSON.parse(localStorage.getItem("spikeTrolleyProgression") |
 if (typeof progression.bestRoom !== "number") progression.bestRoom = 0;
 
 let armorPoints = 0;
+if (!progression.equipment) {
+  progression.equipment = {
+    gloves: "adventurer",
+    ball: "iron",
+    unlocked: { gloves:["adventurer","heavy","quick"], ball:["iron","piercing","cinder"] }
+  };
+  saveProgression();
+}
+const equipmentCatalog = {
+  gloves:{
+    adventurer:{name:"Adventurer Gloves",effect:"Balanced ball handling."},
+    heavy:{name:"Heavy Gloves",effect:"Ball -15% speed, +25% damage."},
+    quick:{name:"Quick Gloves",effect:"Ball +15% speed, -10% damage."}
+  },
+  ball:{
+    iron:{name:"Iron Ball",effect:"Standard rebound."},
+    piercing:{name:"Piercing Ball",effect:"Excess damage carries through destroyed blocks."},
+    cinder:{name:"Cinder Ball",effect:"With Fire, every hit splashes adjacent targets."}
+  }
+};
+let patchBoughtThisVisit = false;
+
 let stateBeforeStats = "waiting";
 
 function xpNeededForLevel(level) {
@@ -192,7 +223,9 @@ const ball = {
   vy: 0,
   launched: false,
   damage: 1,
-  baseDamageMultiplier: 1
+  baseDamageMultiplier: 1,
+  equipmentSpeedMultiplier: 1,
+  equipmentDamageMultiplier: 1
 };
 
 let bricks = [];
@@ -202,21 +235,21 @@ let attackTimer = 0;
 
 const roomLayouts = [
   [
-    "BBIBB",
-    "BMMMB",
-    "BTMIB",
+    "BBBBB",
+    "BMGMB",
+    "BTMBB",
     "BBSBB"
   ],
   [
     "BMBMB",
-    "BIMIB",
-    "MBTBM",
+    "BBMBB",
+    "MGTBM",
     "BBSBB"
   ],
   [
-    "IIMII",
+    "BBMBB",
     "BHBHB",
-    "MMTMM",
+    "MMTGM",
     "BBSBB"
   ]
 ];
@@ -241,7 +274,7 @@ function buildRoom() {
       let isMob = false;
       let shooter = false;
       let treasure = false;
-      let ice = false;
+      let iceGoblin = false;
 
       if (type === "B") hp = 2;
       if (type === "H") hp = 4;
@@ -249,6 +282,12 @@ function buildRoom() {
       if (type === "M") {
         hp = 3;
         isMob = true;
+      }
+
+      if (type === "G") {
+        hp = 5;
+        isMob = true;
+        iceGoblin = true;
       }
 
       if (type === "S") {
@@ -262,11 +301,6 @@ function buildRoom() {
         treasure = true;
       }
 
-      if (type === "I") {
-        hp = 4;
-        ice = true;
-      }
-
       bricks.push({
         x: startX + col * (brickWidth + gap),
         y: startY + row * (brickHeight + gap),
@@ -278,7 +312,7 @@ function buildRoom() {
         isMob,
         shooter,
         treasure,
-        ice,
+        iceGoblin,
         hitFlash: 0,
         type
       });
@@ -289,6 +323,35 @@ function buildRoom() {
   updateHUD();
 }
 
+
+function applyEquipment() {
+  ball.equipmentSpeedMultiplier = 1;
+  ball.equipmentDamageMultiplier = 1;
+  if (progression.equipment.gloves === "heavy") {
+    ball.equipmentSpeedMultiplier = 0.85;
+    ball.equipmentDamageMultiplier = 1.25;
+  } else if (progression.equipment.gloves === "quick") {
+    ball.equipmentSpeedMultiplier = 1.15;
+    ball.equipmentDamageMultiplier = 0.90;
+  }
+}
+function updateLoadoutUI() {
+  const g = equipmentCatalog.gloves[progression.equipment.gloves];
+  const b = equipmentCatalog.ball[progression.equipment.ball];
+  glovesNameEl.textContent=g.name; glovesEffectEl.textContent=g.effect;
+  ballNameEl.textContent=b.name; ballEffectEl.textContent=b.effect;
+}
+function openEquipmentPicker(slot) {
+  equipmentPicker.innerHTML = `<strong>Choose ${slot.toUpperCase()}</strong>`;
+  for (const id of progression.equipment.unlocked[slot] || []) {
+    const item=equipmentCatalog[slot][id], btn=document.createElement("button");
+    btn.className="equipmentChoice";
+    btn.innerHTML=`<strong>${item.name}</strong><small>${item.effect}</small>`;
+    btn.onclick=()=>{progression.equipment[slot]=id;saveProgression();updateLoadoutUI();equipmentPicker.classList.add("hidden");};
+    equipmentPicker.appendChild(btn);
+  }
+  equipmentPicker.classList.remove("hidden");
+}
 function resetRun() {
   roomNumber = 1;
   gold = 0;
@@ -311,6 +374,7 @@ function resetRun() {
   player.speed = player.baseSpeed;
   ball.damage = 1;
   applyPermanentStats();
+  applyEquipment();
   player.hp = player.maxHp;
   player.x = WORLD_WIDTH / 2;
 
@@ -432,6 +496,10 @@ function setPointerPosition(event) {
   pointerX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
 }
 
+openLoadoutButton.addEventListener("click",()=>{runLobby.classList.add("hidden");loadoutOverlay.classList.remove("hidden");updateLoadoutUI();});
+closeLoadoutButton.addEventListener("click",()=>{loadoutOverlay.classList.add("hidden");equipmentPicker.classList.add("hidden");runLobby.classList.remove("hidden");});
+document.querySelectorAll(".equipmentSlot[data-slot]").forEach(b=>b.addEventListener("click",()=>openEquipmentPicker(b.dataset.slot)));
+
 openStatsButton.addEventListener("click", () => {
   runLobby.classList.add("hidden");
   statsOverlay.classList.remove("hidden");
@@ -545,6 +613,8 @@ function updateRuneText() {
 
 function openShop() {
   gameState = "shop";
+  patchBoughtThisVisit = false;
+  document.querySelectorAll('[data-shop="heal"],[data-shop="patch"]').forEach(b=>{b.disabled=false;b.style.opacity="1";});
   messageEl.style.display = "none";
   shopOverlay.classList.remove("hidden");
   updateShopUI();
@@ -772,9 +842,9 @@ function checkBrickCollisions() {
 }
 
 function damageBrick(brick) {
-  let hitDamage = ball.damage * ball.baseDamageMultiplier;
+  let hitDamage = ball.damage * ball.baseDamageMultiplier * ball.equipmentDamageMultiplier;
 
-  if (brick.ice && runes.ember > 0) {
+  if (brick.iceGoblin && runes.ember > 0) {
     hitDamage *= 2;
   }
 
@@ -1062,6 +1132,7 @@ function updateHUD() {
     (hasOvershield ? (shieldReady ? " 💙" : " ♡") : "") +
     (armorPoints > 0 ? ` 🛡️${armorPoints}` : "");
   goldHudEl.textContent = `💰 ${gold}`;
+  if (shopGoldEl) shopGoldEl.textContent = `${gold} 💰`;
 
   const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
   enemyCountEl.textContent = mobsLeft;
@@ -1329,7 +1400,9 @@ function drawBricks(dt) {
 
       // Shooter goblins get a red hue shift so gob1.png can serve as
       // the first reusable mob block asset.
-      if (brick.shooter) {
+      if (brick.iceGoblin) {
+        ctx.filter = "hue-rotate(145deg) saturate(1.35) brightness(1.12)";
+      } else if (brick.shooter) {
         ctx.filter = "hue-rotate(285deg) saturate(1.15)";
       }
 
@@ -1352,51 +1425,14 @@ function drawBricks(dt) {
         ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
       }
     } else if (brick.treasure) {
-      // Visible treasure block: intentionally obvious and optional.
-      ctx.fillStyle = brick.hitFlash > 0 ? "#fff8c2" : "#d9ad28";
-      ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
-
-      ctx.strokeStyle = "#ffe77c";
-      ctx.lineWidth = 5;
-      ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
-
-      ctx.fillStyle = "#fff0a2";
-      ctx.font = "bold 34px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("💰", brick.x + brick.width / 2, brick.y + 44);
-      ctx.textAlign = "start";
-    } else if (brick.ice) {
       const damaged = brick.hp <= brick.maxHp * 0.5;
-
-      ctx.fillStyle = brick.hitFlash > 0
-        ? "#ffffff"
-        : damaged
-          ? "#78a9c7"
-          : "#b9e8f7";
-
-      ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
-
-      ctx.strokeStyle = "#e8fbff";
-      ctx.lineWidth = 5;
-      ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
-
-      ctx.strokeStyle = "rgba(65, 125, 165, .72)";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(brick.x + 15, brick.y + 12);
-      ctx.lineTo(brick.x + brick.width * .48, brick.y + brick.height * .55);
-      ctx.lineTo(brick.x + brick.width - 18, brick.y + 18);
-      ctx.moveTo(brick.x + brick.width * .48, brick.y + brick.height * .55);
-      ctx.lineTo(brick.x + brick.width * .62, brick.y + brick.height - 8);
-      ctx.stroke();
-
-      if (runes.ember > 0) {
-        ctx.fillStyle = "#ff9d3f";
-        ctx.font = "bold 18px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("🔥 WEAK", brick.x + brick.width / 2, brick.y + 24);
-        ctx.textAlign = "start";
-      }
+      const img = damaged ? brick2Image : brick1Image;
+      ctx.save();
+      ctx.filter = "hue-rotate(35deg) saturate(1.9) brightness(1.18)";
+      if (brick.hitFlash > 0) ctx.globalAlpha = 0.65;
+      if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, brick.x, brick.y, brick.width, brick.height);
+      else { ctx.fillStyle="#c79d31"; ctx.fillRect(brick.x,brick.y,brick.width,brick.height); }
+      ctx.restore();
     } else {
       const damaged = brick.hp <= brick.maxHp * 0.5;
       const img = damaged ? brick2Image : brick1Image;
@@ -1441,9 +1477,7 @@ function drawBricks(dt) {
         ? "#e45757"
         : brick.treasure
           ? "#ffe77c"
-          : brick.ice
-            ? "#8edaf0"
-            : "#bcae9b";
+          : "#bcae9b";
 
       ctx.fillRect(
         brick.x + 10,
@@ -1552,6 +1586,7 @@ function gameLoop(timestamp) {
 }
 
 updateStatsUI();
+updateLoadoutUI();
 updateRuneText();
 resetRun();
 gameState = "lobby";

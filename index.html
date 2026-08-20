@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.9</title>
+  <title>Spike Trolley RPG v0.10</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,7 +20,7 @@
       <div id="message">TAP / CLICK TO LAUNCH</div>
       <button id="glueButton" class="hidden">🧲 GLUE <span id="glueButtonCount">0</span></button>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.9</div>
+      <div id="versionBadge">v0.10</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
 
 
@@ -50,9 +50,31 @@
           <div class="lobbyActions">
             <button id="startRunButton" class="primaryLobbyButton">START RUN</button>
             <button id="openStatsButton" class="secondaryLobbyButton">⭐ ALLOCATE STATS</button>
+            <button id="openLoadoutButton" class="secondaryLobbyButton">🎒 LOADOUT</button>
           </div>
 
           <div id="lastRunSummary" class="lastRunSummary hidden"></div>
+        </div>
+      </div>
+
+
+      <div id="loadoutOverlay" class="hidden">
+        <div class="upgradePanel loadoutPanel">
+          <div class="eyebrow">BETWEEN RUNS</div>
+          <h1>Equipment Loadout</h1>
+          <p>Equipment is permanent. Swap freely before starting a run.</p>
+          <div class="equipmentGrid">
+            <button class="equipmentSlot" data-slot="gloves"><span>🧤 GLOVES</span><strong id="glovesName">Adventurer Gloves</strong><small id="glovesEffect">Balanced ball handling.</small></button>
+            <button class="equipmentSlot" data-slot="ball"><span>⚪ BALL</span><strong id="ballName">Iron Ball</strong><small id="ballEffect">Standard rebound.</small></button>
+            <button class="equipmentSlot lockedSlot"><span>🪖 HELMET</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>🥋 CHEST</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>👢 BOOTS</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>💍 RING</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>📿 AMULET</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>🛒 TROLLEY</span><strong>Coming soon</strong></button>
+          </div>
+          <div id="equipmentPicker" class="equipmentPicker hidden"></div>
+          <button id="closeLoadout" class="leaveShop">BACK</button>
         </div>
       </div>
 
