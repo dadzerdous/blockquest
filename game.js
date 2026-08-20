@@ -27,6 +27,9 @@ const shopGoldEl = document.getElementById("shopGold");
 const livesHudEl = document.getElementById("livesHud");
 const ballShopStatusEl = document.getElementById("ballShopStatus");
 const pathHintEl = document.getElementById("pathHint");
+const comboHudEl = document.getElementById("comboHud");
+const comboCountEl = document.getElementById("comboCount");
+const comboXpEl = document.getElementById("comboXp");
 const closeStatsBtn = document.getElementById("closeStats");
 const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
@@ -269,6 +272,52 @@ let attackTimer = 0;
 let ballsLeft = 3;
 const maxBalls = 3;
 
+let hitCombo = 0;
+let comboXpEarned = 0;
+
+function resetHitCombo() {
+  hitCombo = 0;
+  comboXpEarned = 0;
+  updateComboHUD();
+}
+
+function registerComboHit() {
+  hitCombo += 1;
+
+  // Small permanent-XP reward for keeping the ball alive and chaining hits.
+  // The reward grows gently at 5/10/20-hit thresholds.
+  let xp = 1;
+  if (hitCombo >= 20) xp = 4;
+  else if (hitCombo >= 10) xp = 3;
+  else if (hitCombo >= 5) xp = 2;
+
+  comboXpEarned += xp;
+  addXP(xp);
+  updateComboHUD();
+
+  if (hitCombo === 5 || hitCombo === 10 || hitCombo === 20) {
+    createFloatingText(
+      ball.x,
+      ball.y - 28,
+      `COMBO x${hitCombo}! +${xp} XP`,
+      "#ffe171"
+    );
+  }
+}
+
+function updateComboHUD() {
+  if (!comboHudEl) return;
+
+  if (hitCombo <= 0 || gameState !== "playing") {
+    comboHudEl.classList.add("hidden");
+    return;
+  }
+
+  comboHudEl.classList.remove("hidden");
+  comboCountEl.textContent = `x${hitCombo}`;
+  comboXpEl.textContent = `+${comboXpEarned} XP`;
+}
+
 const roomLayouts = [
   [
     "BBBBB",
@@ -412,6 +461,7 @@ function resetRun() {
   pendingRoomType = "battle";
   gold = 0;
   ballsLeft = maxBalls;
+  resetHitCombo();
   runes = {
     ember: 0,
     impact: 0,
@@ -455,6 +505,7 @@ function resetRun() {
 }
 
 function startRoom() {
+  resetHitCombo();
   exitChoice.active = false;
   exitChoice.chosen = null;
   pathHintEl.classList.add("hidden");
@@ -921,6 +972,7 @@ function checkPaddleCollision() {
     ball.y + ball.radius > top &&
     ball.y - ball.radius < bottom
   ) {
+    resetHitCombo();
     ball.y = top - ball.radius;
 
     if (glueArmed) {
@@ -980,6 +1032,7 @@ function checkBrickCollisions() {
 
 function damageBrick(brick) {
   playHitSound();
+  registerComboHit();
   let hitDamage = ball.damage * ball.baseDamageMultiplier * ball.equipmentDamageMultiplier;
 
   if (brick.iceGoblin && runes.ember > 0) {
@@ -1145,6 +1198,8 @@ function updateProjectiles(dt) {
 function loseBall() {
   if (gameState === "lost") return;
 
+  resetHitCombo();
+
   ballsLeft = Math.max(0, ballsLeft - 1);
   ball.launched = false;
   ball.vx = 0;
@@ -1213,6 +1268,7 @@ function checkVictory() {
   if (mobsLeft === 0 && gameState === "playing") {
     addXP(20);
 
+    resetHitCombo();
     gameState = "exitChoice";
     ball.launched = false;
     ballStuck = false;
@@ -1321,6 +1377,7 @@ function updateHUD() {
   enemyCountEl.textContent = mobsLeft;
 
   updateGlueButton();
+  updateComboHUD();
 }
 
 function drawBackground() {
@@ -1484,7 +1541,7 @@ function drawPlayer() {
     ctx.globalAlpha = 0.45;
   }
 
-  // Overshield still wraps both hero and trolley.
+  // Shield is drawn in world space and should never visually mirror.
   if (shieldReady || shieldShatterTimer > 0) {
     const alpha = shieldReady
       ? 0.85
@@ -1497,9 +1554,9 @@ function drawPlayer() {
     ctx.beginPath();
     ctx.ellipse(
       x,
-      y - 30,
+      y - 22,
       player.width / 2 + 44,
-      112,
+      106,
       0,
       0,
       Math.PI * 2
@@ -1512,7 +1569,13 @@ function drawPlayer() {
     ctx.restore();
   }
 
-  // During path selection the trolley stays parked and the hero is rendered separately below.
+  // Mirror the mounted assembly based on the trolley's last movement direction.
+  const facing = player.facing >= 0 ? 1 : -1;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(facing, 1);
+
   const trolleyW = player.width * 1.24;
   const trolleyH = trolleyBodyImage.naturalWidth > 0
     ? trolleyW * (trolleyBodyImage.naturalHeight / trolleyBodyImage.naturalWidth)
@@ -1521,21 +1584,36 @@ function drawPlayer() {
   if (trolleyBodyImage.complete && trolleyBodyImage.naturalWidth > 0) {
     ctx.drawImage(
       trolleyBodyImage,
-      x - trolleyW / 2,
-      y - trolleyH * 0.48,
+      -trolleyW / 2,
+      -trolleyH * 0.48,
       trolleyW,
       trolleyH
     );
   } else {
     ctx.fillStyle = "#76523c";
-    ctx.fillRect(x - player.width / 2, y - 20, player.width, 40);
+    ctx.fillRect(-player.width / 2, -20, player.width, 40);
   }
 
-  // Mounted hero only during combat/waiting/shop states.
+  // Hero is deliberately much closer to the trolley deck now.
+  // Draw directly in the already-mirrored trolley coordinate system.
   if (gameState !== "exitChoice") {
-    drawHeroSprite(x, y - 105, 1, 0.78);
+    const heroH = 92;
+    const heroW = heroImage.naturalHeight > 0
+      ? heroH * (heroImage.naturalWidth / heroImage.naturalHeight)
+      : 58;
+
+    if (heroImage.complete && heroImage.naturalWidth > 0) {
+      ctx.drawImage(
+        heroImage,
+        -heroW / 2,
+        -trolleyH * 0.36 - heroH + 8,
+        heroW,
+        heroH
+      );
+    }
   }
 
+  ctx.restore();
   ctx.restore();
 }
 

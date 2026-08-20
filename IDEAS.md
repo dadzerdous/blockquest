@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.11**
+Current prototype: **v0.11.1**
 
 ## Current Direction
 
@@ -462,3 +462,21 @@ Classes may ultimately be defined partly by their weapon system:
 - Some may create secondary attacks alongside the ball.
 
 Keep this open until physical dungeon navigation and equipment feel solid.
+
+
+## v0.11.1 — Hit Combo XP + Mounted Art Polish
+
+- Consecutive target hits now build a hit combo.
+- Combo counts brick, treasure, and mob damage.
+- Combo resets when:
+  - Ball returns to the trolley.
+  - Ball is lost.
+  - Room ends.
+- Combo hits award small permanent XP:
+  - x1–4: +1 XP/hit
+  - x5–9: +2 XP/hit
+  - x10–19: +3 XP/hit
+  - x20+: +4 XP/hit
+- Mob kills and room-clear XP remain separate.
+- Mounted hero was lowered so he stands on the trolley instead of floating.
+- Hero + trolley now mirror together based on the trolley's movement direction.

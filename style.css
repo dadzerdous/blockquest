@@ -564,3 +564,32 @@ body {
   white-space: nowrap;
   pointer-events: none;
 }
+
+
+#comboHud {
+  position: absolute;
+  z-index: 16;
+  left: 50%;
+  top: 10.5%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 218, 102, .55);
+  border-radius: 9px;
+  background: rgba(19, 15, 13, .78);
+  color: #d7cfc3;
+  font-size: clamp(9px, 1.35vh, 11px);
+  font-weight: 900;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#comboCount {
+  margin-left: 4px;
+  color: #ffe171;
+  font-size: 1.18em;
+}
+
+#comboXp {
+  margin-left: 6px;
+  color: #d7c8ff;
+}
