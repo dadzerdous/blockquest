@@ -31,6 +31,9 @@ const comboHudEl = document.getElementById("comboHud");
 const comboCountEl = document.getElementById("comboCount");
 const comboXpEl = document.getElementById("comboXp");
 const roomClearBannerEl = document.getElementById("roomClearBanner");
+const bossHudEl = document.getElementById("bossHud");
+const bossBarFillEl = document.getElementById("bossBarFill");
+const bossPhaseEl = document.getElementById("bossPhase");
 const closeStatsBtn = document.getElementById("closeStats");
 const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
@@ -83,6 +86,17 @@ brick1Image.src = "assets/brick1.png";
 
 const brick2Image = new Image();
 brick2Image.src = "assets/brick2.png";
+const bgMusic = new Audio("assets/bgmusic-bq.mp3");
+bgMusic.loop = true;
+bgMusic.volume = 0.34;
+let bgMusicStarted = false;
+
+function ensureBgMusic() {
+  if (bgMusicStarted) return;
+  bgMusicStarted = true;
+  bgMusic.play().catch(() => { bgMusicStarted = false; });
+}
+
 const hitSound = new Audio("assets/click.wav");
 hitSound.preload = "auto";
 
@@ -323,30 +337,53 @@ function updateComboHUD() {
 }
 
 const roomLayouts = [
+  // Battle 1: 2 grey grunts + 1 Fire Grunt. 20 positions.
   [
     "BBBBB",
-    "BMGMB",
-    "BTMBB",
-    "BBSBB"
+    "BMBFB",
+    "BBMBB",
+    "BBBBB"
   ],
+
+  // Battle 2: 2 Ice Grunts + 2 Green Grunts. 20 positions.
+  [
+    "BBIBB",
+    "BGBGB",
+    "BBIBB",
+    "BBBBB"
+  ],
+
+  // Battle 3: 5 grunts — 2 Ice, 1 dark-red Fire, 2 grey.
+  [
+    "BIMIB",
+    "BBDBB",
+    "BIMIB",
+    "BBBBB"
+  ],
+
+  // Battle 4: grey-grunt endurance room before the mini-boss.
   [
     "BMBMB",
     "BBMBB",
-    "MGTBM",
-    "BBRBB"
+    "BMBMB",
+    "BBBBB"
   ],
+
+  // Battle 5: 5x8 Armored Raider arena.
+  // Middle row is deliberately open except for side walls and the Raider.
   [
-    "BBMBB",
-    "BHBHB",
-    "MMTGM",
-    "BBRBB"
+    "BBBBBBBB",
+    "BMBBBMBB",
+    "B..R...B",
+    "BBMBBMBB",
+    "BBBBBBBB"
   ]
 ];
 
 function buildRoom() {
   bricks = [];
 
-  const layout = roomLayouts[(roomNumber - 1) % roomLayouts.length];
+  const layout = roomLayouts[Math.min(roomNumber - 1, roomLayouts.length - 1)];
   const workingLayout = layout.map(row => row.split(""));
 
   if (currentRoomType === "treasure") {
@@ -379,6 +416,9 @@ function buildRoom() {
       let shooter = false;
       let treasure = false;
       let iceGoblin = false;
+      let greenGoblin = false;
+      let darkFireGoblin = false;
+      let raiderBoss = false;
 
       if (type === "B") hp = 2;
       if (type === "H") hp = 4;
@@ -386,12 +426,6 @@ function buildRoom() {
       if (type === "M") {
         hp = 3;
         isMob = true;
-      }
-
-      if (type === "G") {
-        hp = 5;
-        isMob = true;
-        iceGoblin = true;
       }
 
       if (type === "R") {
@@ -419,6 +453,13 @@ function buildRoom() {
         telegraph: 0,
         treasure,
         iceGoblin,
+        greenGoblin,
+        darkFireGoblin,
+        raiderBoss,
+        armor: raiderBoss ? 12 : 0,
+        maxArmor: raiderBoss ? 12 : 0,
+        moveDir: 1,
+        moveSpeed: raiderBoss ? 92 : 0,
         hitFlash: 0,
         type
       });
@@ -430,6 +471,8 @@ function buildRoom() {
       ? `ROOM ${roomNumber} — TREASURE ROUTE`
       : `ROOM ${roomNumber} — GOBLIN OUTPOST`;
   updateHUD();
+  const activeBoss = bricks.find(brick => brick.alive && brick.raiderBoss);
+  updateBossHUD(activeBoss);
 }
 
 
@@ -575,6 +618,7 @@ function launchBall() {
 }
 
 window.addEventListener("keydown", event => {
+  ensureBgMusic();
   keys[event.key.toLowerCase()] = true;
 
   if (event.key === " " || event.key === "Enter") {
@@ -592,6 +636,7 @@ window.addEventListener("keyup", event => {
 });
 
 canvas.addEventListener("pointerdown", event => {
+  ensureBgMusic();
   if (gameState === "upgrade" || gameState === "shop" || gameState === "stats") return;
 
   if (gameState === "exitChoice" || gameState === "roomClear") {
@@ -1070,6 +1115,23 @@ function damageBrick(brick) {
     hitDamage *= 2;
   }
 
+  if (brick.raiderBoss && brick.armor > 0) {
+    const absorbed = Math.min(brick.armor, hitDamage);
+    brick.armor -= absorbed;
+    hitDamage -= absorbed;
+    createFloatingText(
+      brick.x + brick.width / 2,
+      brick.y - 8,
+      brick.armor > 0 ? "ARMOR" : "ARMOR BROKEN!",
+      "#d7c8a8"
+    );
+
+    if (hitDamage <= 0) {
+      brick.hitFlash = 0.12;
+      return;
+    }
+  }
+
   brick.hp -= hitDamage;
   brick.hitFlash = 0.12;
 
@@ -1173,6 +1235,49 @@ function fireExplosion(x, y, sourceBrick) {
 
   updateHUD();
   checkVictory();
+}
+
+function updateBossMovement(dt) {
+  if (gameState !== "playing" || roomNumber !== 5) return;
+
+  const boss = bricks.find(brick => brick.alive && brick.raiderBoss);
+  if (!boss) return;
+
+  // The center lane is open. Destroying side/environment bricks later can expand
+  // this idea into dynamic corridors; for the first boss the Raider owns this lane.
+  const leftLimit = 145;
+  const rightLimit = WORLD_WIDTH - 145 - boss.width;
+  const exposed = boss.armor <= 0;
+  const speed = exposed ? boss.moveSpeed * 1.65 : boss.moveSpeed;
+
+  boss.x += boss.moveDir * speed * dt;
+
+  if (boss.x <= leftLimit) {
+    boss.x = leftLimit;
+    boss.moveDir = 1;
+  } else if (boss.x >= rightLimit) {
+    boss.x = rightLimit;
+    boss.moveDir = -1;
+  }
+
+  updateBossHUD(boss);
+}
+
+function updateBossHUD(boss) {
+  if (!boss || !boss.alive || roomNumber !== 5 || gameState !== "playing") {
+    bossHudEl.classList.add("hidden");
+    return;
+  }
+
+  bossHudEl.classList.remove("hidden");
+  const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
+  bossBarFillEl.style.width = `${hpPct * 100}%`;
+
+  if (boss.armor > 0) {
+    bossPhaseEl.textContent = `ARMOR ${Math.ceil(boss.armor)} / ${boss.maxArmor}`;
+  } else {
+    bossPhaseEl.textContent = "ARMOR BROKEN — RAIDER ENRAGED";
+  }
 }
 
 function updateEnemyAttacks(dt) {
@@ -1292,57 +1397,74 @@ function applyIceSlow() {
 }
 
 function hurtPlayer() {
-  if (player.invincibleTimer > 0 || gameState === "lost") return;
+  if (player.invincibleTimer > 0 || gameState !== "playing") return;
 
   if (shieldReady) {
     shieldReady = false;
     shieldShatterTimer = 0.55;
-    player.invincibleTimer = 0.45;
-    createParticles(player.x, player.y, 34, "#76d5ff");
-    updateHUD();
-    return;
-  }
-
-  if (armorPoints > 0) {
-    armorPoints = Math.max(0, armorPoints - 1);
-    player.invincibleTimer = 0.35;
-    createParticles(player.x, player.y, 18, "#c7cbd4");
-    updateHUD();
+    createParticles(player.x, player.y - 30, 26, "#73d8ff");
+    createFloatingText(player.x, player.y - 70, "SHIELD!", "#9fe8ff");
     return;
   }
 
   player.hp -= 1;
-  player.invincibleTimer = 0.7;
-
-  createParticles(player.x, player.y, 20, "#ff8b8b");
+  player.invincibleTimer = 0.8;
+  createParticles(player.x, player.y - 25, 18, "#ff725f");
   updateHUD();
 
   if (player.hp <= 0) {
+    loseBallFromHP();
+  }
+}
+
+function loseBallFromHP() {
+  ballsLeft = Math.max(0, ballsLeft - 1);
+  resetHitCombo();
+
+  if (ballsLeft <= 0) {
     player.hp = 0;
     gameState = "lost";
     ball.launched = false;
     messageEl.style.display = "block";
-    messageEl.textContent = "DEFEATED — TAP TO START A NEW RUN";
+    messageEl.textContent = "OUT OF BALLS — TAP TO END RUN";
+    updateHUD();
+    return;
   }
+
+  player.hp = player.maxHp;
+  player.invincibleTimer = 1.4;
+  ball.launched = false;
+  ball.vx = 0;
+  ball.vy = 0;
+  ball.x = player.x;
+  ball.y = player.y - 58;
+  gameState = "waiting";
+  messageEl.style.display = "block";
+  messageEl.textContent = `KNOCKED OUT — ${ballsLeft} BALLS LEFT — TAP TO RELAUNCH`;
+  updateHUD();
 }
 
 function checkVictory() {
   const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
 
   if (mobsLeft === 0 && gameState === "playing") {
-    resetHitCombo();
-    addXP(20);
+    addXP(roomNumber === 5 ? 75 : 20);
 
-    gameState = "roomClear";
+    if (roomNumber === 5) {
+      progression.raiderUnlocked = true;
+      saveProgression();
+    }
+    resetHitCombo();
+
     ball.launched = false;
     ballStuck = false;
     enemyProjectiles = [];
-    pendingShot = null;
+    bossHudEl.classList.add("hidden");
 
-    roomClearTimer = 0.9;
-    roomClearRewardPending = true;
-    roomClearBannerEl.classList.remove("hidden");
+    gameState = "upgrade";
     messageEl.style.display = "none";
+    updateRuneText();
+    upgradeOverlay.classList.remove("hidden");
   }
 }
 
@@ -1967,6 +2089,7 @@ function gameLoop(timestamp) {
 
   if (gameState === "playing") {
     updateBall(dt);
+    updateBossMovement(dt);
     updateEnemyAttacks(dt);
     updateProjectiles(dt);
   }

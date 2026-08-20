@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.12**
+Current prototype: **v0.13**
 
 ## Current Direction
 
@@ -535,3 +535,51 @@ First moving enemy:
 The boss introduces movement through spaces opened by destroyed bricks.
 Defeating it unlocks normal Raider-family enemies in later encounters.
 Those Raiders can then receive the same elemental/color variants as other enemy families.
+
+
+## v0.13 — First Authored Section + Armored Raider
+
+### Battles 1–4
+Each uses a deliberately authored 4x5 formation (~20 board positions) instead of recycling the same layout.
+
+- Battle 1: 2 Grey Grunts + 1 Fire Grunt.
+- Battle 2: 2 Ice Grunts + 2 Green Grunts.
+- Battle 3: 2 Ice + 2 Grey + 1 Dark-Red Fire Grunt.
+- Battle 4: Grey-grunt endurance room.
+
+Basic blocks continue filling the board around the enemies.
+
+### Battle 5 — Armored Raider Mini-Boss
+- Unique 5x8 boss arena.
+- Middle row forms an open horizontal Raider lane.
+- Raider begins centered.
+- Other grunts remain in the arena.
+- Raider patrols horizontally.
+- Raider has an armor layer that absorbs damage before HP.
+- Breaking armor enrages the Raider and increases movement speed.
+- Clearing Battle 5 permanently records the Raider archetype as unlocked.
+- Later rooms will add normal Raider enemies to encounter mixes.
+
+### Survival Rule
+- Enemy damage reduces HP.
+- Reaching 0 HP costs one Ball/Life.
+- HP then refills and the player continues the same run.
+- Missing the ball also costs one Ball/Life.
+- The run ends only when the final Ball/Life is lost.
+
+### Audio
+- `assets/bgmusic-bq.mp3` is dungeon background music.
+- Loops during play.
+- Starts after first user interaction for browser/mobile compatibility.
+
+### Reward Flow
+No separate ROOM CLEARED splash.
+The rune/reward screen itself communicates **ROOM CLEARED**.
+
+### Future Class / Weapon Concepts
+- Mystic: gravity/magnet weapon. Finger/touch creates gravitational pull on ball trajectory; trolley may also generate an aura. Overlapping finger + trolley gravity amplifies the effect.
+- Ranger: bow/target-lock direct attack; likely cooldown and/or limited ammo.
+- Paladin: hold-to-block regenerative shield with its own shield HP.
+- Class defines active weapon/ability.
+- Equipment modifies the class/build rather than replacing class identity.
+- Some weapons can use cooldowns, ammo-per-run, or both.
