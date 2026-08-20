@@ -45,6 +45,8 @@ const comboHudEl = document.getElementById("comboHud");
 const comboCountEl = document.getElementById("comboCount");
 const comboXpEl = document.getElementById("comboXp");
 const roomClearBannerEl = document.getElementById("roomClearBanner");
+const weaponCooldownFillEl = document.getElementById("weaponCooldownFill");
+const weaponStatusEl = document.getElementById("weaponStatus");
 const bossHudEl = document.getElementById("bossHud");
 const bossBarFillEl = document.getElementById("bossBarFill");
 const bossPhaseEl = document.getElementById("bossPhase");
@@ -177,7 +179,9 @@ const exitChoice = {
   speed: 390,
   facing: 1,
   hopTimer: 0,
-  chosen: null
+  chosen: null,
+  leftType: "battle",
+  rightType: "treasure"
 };
 
 let runes = {
@@ -433,6 +437,14 @@ const ball = {
 
 let bricks = [];
 let enemyProjectiles = [];
+let playerProjectiles = [];
+
+const rangerWeapon = {
+  cooldown: 2.0,
+  timer: 0,
+  damage: 3,
+  speed: 720
+};
 let particles = [];
 let attackTimer = 0;
 let pendingShot = null;
@@ -529,6 +541,37 @@ const roomLayouts = [
     "BBBBBBBB"
   ]
 ];
+
+function shuffleEnemyPlacements() {
+  if (roomNumber === 5) return;
+
+  const mobs = bricks.filter(brick => brick.alive && brick.isMob);
+  const positions = mobs.map(brick => ({ x: brick.x, y: brick.y }));
+
+  for (let i = positions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
+
+  mobs.forEach((brick, index) => {
+    brick.x = positions[index].x;
+    brick.y = positions[index].y;
+  });
+}
+
+function applyRouteThreat() {
+  if (roomNumber === 5 || currentRoomType !== "hard") return;
+
+  // Hard changes the encounter without simply doubling everything.
+  // Every other mob gains +2 HP for this first tuning pass.
+  const mobs = bricks.filter(brick => brick.isMob);
+  mobs.forEach((brick, index) => {
+    if (index % 2 === 0) {
+      brick.hp += 2;
+      brick.maxHp += 2;
+    }
+  });
+}
 
 function buildRoom() {
   bricks = [];
@@ -696,6 +739,8 @@ function buildRoom() {
         ? `ROOM ${roomNumber} — TREASURE ROUTE`
         : `ROOM ${roomNumber} — GOBLIN OUTPOST`;
 
+  applyRouteThreat();
+  shuffleEnemyPlacements();
   updateHUD();
 
   const activeBoss =
@@ -783,6 +828,8 @@ function resetRun() {
 }
 
 function startRoom() {
+  playerProjectiles = [];
+  rangerWeapon.timer = 0;
   resetHitCombo();
   exitChoice.active = false;
   exitChoice.chosen = null;
@@ -869,6 +916,18 @@ window.addEventListener("keyup", event => {
 canvas.addEventListener("pointerdown", event => {
   ensureBgMusic();
   if (gameState === "upgrade" || gameState === "shop" || gameState === "stats") return;
+
+  if (gameState === "playing") {
+    const rect = canvas.getBoundingClientRect();
+    const worldX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
+    const worldY = ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT;
+    const tappedEnemy = enemyAtWorldPoint(worldX, worldY);
+
+    if (tappedEnemy && fireRangerBow(tappedEnemy)) {
+      event.preventDefault();
+      return;
+    }
+  }
 
   if (gameState === "exitChoice" || gameState === "roomClear") {
     pointerActive = true;
@@ -1325,6 +1384,25 @@ function beginExitChoice() {
   exitChoice.facing = player.facing || 1;
   exitChoice.hopTimer = 0.45;
   exitChoice.chosen = null;
+
+  const routeSets = roomNumber <= 1
+    ? [
+        ["battle", "hard"],
+        ["battle", "treasure"]
+      ]
+    : [
+        ["battle", "hard"],
+        ["battle", "treasure"],
+        ["hard", "treasure"],
+        ["battle", "shop"],
+        ["hard", "shop"],
+        ["treasure", "shop"]
+      ];
+
+  const pair = routeSets[Math.floor(Math.random() * routeSets.length)];
+  exitChoice.leftType = pair[0];
+  exitChoice.rightType = pair[1];
+
   pathHintEl.classList.remove("hidden");
 }
 
@@ -1332,7 +1410,6 @@ function updateExitChoice(dt) {
   if (gameState !== "exitChoice") return;
 
   let move = 0;
-
   if (keys["arrowleft"] || keys["a"]) move -= 1;
   if (keys["arrowright"] || keys["d"]) move += 1;
 
@@ -1343,9 +1420,7 @@ function updateExitChoice(dt) {
     }
   }
 
-  if (move !== 0) {
-    exitChoice.facing = move > 0 ? 1 : -1;
-  }
+  if (move !== 0) exitChoice.facing = move > 0 ? 1 : -1;
 
   if (exitChoice.hopTimer > 0) {
     exitChoice.hopTimer -= dt;
@@ -1355,11 +1430,10 @@ function updateExitChoice(dt) {
   exitChoice.heroX += move * exitChoice.speed * dt;
   exitChoice.heroX = Math.max(70, Math.min(WORLD_WIDTH - 70, exitChoice.heroX));
 
-  // Walking into either doorway commits the route.
   if (exitChoice.heroX <= 125) {
-    chooseDungeonExit("battle");
+    chooseDungeonExit(exitChoice.leftType);
   } else if (exitChoice.heroX >= WORLD_WIDTH - 125) {
-    chooseDungeonExit("treasure");
+    chooseDungeonExit(exitChoice.rightType);
   }
 }
 
@@ -1367,17 +1441,21 @@ function chooseDungeonExit(type) {
   if (gameState !== "exitChoice" || exitChoice.chosen) return;
 
   exitChoice.chosen = type;
-  pendingRoomType = type;
   exitChoice.active = false;
   pathHintEl.classList.add("hidden");
 
-  if (roomNumber % 3 === 0) {
+  if (type === "shop") {
+    // A shop is a stop on the route, not a combat room.
+    // Leaving it continues to the next standard combat room.
+    pendingRoomType = "battle";
     openShop();
-  } else {
-    roomNumber += 1;
-    currentRoomType = pendingRoomType;
-    startRoom();
+    return;
   }
+
+  pendingRoomType = type;
+  roomNumber += 1;
+  currentRoomType = pendingRoomType;
+  startRoom();
 }
 
 function updatePlayer(dt) {
@@ -1796,6 +1874,120 @@ function updateBossHUD(boss) {
   }
 }
 
+function updateRangerWeapon(dt) {
+  rangerWeapon.timer = Math.max(0, rangerWeapon.timer - dt);
+  const ready = rangerWeapon.timer <= 0;
+  const fill = 1 - rangerWeapon.timer / rangerWeapon.cooldown;
+
+  if (weaponCooldownFillEl) {
+    weaponCooldownFillEl.style.width = `${Math.max(0, Math.min(1, fill)) * 100}%`;
+  }
+  if (weaponStatusEl) {
+    weaponStatusEl.textContent = ready
+      ? "BOW READY — TAP ENEMY"
+      : `BOW ${rangerWeapon.timer.toFixed(1)}s`;
+  }
+}
+
+function enemyAtWorldPoint(x, y) {
+  for (let i = bricks.length - 1; i >= 0; i--) {
+    const enemy = bricks[i];
+    if (
+      enemy.alive &&
+      enemy.isMob &&
+      x >= enemy.x &&
+      x <= enemy.x + enemy.width &&
+      y >= enemy.y &&
+      y <= enemy.y + enemy.height
+    ) {
+      return enemy;
+    }
+  }
+  return null;
+}
+
+function fireRangerBow(target) {
+  if (
+    gameState !== "playing" ||
+    rangerWeapon.timer > 0 ||
+    !target ||
+    !target.alive ||
+    !target.isMob
+  ) return false;
+
+  const x = player.x;
+  const y = player.y - 55;
+  const targetX = target.x + target.width / 2;
+  const targetY = target.y + target.height / 2;
+  const dx = targetX - x;
+  const dy = targetY - y;
+  const length = Math.hypot(dx, dy) || 1;
+
+  playerProjectiles.push({
+    x,
+    y,
+    vx: dx / length * rangerWeapon.speed,
+    vy: dy / length * rangerWeapon.speed,
+    radius: 8,
+    damage: rangerWeapon.damage,
+    target
+  });
+
+  rangerWeapon.timer = rangerWeapon.cooldown;
+  return true;
+}
+
+function updatePlayerProjectiles(dt) {
+  for (let i = playerProjectiles.length - 1; i >= 0; i--) {
+    const shot = playerProjectiles[i];
+    shot.x += shot.vx * dt;
+    shot.y += shot.vy * dt;
+
+    const target = shot.target;
+    if (
+      target &&
+      target.alive &&
+      shot.x + shot.radius > target.x &&
+      shot.x - shot.radius < target.x + target.width &&
+      shot.y + shot.radius > target.y &&
+      shot.y - shot.radius < target.y + target.height
+    ) {
+      damageBrick(target, shot.damage);
+      playerProjectiles.splice(i, 1);
+      continue;
+    }
+
+    if (
+      shot.x < -40 || shot.x > WORLD_WIDTH + 40 ||
+      shot.y < -40 || shot.y > WORLD_HEIGHT + 40
+    ) {
+      playerProjectiles.splice(i, 1);
+    }
+  }
+}
+
+function drawPlayerProjectiles() {
+  for (const shot of playerProjectiles) {
+    ctx.save();
+    ctx.translate(shot.x, shot.y);
+    ctx.rotate(Math.atan2(shot.vy, shot.vx));
+    ctx.strokeStyle = "#f2d7a0";
+    ctx.fillStyle = "#f2d7a0";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-16, 0);
+    ctx.lineTo(13, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(15, 0);
+    ctx.lineTo(6, -6);
+    ctx.lineTo(6, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 function updateEnemyAttacks(dt) {
   if (gameState !== "playing") return;
 
@@ -1842,6 +2034,24 @@ function updateEnemyAttacks(dt) {
 function fireEnemyShot(shooter) {
   const x = shooter.x + shooter.width / 2;
   const y = shooter.y + shooter.height;
+
+  if (shooter.raiderBoss) {
+    const targetX = player.x;
+    const targetY = player.y - 20;
+    const dx = targetX - x;
+    const dy = targetY - y;
+    const length = Math.hypot(dx, dy) || 1;
+    const speed = shooter.armor > 0 ? 360 : 430;
+    const vx = dx / length * speed;
+    const vy = dy / length * speed;
+
+    enemyProjectiles.push({
+      x, y, radius: 11, vx, vy,
+      type: "arrow",
+      angle: Math.atan2(vy, vx)
+    });
+    return;
+  }
 
   if (shooter.iceGoblin) {
     enemyProjectiles.push({x,y,radius:15,vx:0,vy:320,type:"ice"});
@@ -2147,65 +2357,56 @@ function drawBackground() {
   ctx.fillRect(WORLD_WIDTH - 28, 110, 28, WORLD_HEIGHT);
 }
 
+function routeDoorInfo(type) {
+  if (type === "hard") return { icon: "🔥", label: "HARD", accent: "#b64d3d", detail: "TOUGHER ENEMIES" };
+  if (type === "treasure") return { icon: "💰", label: "TREASURE", accent: "#c6a23b", detail: "MORE TREASURE" };
+  if (type === "shop") return { icon: "🛒", label: "SHOP", accent: "#6eaa78", detail: "SPEND GOLD" };
+  return { icon: "⚔️", label: "STANDARD", accent: "#9f8355", detail: "STANDARD ROOM" };
+}
+
 function drawExitChoice() {
   if (gameState !== "exitChoice") return;
 
-  // Dim combat field.
   ctx.fillStyle = "rgba(7, 7, 10, .42)";
   ctx.fillRect(0, 110, WORLD_WIDTH, 1040);
 
   const doorY = 870;
   const doorW = 170;
   const doorH = 260;
+  const left = routeDoorInfo(exitChoice.leftType);
+  const right = routeDoorInfo(exitChoice.rightType);
 
-  drawDoor(45, doorY, doorW, doorH, "⚔️", "BATTLE", "#9f8355");
-  drawDoor(WORLD_WIDTH - 45 - doorW, doorY, doorW, doorH, "💰", "TREASURE", "#c6a23b");
+  drawDoor(45, doorY, doorW, doorH, left.icon, left.label, left.accent, left.detail);
+  drawDoor(WORLD_WIDTH - 45 - doorW, doorY, doorW, doorH, right.icon, right.label, right.accent, right.detail);
 
-  // Tiny hop-off arc for the first fraction of a second.
   let heroY = exitChoice.heroY;
   if (exitChoice.hopTimer > 0) {
     const t = 1 - exitChoice.hopTimer / 0.45;
     heroY -= Math.sin(t * Math.PI) * 55;
   }
 
-  drawHeroSprite(
-    exitChoice.heroX,
-    heroY,
-    exitChoice.facing,
-    0.92
-  );
+  drawHeroSprite(exitChoice.heroX, heroY, exitChoice.facing, 0.92);
 }
 
-function drawDoor(x, y, w, h, icon, label, accent) {
+function drawDoor(x, y, w, h, icon, label, accent, detail = "") {
   ctx.save();
-
   ctx.fillStyle = "#151219";
   ctx.fillRect(x, y, w, h);
-
   ctx.strokeStyle = accent;
   ctx.lineWidth = 8;
   ctx.strokeRect(x, y, w, h);
-
   ctx.fillStyle = "rgba(0,0,0,.35)";
   ctx.fillRect(x + 14, y + 14, w - 28, h - 28);
-
   ctx.font = "bold 54px Arial";
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
   ctx.fillText(icon, x + w / 2, y + 95);
-
   ctx.font = "bold 22px Arial";
   ctx.fillStyle = "#f0e6c8";
   ctx.fillText(label, x + w / 2, y + 150);
-
   ctx.font = "bold 13px Arial";
   ctx.fillStyle = "#b9afbd";
-  ctx.fillText(
-    label === "BATTLE" ? "STANDARD ROOM" : "MORE TREASURE",
-    x + w / 2,
-    y + 178
-  );
-
+  ctx.fillText(detail, x + w / 2, y + 178);
   ctx.textAlign = "start";
   ctx.restore();
 }
@@ -2667,6 +2868,8 @@ function gameLoop(timestamp) {
   updateExitChoice(dt);
 
   if (gameState === "playing") {
+    updateRangerWeapon(dt);
+    updatePlayerProjectiles(dt);
     updateBall(dt);
     updateBossMovement(dt);
     updateEnemyAttacks(dt);
@@ -2677,6 +2880,7 @@ function gameLoop(timestamp) {
 
   drawBackground();
   drawBricks(dt);
+  drawPlayerProjectiles();
   drawProjectiles();
   drawRail();
   drawPlayer();

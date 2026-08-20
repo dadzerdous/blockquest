@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.15.2**
+Current prototype: **v0.16**
 
 ## Current Direction
 
@@ -748,3 +748,31 @@ Fixed a regression introduced during the v0.15.1 cleanup:
 - `startRoom()` now correctly calls `updateRuneText()`.
 
 No gameplay/balance changes in this hotfix.
+
+
+## v0.16 — Ranger Weapon + Route Pass
+
+### Ranger
+- First active class prototype is Ranger.
+- Tap/click a living mob to fire the Bow.
+- Bow arrow physically travels from the hero to the selected target.
+- 3 damage, 2-second cooldown, unlimited ammo for this prototype.
+- Enemy taps are consumed by the weapon so the same tap does not also steer/launch.
+- This is intentionally one class first; Mystic gravity and Paladin shield remain later tests.
+
+### Enemy Placement
+- Normal-room board geometry remains authored.
+- Existing mob positions act as enemy sockets.
+- Mob identities are shuffled among those sockets each run.
+- Room 5 boss placement remains fully hard-coded.
+
+### Route Choices
+- Shop is no longer an automatic every-third-room interruption.
+- Physical route doors can now offer Standard, Hard, Treasure, or Shop.
+- Shop does not increment the combat room by itself; leaving it advances to the next combat room.
+- Shop is excluded from the first route choice.
+- Hard currently adds +2 HP to alternating mobs as an initial threat-budget prototype.
+- Treasure retains the extra yellow-hued treasure-brick behavior.
+
+### v0.16 Compatibility Fix
+- Preserves/restores the Raider Archer aimed-arrow behavior: the Room 5 Raider aims at the trolley at release time instead of firing straight down.
