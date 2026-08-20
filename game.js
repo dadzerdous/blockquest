@@ -417,7 +417,8 @@ const player = {
   facing: 1,
   runTimer: 0,
   slowTimer: 0,
-  slowMultiplier: 1
+  slowMultiplier: 1,
+  slowStacks: 0
 };
 
 const ball = {
@@ -809,6 +810,7 @@ function resetRun() {
   player.x = WORLD_WIDTH / 2;
   player.slowTimer = 0;
   player.slowMultiplier = 1;
+  player.slowStacks = 0;
 
   ball.launched = false;
   ball.vx = 0;
@@ -837,6 +839,7 @@ function startRoom() {
   player.x = WORLD_WIDTH / 2;
   player.slowTimer = 0;
   player.slowMultiplier = 1;
+  player.slowStacks = 0;
 
   ball.launched = false;
   ballStuck = false;
@@ -1479,8 +1482,15 @@ function updatePlayer(dt) {
 
   if (player.slowTimer > 0) {
     player.slowTimer -= dt;
-    player.slowMultiplier = 0.70;
+    const slowByStack = [1, 0.75, 0.58, 0.40];
+    player.slowMultiplier = slowByStack[Math.min(3, player.slowStacks || 0)];
+
+    if (player.slowTimer <= 0) {
+      player.slowStacks = 0;
+      player.slowMultiplier = 1;
+    }
   } else {
+    player.slowStacks = 0;
     player.slowMultiplier = 1;
   }
 
@@ -1618,7 +1628,7 @@ function checkBrickCollisions() {
 
       const hpBefore = brick.hp + (brick.raiderBoss ? brick.armor : 0);
 
-      damageBrick(brick, damageToApply);
+      damageBrick(brick, damageToApply, "ball");
 
       if (equippedPiercing) {
         ball.pierceDamageRemaining =
@@ -1663,9 +1673,18 @@ function checkBrickCollisions() {
   }
 }
 
-function damageBrick(brick, overrideDamage = null) {
+function damageBrick(brick, overrideDamage = null, source = "ball") {
+  if (!brick || !brick.alive) return;
+
   playHitSound();
-  registerComboHit();
+
+  const isBallDamage = source === "ball";
+
+  // Ball combo XP is separate from class weapon damage.
+  if (isBallDamage) {
+    registerComboHit();
+  }
+
   let hitDamage =
     overrideDamage !== null
       ? overrideDamage
@@ -1673,14 +1692,23 @@ function damageBrick(brick, overrideDamage = null) {
         ball.baseDamageMultiplier *
         ball.equipmentDamageMultiplier;
 
-  if (brick.iceGoblin && (runes.ember > 0 || progression.equipment.ball === "cinder")) {
+  const ballHasFire =
+    isBallDamage &&
+    (
+      runes.ember > 0 ||
+      progression.equipment.ball === "cinder"
+    );
+
+  if (brick.iceGoblin && ballHasFire) {
     hitDamage *= 2;
   }
 
+  // Armor is universal defense; both Ball and weapon damage can break it.
   if (brick.raiderBoss && brick.armor > 0) {
     const absorbed = Math.min(brick.armor, hitDamage);
     brick.armor -= absorbed;
     hitDamage -= absorbed;
+
     createFloatingText(
       brick.x + brick.width / 2,
       brick.y - 8,
@@ -1690,6 +1718,7 @@ function damageBrick(brick, overrideDamage = null) {
 
     if (hitDamage <= 0) {
       brick.hitFlash = 0.12;
+      updateBossHUD(brick);
       return;
     }
   }
@@ -1697,10 +1726,8 @@ function damageBrick(brick, overrideDamage = null) {
   brick.hp -= hitDamage;
   brick.hitFlash = 0.12;
 
-  if (
-    runes.ember > 0 ||
-    progression.equipment.ball === "cinder"
-  ) {
+  // Ball-only elemental/equipment effects.
+  if (ballHasFire) {
     fireExplosion(
       brick.x + brick.width / 2,
       brick.y + brick.height / 2,
@@ -1752,6 +1779,7 @@ function damageBrick(brick, overrideDamage = null) {
     checkVictory();
   }
 
+  if (brick.raiderBoss) updateBossHUD(brick);
   updateHUD();
 }
 
@@ -1952,7 +1980,7 @@ function updatePlayerProjectiles(dt) {
       shot.y + shot.radius > target.y &&
       shot.y - shot.radius < target.y + target.height
     ) {
-      damageBrick(target, shot.damage);
+      damageBrick(target, shot.damage, "weapon");
       playerProjectiles.splice(i, 1);
       continue;
     }
@@ -2122,10 +2150,20 @@ function loseBall() {
 }
 
 function applyIceSlow() {
-  player.slowTimer = Math.max(player.slowTimer, 3);
-  player.slowMultiplier = 0.70;
+  // Stack Ice up to three times; each hit refreshes the duration.
+  player.slowStacks = Math.min(3, (player.slowStacks || 0) + 1);
+  player.slowTimer = 3;
+
+  const slowByStack = [1, 0.75, 0.58, 0.40];
+  player.slowMultiplier = slowByStack[player.slowStacks];
+
   createParticles(player.x, player.y, 28, "#9de7ff");
-  createFloatingText(player.x, player.y - 45, "SLOWED!", "#bceeff");
+  createFloatingText(
+    player.x,
+    player.y - 45,
+    player.slowStacks > 1 ? `FROZEN x${player.slowStacks}!` : "SLOWED!",
+    "#bceeff"
+  );
 }
 
 function hurtPlayer() {
@@ -2460,6 +2498,11 @@ function drawPlayer() {
   }
 
   ctx.save();
+  if (player.slowTimer > 0 && player.slowStacks > 0) {
+    const frost = 1 + player.slowStacks * 0.28;
+    ctx.filter = `hue-rotate(155deg) saturate(${frost}) brightness(1.12)`;
+  }
+
 
   if (
     player.invincibleTimer > 0 &&
@@ -2718,13 +2761,17 @@ function drawBricks(dt) {
       }
 
       if (brick.raiderBoss) {
-        drawMobImage(
-          raiderImage,
-          brick,
-          1.55,
-          1.85,
-          -6
-        );
+        // Raider has different source dimensions/padding; force exact cell size
+        // so its prison block matches every other enemy block.
+        if (raiderImage.complete && raiderImage.naturalWidth > 0) {
+          ctx.drawImage(
+            raiderImage,
+            brick.x,
+            brick.y - 3,
+            brick.width,
+            brick.height + 6
+          );
+        }
       } else {
         drawMobImage(
           gobImage,
@@ -2779,6 +2826,35 @@ function drawBricks(dt) {
         ctx.fillStyle = damaged ? "#7b3f31" : "#b35042";
         ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
       }
+    }
+
+    if (brick.raiderBoss && brick.armor > 0) {
+      ctx.save();
+      const pulse = 0.78 + Math.sin(performance.now() * 0.006) * 0.10;
+
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = "#aeb4bb";
+      ctx.lineWidth = 7;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = "#9299a1";
+
+      ctx.strokeRect(
+        brick.x - 7,
+        brick.y - 9,
+        brick.width + 14,
+        brick.height + 18
+      );
+
+      ctx.globalAlpha = 0.09;
+      ctx.fillStyle = "#c5c9cd";
+      ctx.fillRect(
+        brick.x - 5,
+        brick.y - 7,
+        brick.width + 10,
+        brick.height + 14
+      );
+
+      ctx.restore();
     }
 
     if (brick.maxHp > 1) {

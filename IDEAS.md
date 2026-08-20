@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.16**
+Current prototype: **v0.16.1**
 
 ## Current Direction
 
@@ -776,3 +776,40 @@ No gameplay/balance changes in this hotfix.
 
 ### v0.16 Compatibility Fix
 - Preserves/restores the Raider Archer aimed-arrow behavior: the Room 5 Raider aims at the trolley at release time instead of firing straight down.
+
+
+## v0.16.1 — Freeze / Damage Sources / Raider Visuals
+
+### Freeze Stacking
+- Ice slow stacks up to 3 times.
+- Each Ice hit refreshes the 3-second duration.
+- 1 stack = 75% movement speed.
+- 2 stacks = 58% movement speed.
+- 3 stacks = 40% movement speed.
+- Hero + trolley are tinted increasingly blue while frozen.
+- Freeze is capped so the player can never be slowed below 40%.
+
+### Separate Damage Sources
+Ball damage and class-weapon damage are now separate systems.
+
+**Ball damage can:**
+- use ball damage stats/equipment,
+- trigger Ember/Cinder,
+- exploit Ball elemental weaknesses,
+- trigger Fire splash,
+- build Ball combo XP,
+- use Ball piercing.
+
+**Ranger Bow weapon damage:**
+- deals its own direct weapon damage,
+- does not inherit ball Fire,
+- does not trigger Cinder/Ember splash,
+- does not use Ball piercing,
+- does not add Ball combo XP.
+
+Raider armor remains universal defense and can be damaged by either source.
+
+### Raider Visuals
+- Raider image is forced into the exact same gameplay cell dimensions as Grunt enemy blocks, regardless of source PNG dimensions or padding.
+- While Raider armor remains, a pulsing grey shield outline surrounds the block.
+- Shield disappears immediately when armor breaks.
