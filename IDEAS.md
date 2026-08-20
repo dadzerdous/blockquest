@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.15.1**
+Current prototype: **v0.15.2**
 
 ## Current Direction
 
@@ -736,3 +736,15 @@ All enemy art is fit into code-defined gameplay rectangles while preserving imag
 Room 5 remains the only Armored Raider mini-boss.
 Rooms 6+ temporarily reuse Room 4 rather than accidentally respawning a broken boss.
 The next content pass should author Rooms 6–10.
+
+
+## v0.15.2 — Portal Freeze Hotfix
+
+Fixed a regression introduced during the v0.15.1 cleanup:
+
+- `updateUpgradeText()` was removed as dead legacy code.
+- `startRoom()` still called the removed function.
+- Entering a dungeon portal eventually calls `startRoom()`, causing a runtime ReferenceError and making the transition appear frozen.
+- `startRoom()` now correctly calls `updateRuneText()`.
+
+No gameplay/balance changes in this hotfix.

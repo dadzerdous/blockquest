@@ -807,7 +807,7 @@ function startRoom() {
   gameState = "waiting";
 
   buildRoom();
-  updateUpgradeText();
+  updateRuneText();
   updateShopUI();
 
   messageEl.style.display = "block";
