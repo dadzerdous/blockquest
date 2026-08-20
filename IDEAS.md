@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.10**
+Current prototype: **v0.10.1**
 
 ## Current Direction
 
@@ -412,3 +412,19 @@ The current v0.9 rune choices are a temporary bridge until equipment exists.
 - Shop now displays current gold.
 - Patch Up is intended to be limited to one purchase per shop visit.
 - Next major system: physical room exits/path decisions controlled by the adventurer.
+
+
+## v0.10.1 — HP / Balls + Ice Attack + Hit Sound
+
+- `assets/click.wav` is now referenced for ball impacts with the trolley and bricks/mobs.
+- HP and ball lives are separate systems.
+- Runs begin with 3 balls.
+- Missing the ball removes one ball, not HP.
+- The run ends if HP reaches 0 OR the player loses the final ball.
+- Enemy damaging attacks continue to target HP.
+- Ice Goblins now fire a distinct ice projectile.
+- Ice projectile does no HP damage; it slows trolley movement by 30% for 3 seconds.
+- Added visible slow feedback.
+- Shop can restore one lost ball for 10 gold.
+- Patch Up is limited to one purchase per shop visit.
+- Fixed Cinder Ball Fire Splash so Fire splashes on every hit while Cinder is equipped.

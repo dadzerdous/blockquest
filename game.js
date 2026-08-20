@@ -24,6 +24,8 @@ const glovesEffectEl = document.getElementById("glovesEffect");
 const ballNameEl = document.getElementById("ballName");
 const ballEffectEl = document.getElementById("ballEffect");
 const shopGoldEl = document.getElementById("shopGold");
+const livesHudEl = document.getElementById("livesHud");
+const ballShopStatusEl = document.getElementById("ballShopStatus");
 const closeStatsBtn = document.getElementById("closeStats");
 const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
@@ -70,6 +72,16 @@ brick1Image.src = "assets/brick1.png";
 
 const brick2Image = new Image();
 brick2Image.src = "assets/brick2.png";
+const hitSound = new Audio("assets/click.wav");
+hitSound.preload = "auto";
+
+function playHitSound() {
+  try {
+    hitSound.currentTime = 0;
+    hitSound.play().catch(() => {});
+  } catch (_) {}
+}
+
 
 let gameState = "waiting";
 let lastTime = 0;
@@ -211,7 +223,9 @@ const player = {
   maxHp: 5,
   invincibleTimer: 0,
   facing: 1,
-  runTimer: 0
+  runTimer: 0,
+  slowTimer: 0,
+  slowMultiplier: 1
 };
 
 const ball = {
@@ -232,6 +246,8 @@ let bricks = [];
 let enemyProjectiles = [];
 let particles = [];
 let attackTimer = 0;
+let ballsLeft = 3;
+const maxBalls = 3;
 
 const roomLayouts = [
   [
@@ -355,6 +371,7 @@ function openEquipmentPicker(slot) {
 function resetRun() {
   roomNumber = 1;
   gold = 0;
+  ballsLeft = maxBalls;
   runes = {
     ember: 0,
     impact: 0,
@@ -377,6 +394,8 @@ function resetRun() {
   applyEquipment();
   player.hp = player.maxHp;
   player.x = WORLD_WIDTH / 2;
+  player.slowTimer = 0;
+  player.slowMultiplier = 1;
 
   ball.launched = false;
   ball.vx = 0;
@@ -397,6 +416,8 @@ function resetRun() {
 
 function startRoom() {
   player.x = WORLD_WIDTH / 2;
+  player.slowTimer = 0;
+  player.slowMultiplier = 1;
 
   ball.launched = false;
   ballStuck = false;
@@ -645,9 +666,16 @@ function buyShopItem(type) {
   }
 
   if (type === "heal") {
-    if (gold < 6 || player.hp >= player.maxHp) return;
+    if (patchBoughtThisVisit || gold < 6 || player.hp >= player.maxHp) return;
     gold -= 6;
     player.hp = Math.min(player.maxHp, player.hp + 2);
+    patchBoughtThisVisit = true;
+  }
+
+  if (type === "ball") {
+    if (gold < 10 || ballsLeft >= maxBalls) return;
+    gold -= 10;
+    ballsLeft += 1;
   }
 
   updateHUD();
@@ -657,15 +685,20 @@ function buyShopItem(type) {
 function updateShopUI() {
   shieldOwnedEl.textContent = hasOvershield ? "OWNED — recharges each room" : "Not owned";
   glueCountEl.textContent = `Charges: ${glueCharges}`;
-  healStatusEl.textContent = `HP: ${player.hp} / ${player.maxHp}`;
+  healStatusEl.textContent = patchBoughtThisVisit
+    ? `PURCHASED THIS VISIT — HP: ${player.hp} / ${player.maxHp}`
+    : `HP: ${player.hp} / ${player.maxHp}`;
+  if (ballShopStatusEl) ballShopStatusEl.textContent = `Balls: ${ballsLeft} / ${maxBalls}`;
 
   const shieldBtn = document.querySelector('[data-shop="overshield"]');
   const glueBtn = document.querySelector('[data-shop="glue"]');
   const healBtn = document.querySelector('[data-shop="heal"]');
+  const ballBtn = document.querySelector('[data-shop="ball"]');
 
   if (shieldBtn) shieldBtn.disabled = hasOvershield || gold < 12;
   if (glueBtn) glueBtn.disabled = gold < 8;
-  if (healBtn) healBtn.disabled = gold < 6 || player.hp >= player.maxHp;
+  if (healBtn) healBtn.disabled = patchBoughtThisVisit || gold < 6 || player.hp >= player.maxHp;
+  if (ballBtn) ballBtn.disabled = gold < 10 || ballsLeft >= maxBalls;
 
   updateGlueButton();
 }
@@ -700,7 +733,14 @@ function updatePlayer(dt) {
     }
   }
 
-  player.velocityX = move * player.speed;
+  if (player.slowTimer > 0) {
+    player.slowTimer -= dt;
+    player.slowMultiplier = 0.70;
+  } else {
+    player.slowMultiplier = 1;
+  }
+
+  player.velocityX = move * player.speed * player.slowMultiplier;
   player.x += player.velocityX * dt;
 
   const halfWidth = player.width / 2;
@@ -753,17 +793,7 @@ function updateBall(dt) {
   }
 
   if (ball.y > WORLD_HEIGHT + 50) {
-    hurtPlayer();
-
-    if (gameState !== "lost") {
-      ball.launched = false;
-      ball.vx = 0;
-      ball.vy = 0;
-      gameState = "waiting";
-      messageEl.style.display = "block";
-      messageEl.textContent = "BALL LOST — TAP TO LAUNCH";
-    }
-
+    loseBall();
     return;
   }
 
@@ -807,6 +837,7 @@ function checkPaddleCollision() {
     ball.vx = Math.sin(angle) * ball.speed;
     ball.vy = -Math.cos(angle) * ball.speed;
 
+    playHitSound();
     createParticles(ball.x, ball.y, 8, "#f7d98a");
   }
 }
@@ -842,6 +873,7 @@ function checkBrickCollisions() {
 }
 
 function damageBrick(brick) {
+  playHitSound();
   let hitDamage = ball.damage * ball.baseDamageMultiplier * ball.equipmentDamageMultiplier;
 
   if (brick.iceGoblin && runes.ember > 0) {
@@ -851,7 +883,10 @@ function damageBrick(brick) {
   brick.hp -= hitDamage;
   brick.hitFlash = 0.12;
 
-  if (runes.ember > 0 && brick.ice) {
+  if (
+    runes.ember > 0 &&
+    (brick.iceGoblin || progression.equipment.ball === "cinder")
+  ) {
     fireExplosion(
       brick.x + brick.width / 2,
       brick.y + brick.height / 2,
@@ -958,16 +993,20 @@ function updateEnemyAttacks(dt) {
 
   attackTimer = 2.25;
 
-  const shooters = bricks.filter(brick => brick.alive && brick.shooter);
-  if (shooters.length === 0) return;
+  const attackers = bricks.filter(
+    brick => brick.alive && (brick.shooter || brick.iceGoblin)
+  );
+  if (attackers.length === 0) return;
 
-  const shooter = shooters[Math.floor(Math.random() * shooters.length)];
+  const shooter = attackers[Math.floor(Math.random() * attackers.length)];
+  const isIce = shooter.iceGoblin;
 
   enemyProjectiles.push({
     x: shooter.x + shooter.width / 2,
     y: shooter.y + shooter.height,
-    radius: 13,
-    vy: 380
+    radius: isIce ? 15 : 13,
+    vy: isIce ? 320 : 380,
+    type: isIce ? "ice" : "damage"
   });
 }
 
@@ -983,7 +1022,11 @@ function updateProjectiles(dt) {
       shot.y - shot.radius < player.y + player.height / 2
     ) {
       enemyProjectiles.splice(i, 1);
-      hurtPlayer();
+      if (shot.type === "ice") {
+        applyIceSlow();
+      } else {
+        hurtPlayer();
+      }
       continue;
     }
 
@@ -991,6 +1034,36 @@ function updateProjectiles(dt) {
       enemyProjectiles.splice(i, 1);
     }
   }
+}
+
+function loseBall() {
+  if (gameState === "lost") return;
+
+  ballsLeft = Math.max(0, ballsLeft - 1);
+  ball.launched = false;
+  ball.vx = 0;
+  ball.vy = 0;
+  updateHUD();
+
+  if (ballsLeft <= 0) {
+    gameState = "lost";
+    messageEl.style.display = "block";
+    messageEl.textContent = "OUT OF BALLS — TAP TO END RUN";
+    return;
+  }
+
+  gameState = "waiting";
+  ball.x = player.x;
+  ball.y = player.y - 58;
+  messageEl.style.display = "block";
+  messageEl.textContent = `BALL LOST — ${ballsLeft} LEFT — TAP TO LAUNCH`;
+}
+
+function applyIceSlow() {
+  player.slowTimer = Math.max(player.slowTimer, 3);
+  player.slowMultiplier = 0.70;
+  createParticles(player.x, player.y, 28, "#9de7ff");
+  createFloatingText(player.x, player.y - 45, "SLOWED!", "#bceeff");
 }
 
 function hurtPlayer() {
@@ -1131,6 +1204,7 @@ function updateHUD() {
   heroShieldEl.textContent =
     (hasOvershield ? (shieldReady ? " 💙" : " ♡") : "") +
     (armorPoints > 0 ? ` 🛡️${armorPoints}` : "");
+  livesHudEl.textContent = ` ⚪ ${ballsLeft}`;
   goldHudEl.textContent = `💰 ${gold}`;
   if (shopGoldEl) shopGoldEl.textContent = `${gold} 💰`;
 
@@ -1492,50 +1566,51 @@ function drawProjectiles() {
   for (const shot of enemyProjectiles) {
     ctx.save();
 
-    // trail
-    const trail = ctx.createLinearGradient(
-      shot.x,
-      shot.y - 38,
-      shot.x,
-      shot.y + 10
-    );
-    trail.addColorStop(0, "rgba(255, 69, 35, 0)");
-    trail.addColorStop(1, "rgba(255, 126, 51, .8)");
+    if (shot.type === "ice") {
+      const trail = ctx.createLinearGradient(shot.x, shot.y - 42, shot.x, shot.y + 8);
+      trail.addColorStop(0, "rgba(125,225,255,0)");
+      trail.addColorStop(1, "rgba(125,225,255,.8)");
+      ctx.strokeStyle = trail;
+      ctx.lineWidth = 11;
+      ctx.beginPath();
+      ctx.moveTo(shot.x, shot.y - 38);
+      ctx.lineTo(shot.x, shot.y - 3);
+      ctx.stroke();
 
-    ctx.strokeStyle = trail;
-    ctx.lineWidth = 12;
-    ctx.beginPath();
-    ctx.moveTo(shot.x, shot.y - 34);
-    ctx.lineTo(shot.x, shot.y - 2);
-    ctx.stroke();
+      ctx.fillStyle = "#8edff5";
+      ctx.beginPath();
+      ctx.moveTo(shot.x, shot.y + shot.radius);
+      ctx.lineTo(shot.x - shot.radius * .7, shot.y - shot.radius * .35);
+      ctx.lineTo(shot.x, shot.y - shot.radius);
+      ctx.lineTo(shot.x + shot.radius * .7, shot.y - shot.radius * .35);
+      ctx.closePath();
+      ctx.fill();
 
-    // outer bolt
-    ctx.fillStyle = "#ff5e35";
-    ctx.beginPath();
-    ctx.ellipse(
-      shot.x,
-      shot.y,
-      shot.radius * .8,
-      shot.radius * 1.35,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+      ctx.fillStyle = "#e8fbff";
+      ctx.beginPath();
+      ctx.arc(shot.x, shot.y - 3, shot.radius * .32, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const trail = ctx.createLinearGradient(shot.x, shot.y - 38, shot.x, shot.y + 10);
+      trail.addColorStop(0, "rgba(255,69,35,0)");
+      trail.addColorStop(1, "rgba(255,126,51,.8)");
+      ctx.strokeStyle = trail;
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.moveTo(shot.x, shot.y - 34);
+      ctx.lineTo(shot.x, shot.y - 2);
+      ctx.stroke();
 
-    // hot center
-    ctx.fillStyle = "#ffd55a";
-    ctx.beginPath();
-    ctx.ellipse(
-      shot.x,
-      shot.y - 2,
-      shot.radius * .35,
-      shot.radius * .75,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+      ctx.fillStyle = "#ff5e35";
+      ctx.beginPath();
+      ctx.ellipse(shot.x, shot.y, shot.radius * .8, shot.radius * 1.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffd55a";
+      ctx.beginPath();
+      ctx.ellipse(shot.x, shot.y - 2, shot.radius * .35, shot.radius * .75, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     ctx.restore();
   }

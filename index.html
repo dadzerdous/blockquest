@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.10</title>
+  <title>Spike Trolley RPG v0.10.1</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="gameShell">
     <div id="gameWrap">
       <div id="hud">
-        <div>HERO <span id="heroHp">❤️ 5 / 5</span><span id="heroShield"></span><span id="goldHud">💰 0</span><span id="levelHud">⭐ Lv 1</span></div>
+        <div>HERO <span id="heroHp">❤️ 5 / 5</span><span id="heroShield"></span><span id="livesHud"> ⚪ 3</span><span id="goldHud">💰 0</span><span id="levelHud">⭐ Lv 1</span></div>
         <div id="roomTitle">ROOM 1 — GOBLIN OUTPOST</div>
         <div>ENEMIES <span id="enemyCount">0</span></div>
       </div>
@@ -20,7 +20,7 @@
       <div id="message">TAP / CLICK TO LAUNCH</div>
       <button id="glueButton" class="hidden">🧲 GLUE <span id="glueButtonCount">0</span></button>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.10</div>
+      <div id="versionBadge">v0.10.1</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
 
 
@@ -170,7 +170,15 @@
             </button>
           </div>
 
-          <button id="leaveShop" class="leaveShop">LEAVE SHOP →</button>
+          
+            <button class="shopCard" data-shop="ball">
+              <span class="upgradeIcon">⚪</span>
+              <strong>SPARE BALL</strong>
+              <span>Restore one lost ball.</span>
+              <small id="ballShopStatus">Balls: 3 / 3</small>
+              <b>10 💰</b>
+            </button>
+<button id="leaveShop" class="leaveShop">LEAVE SHOP →</button>
         </div>
       </div>
 
