@@ -26,6 +26,7 @@ const ballEffectEl = document.getElementById("ballEffect");
 const shopGoldEl = document.getElementById("shopGold");
 const livesHudEl = document.getElementById("livesHud");
 const ballShopStatusEl = document.getElementById("ballShopStatus");
+const pathHintEl = document.getElementById("pathHint");
 const closeStatsBtn = document.getElementById("closeStats");
 const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
@@ -64,6 +65,12 @@ bgImage.src = "assets/bg1.png";
 const trolleyImage = new Image();
 trolleyImage.src = "assets/trolley1.png";
 
+const trolleyBodyImage = new Image();
+trolleyBodyImage.src = "assets/trolley_body.png";
+
+const heroImage = new Image();
+heroImage.src = "assets/hero1.png";
+
 const gobImage = new Image();
 gobImage.src = "assets/gob1.png";
 
@@ -89,6 +96,19 @@ let keys = {};
 let pointerActive = false;
 let pointerX = WORLD_WIDTH / 2;
 let roomNumber = 1;
+
+let pendingRoomType = "battle";
+let currentRoomType = "battle";
+
+const exitChoice = {
+  active: false,
+  heroX: WORLD_WIDTH / 2,
+  heroY: 1110,
+  speed: 390,
+  facing: 1,
+  hopTimer: 0,
+  chosen: null
+};
 
 let runes = {
   ember: 0,
@@ -274,6 +294,21 @@ function buildRoom() {
   bricks = [];
 
   const layout = roomLayouts[(roomNumber - 1) % roomLayouts.length];
+  const workingLayout = layout.map(row => row.split(""));
+
+  if (currentRoomType === "treasure") {
+    // A treasure route guarantees more visible treasure while keeping mobs as the clear objective.
+    let converted = 0;
+    for (let r = 0; r < workingLayout.length && converted < 3; r++) {
+      for (let c = 0; c < workingLayout[r].length && converted < 3; c++) {
+        if (workingLayout[r][c] === "B") {
+          workingLayout[r][c] = "T";
+          converted += 1;
+        }
+      }
+    }
+  }
+
   const brickWidth = 125;
   const brickHeight = 65;
   const gap = 12;
@@ -282,7 +317,7 @@ function buildRoom() {
   const startX = (WORLD_WIDTH - totalWidth) / 2;
   const startY = 210;
 
-  layout.forEach((line, row) => {
+  workingLayout.forEach((line, row) => {
     [...line].forEach((type, col) => {
       if (type === ".") return;
 
@@ -335,7 +370,10 @@ function buildRoom() {
     });
   });
 
-  roomTitleEl.textContent = `ROOM ${roomNumber} — GOBLIN OUTPOST`;
+  roomTitleEl.textContent =
+    currentRoomType === "treasure"
+      ? `ROOM ${roomNumber} — TREASURE ROUTE`
+      : `ROOM ${roomNumber} — GOBLIN OUTPOST`;
   updateHUD();
 }
 
@@ -370,6 +408,8 @@ function openEquipmentPicker(slot) {
 }
 function resetRun() {
   roomNumber = 1;
+  currentRoomType = "battle";
+  pendingRoomType = "battle";
   gold = 0;
   ballsLeft = maxBalls;
   runes = {
@@ -415,6 +455,9 @@ function resetRun() {
 }
 
 function startRoom() {
+  exitChoice.active = false;
+  exitChoice.chosen = null;
+  pathHintEl.classList.add("hidden");
   player.x = WORLD_WIDTH / 2;
   player.slowTimer = 0;
   player.slowMultiplier = 1;
@@ -443,6 +486,8 @@ function startRoom() {
 }
 
 function launchBall() {
+  if (gameState === "exitChoice") return;
+
   if (gameState === "lost") {
     returnToLobby(false);
     return;
@@ -491,6 +536,12 @@ window.addEventListener("keyup", event => {
 
 canvas.addEventListener("pointerdown", event => {
   if (gameState === "upgrade" || gameState === "shop" || gameState === "stats") return;
+
+  if (gameState === "exitChoice") {
+    pointerActive = true;
+    setPointerPosition(event);
+    return;
+  }
 
   pointerActive = true;
   setPointerPosition(event);
@@ -602,6 +653,7 @@ function chooseRune(type) {
     openShop();
   } else {
     roomNumber += 1;
+    currentRoomType = pendingRoomType;
     startRoom();
   }
 }
@@ -646,6 +698,7 @@ function leaveShop() {
 
   shopOverlay.classList.add("hidden");
   roomNumber += 1;
+  currentRoomType = pendingRoomType;
   startRoom();
 }
 
@@ -719,7 +772,60 @@ function updateGlueButton() {
   glueButton.disabled = gameState !== "playing" || glueCharges <= 0 || glueArmed;
 }
 
+function updateExitChoice(dt) {
+  if (gameState !== "exitChoice") return;
+
+  let move = 0;
+
+  if (keys["arrowleft"] || keys["a"]) move -= 1;
+  if (keys["arrowright"] || keys["d"]) move += 1;
+
+  if (pointerActive) {
+    const difference = pointerX - exitChoice.heroX;
+    if (Math.abs(difference) > 8) {
+      move = Math.max(-1, Math.min(1, difference / 90));
+    }
+  }
+
+  if (move !== 0) {
+    exitChoice.facing = move > 0 ? 1 : -1;
+  }
+
+  if (exitChoice.hopTimer > 0) {
+    exitChoice.hopTimer -= dt;
+    return;
+  }
+
+  exitChoice.heroX += move * exitChoice.speed * dt;
+  exitChoice.heroX = Math.max(70, Math.min(WORLD_WIDTH - 70, exitChoice.heroX));
+
+  // Walking into either doorway commits the route.
+  if (exitChoice.heroX <= 125) {
+    chooseDungeonExit("battle");
+  } else if (exitChoice.heroX >= WORLD_WIDTH - 125) {
+    chooseDungeonExit("treasure");
+  }
+}
+
+function chooseDungeonExit(type) {
+  if (gameState !== "exitChoice" || exitChoice.chosen) return;
+
+  exitChoice.chosen = type;
+  pendingRoomType = type;
+  exitChoice.active = false;
+  pathHintEl.classList.add("hidden");
+
+  gameState = "upgrade";
+  updateRuneText();
+  upgradeOverlay.classList.remove("hidden");
+}
+
 function updatePlayer(dt) {
+  if (gameState === "exitChoice") {
+    player.velocityX = 0;
+    return;
+  }
+
   let move = 0;
 
   if (keys["arrowleft"] || keys["a"]) move -= 1;
@@ -1104,20 +1210,23 @@ function hurtPlayer() {
 function checkVictory() {
   const mobsLeft = bricks.filter(brick => brick.alive && brick.isMob).length;
 
-  if (mobsLeft === 0) {
+  if (mobsLeft === 0 && gameState === "playing") {
     addXP(20);
-    gameState = "upgrade";
+
+    gameState = "exitChoice";
     ball.launched = false;
     ballStuck = false;
     enemyProjectiles = [];
-    messageEl.style.display = "none";
-    updateUpgradeText();
 
-    setTimeout(() => {
-      if (gameState === "upgrade") {
-        upgradeOverlay.classList.remove("hidden");
-      }
-    }, 350);
+    exitChoice.active = true;
+    exitChoice.heroX = player.x;
+    exitChoice.heroY = 1110;
+    exitChoice.facing = 1;
+    exitChoice.hopTimer = 0.45;
+    exitChoice.chosen = null;
+
+    messageEl.style.display = "none";
+    pathHintEl.classList.remove("hidden");
   }
 }
 
@@ -1260,6 +1369,69 @@ function drawBackground() {
   ctx.fillRect(WORLD_WIDTH - 28, 110, 28, WORLD_HEIGHT);
 }
 
+function drawExitChoice() {
+  if (gameState !== "exitChoice") return;
+
+  // Dim combat field.
+  ctx.fillStyle = "rgba(7, 7, 10, .42)";
+  ctx.fillRect(0, 110, WORLD_WIDTH, 1040);
+
+  const doorY = 870;
+  const doorW = 170;
+  const doorH = 260;
+
+  drawDoor(45, doorY, doorW, doorH, "⚔️", "BATTLE", "#9f8355");
+  drawDoor(WORLD_WIDTH - 45 - doorW, doorY, doorW, doorH, "💰", "TREASURE", "#c6a23b");
+
+  // Tiny hop-off arc for the first fraction of a second.
+  let heroY = exitChoice.heroY;
+  if (exitChoice.hopTimer > 0) {
+    const t = 1 - exitChoice.hopTimer / 0.45;
+    heroY -= Math.sin(t * Math.PI) * 55;
+  }
+
+  drawHeroSprite(
+    exitChoice.heroX,
+    heroY,
+    exitChoice.facing,
+    0.92
+  );
+}
+
+function drawDoor(x, y, w, h, icon, label, accent) {
+  ctx.save();
+
+  ctx.fillStyle = "#151219";
+  ctx.fillRect(x, y, w, h);
+
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 8;
+  ctx.strokeRect(x, y, w, h);
+
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  ctx.fillRect(x + 14, y + 14, w - 28, h - 28);
+
+  ctx.font = "bold 54px Arial";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(icon, x + w / 2, y + 95);
+
+  ctx.font = "bold 22px Arial";
+  ctx.fillStyle = "#f0e6c8";
+  ctx.fillText(label, x + w / 2, y + 150);
+
+  ctx.font = "bold 13px Arial";
+  ctx.fillStyle = "#b9afbd";
+  ctx.fillText(
+    label === "BATTLE" ? "STANDARD ROOM" : "MORE TREASURE",
+    x + w / 2,
+    y + 178
+  );
+
+  ctx.textAlign = "start";
+  ctx.restore();
+}
+
 function drawRail() {
   const railY = player.y + 70;
 
@@ -1300,6 +1472,9 @@ function drawRail() {
 }
 
 function drawPlayer() {
+  const x = player.x;
+  const y = player.y;
+
   ctx.save();
 
   if (
@@ -1309,10 +1484,7 @@ function drawPlayer() {
     ctx.globalAlpha = 0.45;
   }
 
-  const x = player.x;
-  const y = player.y;
-
-  // Overshield bubble remains code-driven so it can flash/shatter later.
+  // Overshield still wraps both hero and trolley.
   if (shieldReady || shieldShatterTimer > 0) {
     const alpha = shieldReady
       ? 0.85
@@ -1322,7 +1494,6 @@ function drawPlayer() {
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = "#69d0ff";
     ctx.lineWidth = shieldReady ? 9 : 4;
-
     ctx.beginPath();
     ctx.ellipse(
       x,
@@ -1341,42 +1512,51 @@ function drawPlayer() {
     ctx.restore();
   }
 
-  if (trolleyImage.complete && trolleyImage.naturalWidth > 0) {
-    const spriteWidth = player.width * 1.22;
-    const spriteHeight =
-      spriteWidth *
-      (trolleyImage.naturalHeight / trolleyImage.naturalWidth);
+  // During path selection the trolley stays parked and the hero is rendered separately below.
+  const trolleyW = player.width * 1.24;
+  const trolleyH = trolleyBodyImage.naturalWidth > 0
+    ? trolleyW * (trolleyBodyImage.naturalHeight / trolleyBodyImage.naturalWidth)
+    : 92;
 
-    // Bottom-align the wheels slightly below the old paddle collision area.
+  if (trolleyBodyImage.complete && trolleyBodyImage.naturalWidth > 0) {
     ctx.drawImage(
-      trolleyImage,
-      x - spriteWidth / 2,
-      y - spriteHeight * 0.72,
-      spriteWidth,
-      spriteHeight
+      trolleyBodyImage,
+      x - trolleyW / 2,
+      y - trolleyH * 0.48,
+      trolleyW,
+      trolleyH
     );
   } else {
-    // Fallback paddle if the image has not loaded yet.
     ctx.fillStyle = "#76523c";
-    ctx.fillRect(
-      x - player.width / 2,
-      y - player.height / 2,
-      player.width,
-      player.height
-    );
-
-    ctx.strokeStyle = "#c3b8a4";
-    ctx.lineWidth = 6;
-    ctx.strokeRect(
-      x - player.width / 2,
-      y - player.height / 2,
-      player.width,
-      player.height
-    );
-
-    drawDriver(x, y - 28);
+    ctx.fillRect(x - player.width / 2, y - 20, player.width, 40);
   }
 
+  // Mounted hero only during combat/waiting/shop states.
+  if (gameState !== "exitChoice") {
+    drawHeroSprite(x, y - 105, 1, 0.78);
+  }
+
+  ctx.restore();
+}
+
+function drawHeroSprite(x, y, facing = 1, scale = 1) {
+  if (!(heroImage.complete && heroImage.naturalWidth > 0)) {
+    ctx.fillStyle = "#4f7bc4";
+    ctx.fillRect(x - 18, y - 50, 36, 60);
+    return;
+  }
+
+  const h = 118 * scale;
+  const w = h * (heroImage.naturalWidth / heroImage.naturalHeight);
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  if (facing < 0) {
+    ctx.scale(-1, 1);
+  }
+
+  ctx.drawImage(heroImage, -w / 2, -h, w, h);
   ctx.restore();
 }
 
@@ -1640,6 +1820,7 @@ function gameLoop(timestamp) {
   lastTime = timestamp;
 
   updatePlayer(dt);
+  updateExitChoice(dt);
 
   if (gameState === "playing") {
     updateBall(dt);
@@ -1654,7 +1835,11 @@ function gameLoop(timestamp) {
   drawProjectiles();
   drawRail();
   drawPlayer();
-  drawBall();
+  drawExitChoice();
+
+  if (gameState !== "exitChoice") {
+    drawBall();
+  }
   drawParticles();
 
   requestAnimationFrame(gameLoop);

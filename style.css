@@ -546,3 +546,21 @@ body {
 .lockedSlot{opacity:.45}.equipmentPicker{display:grid;gap:7px;margin:12px 0;padding:10px;border:1px solid #51485b;border-radius:10px;background:#151219}
 .equipmentChoice{padding:10px;border:1px solid #655b70;border-radius:8px;background:#2a2430;color:white;text-align:left}
 .equipmentChoice strong,.equipmentChoice small{display:block}.equipmentChoice small{margin-top:4px;color:#bbb2c0}
+
+
+#pathHint {
+  position: absolute;
+  z-index: 19;
+  left: 50%;
+  top: 14%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  border: 1px solid #8d7c9a;
+  border-radius: 9px;
+  background: rgba(16, 13, 20, .85);
+  color: #f3e7ba;
+  font-size: clamp(9px, 1.5vh, 12px);
+  font-weight: 900;
+  white-space: nowrap;
+  pointer-events: none;
+}

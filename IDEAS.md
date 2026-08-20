@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.10.1**
+Current prototype: **v0.11**
 
 ## Current Direction
 
@@ -428,3 +428,37 @@ The current v0.9 rune choices are a temporary bridge until equipment exists.
 - Shop can restore one lost ball for 10 gold.
 - Patch Up is limited to one purchase per shop visit.
 - Fixed Cinder Ball Fire Splash so Fire splashes on every hit while Cinder is equipped.
+
+
+## v0.11 — Split Hero/Trolley + Physical Path Choice
+
+Implemented:
+
+- `assets/hero1.png` and `assets/trolley_body.png` are now rendered independently.
+- During combat the hero is drawn standing on the trolley.
+- Clearing the final mob no longer jumps straight to the rune screen.
+- The ball disappears, combat stops, and the hero hops off the trolley.
+- Player controls the hero left/right using the same keyboard/touch input.
+- Two physical doors appear:
+  - Battle — standard next room.
+  - Treasure — next room contains additional treasure blocks.
+- Walking through a door selects the route.
+- Rune choice appears after the physical route choice.
+- The selected room type is then entered.
+
+### Equipment Ideas — Parked
+
+- Helmets can grant a **percentage chance to block incoming damage**.
+- Some future weapons can use **ammo + cooldown** rather than behaving like the always-active ball.
+- These should be class/weapon/equipment identity systems, not added to v0.11 yet.
+
+### Class / Weapon Direction
+
+Classes may ultimately be defined partly by their weapon system:
+
+- Some use the traditional returning ball.
+- Some weapons may have ammo.
+- Some may recharge on cooldown.
+- Some may create secondary attacks alongside the ball.
+
+Keep this open until physical dungeon navigation and equipment feel solid.
