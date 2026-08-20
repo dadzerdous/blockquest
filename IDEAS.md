@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.16.1**
+Current prototype: **v0.16.2**
 
 ## Current Direction
 
@@ -813,3 +813,32 @@ Raider armor remains universal defense and can be damaged by either source.
 - Raider image is forced into the exact same gameplay cell dimensions as Grunt enemy blocks, regardless of source PNG dimensions or padding.
 - While Raider armor remains, a pulsing grey shield outline surrounds the block.
 - Shield disappears immediately when armor breaks.
+
+
+## v0.16.2 — Door Routing / Baseline Treasure / Grunt Art Width
+
+### Door Routing Fix
+- Left/right movement no longer implies Standard/Treasure.
+- Each physical doorway owns an explicit route type.
+- Crossing the left threshold commits `exitChoice.leftType`.
+- Crossing the right threshold commits `exitChoice.rightType`.
+- Legacy `battle` naming is normalized to `standard`.
+- Console now prints the actual selected route and room for easier testing.
+
+### Treasure Distribution
+Standard rooms now have baseline loot potential:
+- ~45% chance for 1 treasure brick.
+- Small additional chance for a second.
+
+Hard rooms:
+- ~30% chance for 1 treasure brick.
+
+Treasure routes:
+- 5–7 treasure bricks where enough normal environmental bricks exist.
+
+Treasure route is therefore a strong loot choice, not the only way treasure can ever appear.
+
+### Enemy Art Sizing
+- Grunt collision/gameplay cell is unchanged.
+- Grunt artwork is rendered about 16% wider inside the same cell so its visible prison-block frame better matches the Raider and environmental brick width.
+- Raider dimensions remain unchanged from v0.16.1 because its height/overall footprint looked correct.

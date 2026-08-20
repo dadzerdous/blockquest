@@ -584,16 +584,49 @@ function buildRoom() {
 
   const workingLayout = layout.map(row => row.split(""));
 
-  if (currentRoomType === "treasure" && roomNumber !== 5) {
-    let converted = 0;
+  if (roomNumber !== 5) {
+    const availableBricks = [];
 
-    for (let r = 0; r < workingLayout.length && converted < 3; r++) {
-      for (let c = 0; c < workingLayout[r].length && converted < 3; c++) {
-        if (workingLayout[r][c] === "B") {
-          workingLayout[r][c] = "T";
-          converted += 1;
+    workingLayout.forEach((row, r) => {
+      row.forEach((cell, c) => {
+        if (cell === "B") {
+          availableBricks.push([r, c]);
         }
-      }
+      });
+    });
+
+    // Standard rooms can naturally contain a little treasure.
+    // Treasure routes intentionally contain a lot more.
+    let treasureCount = 0;
+
+    if (currentRoomType === "treasure") {
+      treasureCount = Math.min(
+        availableBricks.length,
+        5 + Math.floor(Math.random() * 3) // 5–7
+      );
+    } else if (
+      currentRoomType === "standard" ||
+      currentRoomType === "battle"
+    ) {
+      // About a 45% chance of one treasure brick,
+      // with a small chance for a second.
+      if (Math.random() < 0.45) treasureCount = 1;
+      if (treasureCount > 0 && Math.random() < 0.18) treasureCount += 1;
+    } else if (currentRoomType === "hard") {
+      // Hard is primarily about threat, but can still occasionally contain loot.
+      if (Math.random() < 0.30) treasureCount = 1;
+    }
+
+    // Shuffle eligible environmental-brick positions.
+    for (let i = availableBricks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [availableBricks[i], availableBricks[j]] =
+        [availableBricks[j], availableBricks[i]];
+    }
+
+    for (let i = 0; i < treasureCount; i++) {
+      const [r, c] = availableBricks[i];
+      workingLayout[r][c] = "T";
     }
   }
 
@@ -738,7 +771,9 @@ function buildRoom() {
       ? "ROOM 5 — ARMORED RAIDER ARCHER"
       : currentRoomType === "treasure"
         ? `ROOM ${roomNumber} — TREASURE ROUTE`
-        : `ROOM ${roomNumber} — GOBLIN OUTPOST`;
+        : currentRoomType === "hard"
+          ? `ROOM ${roomNumber} — HARD ROUTE`
+          : `ROOM ${roomNumber} — STANDARD ROUTE`;
 
   applyRouteThreat();
   shuffleEnemyPlacements();
@@ -1390,14 +1425,14 @@ function beginExitChoice() {
 
   const routeSets = roomNumber <= 1
     ? [
-        ["battle", "hard"],
-        ["battle", "treasure"]
+        ["standard", "hard"],
+        ["standard", "treasure"]
       ]
     : [
-        ["battle", "hard"],
-        ["battle", "treasure"],
+        ["standard", "hard"],
+        ["standard", "treasure"],
         ["hard", "treasure"],
-        ["battle", "shop"],
+        ["standard", "shop"],
         ["hard", "shop"],
         ["treasure", "shop"]
       ];
@@ -1413,17 +1448,21 @@ function updateExitChoice(dt) {
   if (gameState !== "exitChoice") return;
 
   let move = 0;
+
   if (keys["arrowleft"] || keys["a"]) move -= 1;
   if (keys["arrowright"] || keys["d"]) move += 1;
 
   if (pointerActive) {
     const difference = pointerX - exitChoice.heroX;
+
     if (Math.abs(difference) > 8) {
       move = Math.max(-1, Math.min(1, difference / 90));
     }
   }
 
-  if (move !== 0) exitChoice.facing = move > 0 ? 1 : -1;
+  if (move !== 0) {
+    exitChoice.facing = move > 0 ? 1 : -1;
+  }
 
   if (exitChoice.hopTimer > 0) {
     exitChoice.hopTimer -= dt;
@@ -1431,33 +1470,64 @@ function updateExitChoice(dt) {
   }
 
   exitChoice.heroX += move * exitChoice.speed * dt;
-  exitChoice.heroX = Math.max(70, Math.min(WORLD_WIDTH - 70, exitChoice.heroX));
+  exitChoice.heroX =
+    Math.max(
+      70,
+      Math.min(WORLD_WIDTH - 70, exitChoice.heroX)
+    );
 
+  // Direction only chooses which physical doorway is entered.
+  // The doorway's assigned route type decides the destination.
   if (exitChoice.heroX <= 125) {
-    chooseDungeonExit(exitChoice.leftType);
+    commitExitDoor("left");
   } else if (exitChoice.heroX >= WORLD_WIDTH - 125) {
-    chooseDungeonExit(exitChoice.rightType);
+    commitExitDoor("right");
   }
+}
+
+function commitExitDoor(side) {
+  if (gameState !== "exitChoice" || exitChoice.chosen) return;
+
+  const type =
+    side === "left"
+      ? exitChoice.leftType
+      : exitChoice.rightType;
+
+  if (!type) {
+    console.warn("Exit door had no assigned route type:", side);
+    return;
+  }
+
+  chooseDungeonExit(type);
 }
 
 function chooseDungeonExit(type) {
   if (gameState !== "exitChoice" || exitChoice.chosen) return;
 
-  exitChoice.chosen = type;
+  const normalizedType =
+    type === "battle"
+      ? "standard"
+      : type;
+
+  exitChoice.chosen = normalizedType;
   exitChoice.active = false;
   pathHintEl.classList.add("hidden");
 
-  if (type === "shop") {
-    // A shop is a stop on the route, not a combat room.
-    // Leaving it continues to the next standard combat room.
-    pendingRoomType = "battle";
+  if (normalizedType === "shop") {
+    // Shop is a route stop, not a combat-room type.
+    pendingRoomType = "standard";
     openShop();
     return;
   }
 
-  pendingRoomType = type;
+  pendingRoomType = normalizedType;
+  currentRoomType = normalizedType;
   roomNumber += 1;
-  currentRoomType = pendingRoomType;
+
+  console.log(
+    `ENTERING ${normalizedType.toUpperCase()} ROUTE — ROOM ${roomNumber}`
+  );
+
   startRoom();
 }
 
@@ -2776,7 +2846,7 @@ function drawBricks(dt) {
         drawMobImage(
           gobImage,
           brick,
-          1.0,
+          1.16,
           1.20,
           -3
         );
