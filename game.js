@@ -15,6 +15,20 @@ const bestRoomEl = document.getElementById("bestRoom");
 const lastRunSummaryEl = document.getElementById("lastRunSummary");
 const lobbyTitleEl = document.getElementById("lobbyTitle");
 const lobbySubtitleEl = document.getElementById("lobbySubtitle");
+const activeProfileNameEl = document.getElementById("activeProfileName");
+const openProfilesButton = document.getElementById("openProfilesButton");
+const profilesOverlay = document.getElementById("profilesOverlay");
+const profileCardsEl = document.getElementById("profileCards");
+const closeProfilesButton = document.getElementById("closeProfiles");
+const openOptionsButton = document.getElementById("openOptionsButton");
+const optionsOverlay = document.getElementById("optionsOverlay");
+const closeOptionsButton = document.getElementById("closeOptions");
+const musicVolumeInput = document.getElementById("musicVolume");
+const sfxVolumeInput = document.getElementById("sfxVolume");
+const musicVolumeText = document.getElementById("musicVolumeText");
+const sfxVolumeText = document.getElementById("sfxVolumeText");
+const muteMusicButton = document.getElementById("muteMusicButton");
+const muteSfxButton = document.getElementById("muteSfxButton");
 const openLoadoutButton = document.getElementById("openLoadoutButton");
 const loadoutOverlay = document.getElementById("loadoutOverlay");
 const closeLoadoutButton = document.getElementById("closeLoadout");
@@ -86,9 +100,45 @@ brick1Image.src = "assets/brick1.png";
 
 const brick2Image = new Image();
 brick2Image.src = "assets/brick2.png";
+const SETTINGS_KEY = "spikeTrolleySettings";
+
+let gameSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {
+  musicVolume: 34,
+  sfxVolume: 70,
+  musicMuted: false,
+  sfxMuted: false
+};
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(gameSettings));
+}
+
+function applySoundSettings() {
+  bgMusic.volume = gameSettings.musicMuted
+    ? 0
+    : gameSettings.musicVolume / 100;
+
+  hitSound.volume = gameSettings.sfxMuted
+    ? 0
+    : gameSettings.sfxVolume / 100;
+
+  musicVolumeInput.value = gameSettings.musicVolume;
+  sfxVolumeInput.value = gameSettings.sfxVolume;
+  musicVolumeText.textContent = `${gameSettings.musicVolume}%`;
+  sfxVolumeText.textContent = `${gameSettings.sfxVolume}%`;
+
+  muteMusicButton.textContent = gameSettings.musicMuted
+    ? "UNMUTE MUSIC"
+    : "MUTE MUSIC";
+
+  muteSfxButton.textContent = gameSettings.sfxMuted
+    ? "UNMUTE SFX"
+    : "MUTE SFX";
+}
+
 const bgMusic = new Audio("assets/bgmusic-bq.mp3");
 bgMusic.loop = true;
-bgMusic.volume = 0.34;
+
 let bgMusicStarted = false;
 
 function ensureBgMusic() {
@@ -138,33 +188,104 @@ let runes = {
 
 let gold = 0;
 
-const progression = JSON.parse(localStorage.getItem("spikeTrolleyProgression") || "null") || {
-  xp: 0,
-  level: 1,
-  statPoints: 0,
-  bestRoom: 0,
-  stats: {
-    vitality: 0,
-    defense: 0,
-    agility: 0,
-    power: 0,
-    control: 0,
-    fortune: 0
+const PROFILE_COUNT = 3;
+const ACTIVE_PROFILE_KEY = "spikeTrolleyActiveProfile";
+const LEGACY_SAVE_KEY = "spikeTrolleyProgression";
+
+function createFreshProgression(profileIndex = 1) {
+  return {
+    profileName: `Adventurer ${profileIndex}`,
+    xp: 0,
+    level: 1,
+    statPoints: 0,
+    bestRoom: 0,
+    stats: {
+      vitality: 0,
+      defense: 0,
+      agility: 0,
+      power: 0,
+      control: 0,
+      fortune: 0
+    },
+    equipment: {
+      gloves: "adventurer",
+      ball: "iron",
+      unlocked: {
+        gloves: ["adventurer", "heavy", "quick"],
+        ball: ["iron", "piercing", "cinder"]
+      }
+    }
+  };
+}
+
+function profileKey(index) {
+  return `spikeTrolleyProfile${index}`;
+}
+
+function migrateLegacySave() {
+  const legacy = localStorage.getItem(LEGACY_SAVE_KEY);
+  const slot1 = localStorage.getItem(profileKey(1));
+
+  if (legacy && !slot1) {
+    const migrated = JSON.parse(legacy);
+    migrated.profileName = migrated.profileName || "Adventurer 1";
+    localStorage.setItem(profileKey(1), JSON.stringify(migrated));
   }
-};
+}
+
+function loadProfile(index) {
+  const raw = localStorage.getItem(profileKey(index));
+  if (!raw) return null;
+
+  const loaded = JSON.parse(raw);
+  normalizeProgression(loaded, index);
+  return loaded;
+}
+
+function normalizeProgression(save, index) {
+  if (!save.profileName) save.profileName = `Adventurer ${index}`;
+  if (typeof save.xp !== "number") save.xp = 0;
+  if (typeof save.level !== "number") save.level = 1;
+  if (typeof save.statPoints !== "number") save.statPoints = 0;
+  if (typeof save.bestRoom !== "number") save.bestRoom = 0;
+
+  if (!save.stats) save.stats = {};
+  for (const stat of ["vitality","defense","agility","power","control","fortune"]) {
+    if (typeof save.stats[stat] !== "number") save.stats[stat] = 0;
+  }
+
+  if (!save.equipment) {
+    save.equipment = createFreshProgression(index).equipment;
+  }
+
+  if (!save.equipment.unlocked) {
+    save.equipment.unlocked = createFreshProgression(index).equipment.unlocked;
+  }
+}
+
+migrateLegacySave();
+
+let activeProfileIndex =
+  Number(localStorage.getItem(ACTIVE_PROFILE_KEY) || 1);
+
+if (activeProfileIndex < 1 || activeProfileIndex > PROFILE_COUNT) {
+  activeProfileIndex = 1;
+}
+
+let progression = loadProfile(activeProfileIndex);
+
+if (!progression) {
+  progression = createFreshProgression(activeProfileIndex);
+  localStorage.setItem(
+    profileKey(activeProfileIndex),
+    JSON.stringify(progression)
+  );
+}
 
 
-if (typeof progression.bestRoom !== "number") progression.bestRoom = 0;
+
 
 let armorPoints = 0;
-if (!progression.equipment) {
-  progression.equipment = {
-    gloves: "adventurer",
-    ball: "iron",
-    unlocked: { gloves:["adventurer","heavy","quick"], ball:["iron","piercing","cinder"] }
-  };
-  saveProgression();
-}
 const equipmentCatalog = {
   gloves:{
     adventurer:{name:"Adventurer Gloves",effect:"Balanced ball handling."},
@@ -186,7 +307,10 @@ function xpNeededForLevel(level) {
 }
 
 function saveProgression() {
-  localStorage.setItem("spikeTrolleyProgression", JSON.stringify(progression));
+  localStorage.setItem(
+    profileKey(activeProfileIndex),
+    JSON.stringify(progression)
+  );
 }
 
 function addXP(amount) {
@@ -668,6 +792,196 @@ window.addEventListener("pointerup", () => {
 function setPointerPosition(event) {
   const rect = canvas.getBoundingClientRect();
   pointerX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
+}
+
+openProfilesButton.addEventListener("click", () => {
+  runLobby.classList.add("hidden");
+  renderProfiles();
+  profilesOverlay.classList.remove("hidden");
+});
+
+closeProfilesButton.addEventListener("click", () => {
+  profilesOverlay.classList.add("hidden");
+  runLobby.classList.remove("hidden");
+});
+
+openOptionsButton.addEventListener("click", () => {
+  runLobby.classList.add("hidden");
+  applySoundSettings();
+  optionsOverlay.classList.remove("hidden");
+});
+
+closeOptionsButton.addEventListener("click", () => {
+  optionsOverlay.classList.add("hidden");
+  runLobby.classList.remove("hidden");
+});
+
+musicVolumeInput.addEventListener("input", () => {
+  gameSettings.musicVolume = Number(musicVolumeInput.value);
+  gameSettings.musicMuted = false;
+  saveSettings();
+  applySoundSettings();
+  ensureBgMusic();
+});
+
+sfxVolumeInput.addEventListener("input", () => {
+  gameSettings.sfxVolume = Number(sfxVolumeInput.value);
+  gameSettings.sfxMuted = false;
+  saveSettings();
+  applySoundSettings();
+});
+
+muteMusicButton.addEventListener("click", () => {
+  gameSettings.musicMuted = !gameSettings.musicMuted;
+  saveSettings();
+  applySoundSettings();
+});
+
+muteSfxButton.addEventListener("click", () => {
+  gameSettings.sfxMuted = !gameSettings.sfxMuted;
+  saveSettings();
+  applySoundSettings();
+});
+
+function profileSummary(index) {
+  const save = loadProfile(index);
+  if (!save) return null;
+
+  return {
+    name: save.profileName || `Adventurer ${index}`,
+    level: save.level || 1,
+    xp: save.xp || 0,
+    bestRoom: save.bestRoom || 0
+  };
+}
+
+function renderProfiles() {
+  profileCardsEl.innerHTML = "";
+
+  for (let index = 1; index <= PROFILE_COUNT; index++) {
+    const summary = profileSummary(index);
+    const card = document.createElement("div");
+    card.className =
+      "profileCard" +
+      (index === activeProfileIndex ? " active" : "") +
+      (!summary ? " empty" : "");
+
+    if (summary) {
+      card.innerHTML = `
+        <div class="profileCardHeader">
+          <strong>${summary.name}</strong>
+          <span>${index === activeProfileIndex ? "ACTIVE" : `SLOT ${index}`}</span>
+        </div>
+        <div class="profileMeta">
+          Level ${summary.level} · ${summary.xp}/${xpNeededForLevel(summary.level)} XP · Best Room ${summary.bestRoom}
+        </div>
+        <div class="profileActions">
+          <button data-profile-load="${index}">
+            ${index === activeProfileIndex ? "SELECTED" : "SWITCH"}
+          </button>
+          <button class="danger" data-profile-reset="${index}">NEW GAME</button>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="profileCardHeader">
+          <strong>Empty Slot ${index}</strong>
+          <span>SLOT ${index}</span>
+        </div>
+        <div class="profileMeta">Start a completely fresh adventurer.</div>
+        <div class="profileActions">
+          <button data-profile-new="${index}">CREATE</button>
+        </div>
+      `;
+    }
+
+    profileCardsEl.appendChild(card);
+  }
+
+  profileCardsEl
+    .querySelectorAll("[data-profile-load]")
+    .forEach(button => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.profileLoad);
+        switchProfile(index);
+      });
+    });
+
+  profileCardsEl
+    .querySelectorAll("[data-profile-new]")
+    .forEach(button => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.profileNew);
+        createProfile(index, false);
+      });
+    });
+
+  profileCardsEl
+    .querySelectorAll("[data-profile-reset]")
+    .forEach(button => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.profileReset);
+        createProfile(index, true);
+      });
+    });
+}
+
+function switchProfile(index) {
+  const loaded = loadProfile(index);
+  if (!loaded) return;
+
+  activeProfileIndex = index;
+  progression = loaded;
+
+  localStorage.setItem(
+    ACTIVE_PROFILE_KEY,
+    String(activeProfileIndex)
+  );
+
+  applyPermanentStats();
+  applyEquipment();
+  updateStatsUI();
+  updateLoadoutUI();
+  updateLobbyUI();
+  renderProfiles();
+
+  profilesOverlay.classList.add("hidden");
+  runLobby.classList.remove("hidden");
+}
+
+function createProfile(index, overwrite) {
+  if (overwrite) {
+    const ok = window.confirm(
+      `Start a completely new game in Slot ${index}? This permanently erases that slot's progress.`
+    );
+
+    if (!ok) return;
+  }
+
+  const fresh = createFreshProgression(index);
+
+  localStorage.setItem(
+    profileKey(index),
+    JSON.stringify(fresh)
+  );
+
+  activeProfileIndex = index;
+  progression = fresh;
+
+  localStorage.setItem(
+    ACTIVE_PROFILE_KEY,
+    String(activeProfileIndex)
+  );
+
+  applyPermanentStats();
+  applyEquipment();
+  updateStatsUI();
+  updateLoadoutUI();
+  updateLobbyUI();
+  renderProfiles();
+
+  profilesOverlay.classList.add("hidden");
+  runLobby.classList.remove("hidden");
 }
 
 openLoadoutButton.addEventListener("click",()=>{runLobby.classList.add("hidden");loadoutOverlay.classList.remove("hidden");updateLoadoutUI();});
@@ -1469,6 +1783,8 @@ function checkVictory() {
 }
 
 function updateLobbyUI() {
+  activeProfileNameEl.textContent =
+    progression.profileName || `Adventurer ${activeProfileIndex}`;
   lobbyLevelEl.textContent = progression.level;
   lobbyXpEl.textContent = `${progression.xp} / ${xpNeededForLevel(progression.level)}`;
   bestRoomEl.textContent = progression.bestRoom || 0;
@@ -2111,6 +2427,7 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
+applySoundSettings();
 updateStatsUI();
 updateLoadoutUI();
 updateRuneText();

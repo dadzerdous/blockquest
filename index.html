@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.13</title>
+  <title>Spike Trolley RPG v0.14</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,7 +22,7 @@
       <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.13</div>
+      <div id="versionBadge">v0.14</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
@@ -51,16 +51,67 @@
             </div>
           </div>
 
-          <div class="lobbyActions">
-            <button id="startRunButton" class="primaryLobbyButton">START RUN</button>
+          <div class="activeProfileLine">
+            SAVE: <strong id="activeProfileName">Adventurer 1</strong>
+          </div>
+
+          <div class="lobbyActions mainMenuActions">
+            <button id="startRunButton" class="primaryLobbyButton">▶ START RUN</button>
             <button id="openStatsButton" class="secondaryLobbyButton">⭐ ALLOCATE STATS</button>
             <button id="openLoadoutButton" class="secondaryLobbyButton">🎒 LOADOUT</button>
+            <button id="openProfilesButton" class="secondaryLobbyButton">👤 PROFILES / NEW GAME</button>
+            <button id="openOptionsButton" class="secondaryLobbyButton">⚙️ OPTIONS</button>
           </div>
 
           <div id="lastRunSummary" class="lastRunSummary hidden"></div>
         </div>
       </div>
 
+
+
+      <div id="profilesOverlay" class="hidden">
+        <div class="upgradePanel menuPanel">
+          <div class="eyebrow">SAVE PROFILES</div>
+          <h1>Choose Adventurer</h1>
+          <p>Each profile has completely separate XP, stats, equipment, and progress.</p>
+
+          <div id="profileCards" class="profileCards"></div>
+
+          <button id="closeProfiles" class="leaveShop">BACK</button>
+        </div>
+      </div>
+
+      <div id="optionsOverlay" class="hidden">
+        <div class="upgradePanel menuPanel">
+          <div class="eyebrow">OPTIONS</div>
+          <h1>Sound</h1>
+
+          <div class="optionRow">
+            <div>
+              <strong>🎵 Music</strong>
+              <small>Dungeon background music</small>
+            </div>
+            <input id="musicVolume" type="range" min="0" max="100" step="1" value="34">
+            <span id="musicVolumeText">34%</span>
+          </div>
+
+          <div class="optionRow">
+            <div>
+              <strong>🔊 Sound Effects</strong>
+              <small>Ball hits, UI sounds, attacks</small>
+            </div>
+            <input id="sfxVolume" type="range" min="0" max="100" step="1" value="70">
+            <span id="sfxVolumeText">70%</span>
+          </div>
+
+          <div class="optionButtons">
+            <button id="muteMusicButton" class="secondaryLobbyButton">MUTE MUSIC</button>
+            <button id="muteSfxButton" class="secondaryLobbyButton">MUTE SFX</button>
+          </div>
+
+          <button id="closeOptions" class="leaveShop">BACK</button>
+        </div>
+      </div>
 
       <div id="loadoutOverlay" class="hidden">
         <div class="upgradePanel loadoutPanel">

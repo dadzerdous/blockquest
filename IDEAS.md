@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.13**
+Current prototype: **v0.14**
 
 ## Current Direction
 
@@ -583,3 +583,41 @@ The rune/reward screen itself communicates **ROOM CLEARED**.
 - Class defines active weapon/ability.
 - Equipment modifies the class/build rather than replacing class identity.
 - Some weapons can use cooldowns, ammo-per-run, or both.
+
+
+## v0.14 — Full Splash / Profiles / Options
+
+The between-run lobby is now the game's full front door.
+
+Main splash actions:
+- Start Run
+- Allocate Stats
+- Loadout
+- Profiles / New Game
+- Options
+
+### Profiles
+Added 3 independent local save profiles.
+
+Each profile has separate:
+- XP / level
+- Stat allocation
+- Equipment / unlocks
+- Best-room progress
+- Future permanent progression
+
+Existing legacy progress automatically migrates into **Adventurer 1 / Slot 1** so current progress is not intentionally discarded.
+
+"New Game" now lives inside the profile system:
+- Empty slot → Create
+- Existing slot → New Game / Reset with confirmation
+- Player can switch saves without erasing another adventurer
+
+### Options
+Added persistent global audio settings:
+- Music volume
+- SFX volume
+- Mute/unmute music
+- Mute/unmute SFX
+
+Audio preferences are global rather than tied to a character profile.
