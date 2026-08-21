@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.16.2**
+Current prototype: **v0.16.4**
 
 ## Current Direction
 
@@ -842,3 +842,20 @@ Treasure route is therefore a strong loot choice, not the only way treasure can 
 - Grunt collision/gameplay cell is unchanged.
 - Grunt artwork is rendered about 16% wider inside the same cell so its visible prison-block frame better matches the Raider and environmental brick width.
 - Raider dimensions remain unchanged from v0.16.1 because its height/overall footprint looked correct.
+
+
+## v0.16.3 — Reusable Route Door Asset
+
+- Added `assets/door.png`.
+- All physical route doors use the same single image.
+- Standard keeps the original blue portal.
+- Hard, Treasure, and Shop are created with canvas hue/filter changes.
+- Route icon, label, and detail stay code-driven.
+- Door destination still comes from the doorway's assigned route type.
+
+
+## v0.16.4 — Generic Element Splash FX
+- Wired `assets/bg-ball.png` as the reusable impact/splash visual.
+- Fire splash now has a visible expanding effect at its origin.
+- Visual FX are separate from damage logic.
+- Same asset is ready to tint for Fire, Ice, Poison, and Arcane effects later.

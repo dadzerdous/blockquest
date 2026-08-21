@@ -96,6 +96,11 @@ gobImage.src = "assets/gob1.png";
 const raiderImage = new Image();
 raiderImage.src = "assets/mob-skel-arch.png";
 
+const doorImage = new Image();
+doorImage.src = "assets/door.png";
+const splashImage = new Image();
+splashImage.src = "assets/bg-ball.png";
+
 const brick1Image = new Image();
 brick1Image.src = "assets/brick1.png";
 
@@ -447,6 +452,7 @@ const rangerWeapon = {
   speed: 720
 };
 let particles = [];
+const splashEffects = [];
 let attackTimer = 0;
 let pendingShot = null;
 let roomClearTimer = 0;
@@ -1853,7 +1859,24 @@ function damageBrick(brick, overrideDamage = null, source = "ball") {
   updateHUD();
 }
 
+function createSplashEffect(x,y,element="fire",scale=1){
+  const filters={fire:"hue-rotate(0deg) saturate(1.7) brightness(1.2)",ice:"hue-rotate(155deg) saturate(1.5) brightness(1.2)",poison:"hue-rotate(75deg) saturate(1.8)",arcane:"hue-rotate(245deg) saturate(1.7)"};
+  splashEffects.push({x,y,age:0,duration:.28,scale,filter:filters[element]||filters.fire});
+}
+function updateSplashEffects(dt){
+  for(let i=splashEffects.length-1;i>=0;i--){splashEffects[i].age+=dt;if(splashEffects[i].age>=splashEffects[i].duration)splashEffects.splice(i,1);}
+}
+function drawSplashEffects(){
+  if(!splashImage.complete||!splashImage.naturalWidth)return;
+  for(const fx of splashEffects){
+    const t=fx.age/fx.duration,size=(50+105*(1-Math.pow(1-t,3)))*fx.scale;
+    ctx.save();ctx.globalAlpha=Math.max(0,1-t);ctx.filter=fx.filter;ctx.translate(fx.x,fx.y);ctx.rotate(t*.3);
+    ctx.drawImage(splashImage,-size/2,-size/2,size,size);ctx.restore();
+  }
+}
 function fireExplosion(x, y, sourceBrick) {
+  createSplashEffect(x,y,"fire",1);
+
   const radius = 155 + Math.max(0, runes.ember - 1) * 18;
   const splashDamage = 0.75 + Math.max(0, runes.ember - 1) * 0.25;
 
@@ -2466,10 +2489,39 @@ function drawBackground() {
 }
 
 function routeDoorInfo(type) {
-  if (type === "hard") return { icon: "🔥", label: "HARD", accent: "#b64d3d", detail: "TOUGHER ENEMIES" };
-  if (type === "treasure") return { icon: "💰", label: "TREASURE", accent: "#c6a23b", detail: "MORE TREASURE" };
-  if (type === "shop") return { icon: "🛒", label: "SHOP", accent: "#6eaa78", detail: "SPEND GOLD" };
-  return { icon: "⚔️", label: "STANDARD", accent: "#9f8355", detail: "STANDARD ROOM" };
+  if (type === "hard") {
+    return {
+      icon: "🔥",
+      label: "HARD",
+      filter: "hue-rotate(135deg) saturate(1.65) brightness(.92)",
+      detail: "TOUGHER ENEMIES"
+    };
+  }
+
+  if (type === "treasure") {
+    return {
+      icon: "💰",
+      label: "TREASURE",
+      filter: "hue-rotate(205deg) saturate(1.7) brightness(1.08)",
+      detail: "MORE TREASURE"
+    };
+  }
+
+  if (type === "shop") {
+    return {
+      icon: "🛒",
+      label: "SHOP",
+      filter: "hue-rotate(70deg) saturate(1.55) brightness(.95)",
+      detail: "SPEND GOLD"
+    };
+  }
+
+  return {
+    icon: "⚔️",
+    label: "STANDARD",
+    filter: "none",
+    detail: "STANDARD ROOM"
+  };
 }
 
 function drawExitChoice() {
@@ -2478,44 +2530,86 @@ function drawExitChoice() {
   ctx.fillStyle = "rgba(7, 7, 10, .42)";
   ctx.fillRect(0, 110, WORLD_WIDTH, 1040);
 
-  const doorY = 870;
-  const doorW = 170;
-  const doorH = 260;
+  const doorY = 810;
+  const doorW = 205;
+  const doorH = 300;
+
   const left = routeDoorInfo(exitChoice.leftType);
   const right = routeDoorInfo(exitChoice.rightType);
 
-  drawDoor(45, doorY, doorW, doorH, left.icon, left.label, left.accent, left.detail);
-  drawDoor(WORLD_WIDTH - 45 - doorW, doorY, doorW, doorH, right.icon, right.label, right.accent, right.detail);
+  drawDoor(
+    35,
+    doorY,
+    doorW,
+    doorH,
+    left.icon,
+    left.label,
+    left.filter,
+    left.detail
+  );
+
+  drawDoor(
+    WORLD_WIDTH - 35 - doorW,
+    doorY,
+    doorW,
+    doorH,
+    right.icon,
+    right.label,
+    right.filter,
+    right.detail
+  );
 
   let heroY = exitChoice.heroY;
+
   if (exitChoice.hopTimer > 0) {
     const t = 1 - exitChoice.hopTimer / 0.45;
     heroY -= Math.sin(t * Math.PI) * 55;
   }
 
-  drawHeroSprite(exitChoice.heroX, heroY, exitChoice.facing, 0.92);
+  drawHeroSprite(
+    exitChoice.heroX,
+    heroY,
+    exitChoice.facing,
+    0.92
+  );
 }
 
-function drawDoor(x, y, w, h, icon, label, accent, detail = "") {
+function drawDoor(x, y, w, h, icon, label, filter, detail = "") {
   ctx.save();
-  ctx.fillStyle = "#151219";
-  ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 8;
-  ctx.strokeRect(x, y, w, h);
-  ctx.fillStyle = "rgba(0,0,0,.35)";
-  ctx.fillRect(x + 14, y + 14, w - 28, h - 28);
-  ctx.font = "bold 54px Arial";
+
+  if (doorImage.complete && doorImage.naturalWidth > 0) {
+    ctx.filter = filter || "none";
+    ctx.drawImage(
+      doorImage,
+      x,
+      y,
+      w,
+      h
+    );
+    ctx.filter = "none";
+  } else {
+    ctx.fillStyle = "#151219";
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#777";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(x, y, w, h);
+  }
+
   ctx.textAlign = "center";
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = "#000000";
+
+  ctx.font = "bold 28px Arial";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(icon, x + w / 2, y + 95);
-  ctx.font = "bold 22px Arial";
-  ctx.fillStyle = "#f0e6c8";
-  ctx.fillText(label, x + w / 2, y + 150);
-  ctx.font = "bold 13px Arial";
-  ctx.fillStyle = "#b9afbd";
-  ctx.fillText(detail, x + w / 2, y + 178);
-  ctx.textAlign = "start";
+  ctx.fillText(icon, x + w / 2, y + h - 74);
+
+  ctx.font = "bold 19px Arial";
+  ctx.fillText(label, x + w / 2, y + h - 46);
+
+  ctx.font = "bold 11px Arial";
+  ctx.fillStyle = "#ded7c7";
+  ctx.fillText(detail, x + w / 2, y + h - 27);
+
   ctx.restore();
 }
 
@@ -3023,9 +3117,11 @@ function gameLoop(timestamp) {
   }
 
   updateParticles(dt);
+  updateSplashEffects(dt);
 
   drawBackground();
   drawBricks(dt);
+  drawSplashEffects();
   drawPlayerProjectiles();
   drawProjectiles();
   drawRail();
