@@ -1580,12 +1580,7 @@ function updateExitChoice(dt) {
 
   let move = 0;
 
-  if (player.stunTimer > 0) {
-    player.stunTimer = Math.max(0, player.stunTimer - dt);
-  }
-
-  if (player.stunTimer <= 0) {
-    if (keys["arrowleft"] || keys["a"]) move -= 1;
+  if (keys["arrowleft"] || keys["a"]) move -= 1;
   if (keys["arrowright"] || keys["d"]) move += 1;
 
   if (pointerActive) {
@@ -1612,8 +1607,6 @@ function updateExitChoice(dt) {
       Math.min(WORLD_WIDTH - 70, exitChoice.heroX)
     );
 
-  // Direction only chooses which physical doorway is entered.
-  // The doorway's assigned route type decides the destination.
   if (exitChoice.heroX <= 125) {
     commitExitDoor("left");
   } else if (exitChoice.heroX >= WORLD_WIDTH - 125) {
@@ -1650,7 +1643,6 @@ function chooseDungeonExit(type) {
   pathHintEl.classList.add("hidden");
 
   if (normalizedType === "shop") {
-    // Shop is a route stop, not a combat-room type.
     pendingRoomType = "standard";
     openShop();
     return;
@@ -1675,27 +1667,36 @@ function updatePlayer(dt) {
 
   let move = 0;
 
-  if (keys["arrowleft"] || keys["a"]) move -= 1;
-    if (keys["arrowright"] || keys["d"]) move += 1;
+  if (player.stunTimer > 0) {
+    player.stunTimer = Math.max(0, player.stunTimer - dt);
   }
 
-  if (
-    player.stunTimer <= 0 &&
-    pointerActive &&
-    gameState !== "upgrade" &&
-    gameState !== "shop"
-  ) {
-    const difference = pointerX - player.x;
+  if (player.stunTimer <= 0) {
+    if (keys["arrowleft"] || keys["a"]) move -= 1;
+    if (keys["arrowright"] || keys["d"]) move += 1;
 
-    if (Math.abs(difference) > 10) {
-      move = Math.max(-1, Math.min(1, difference / 120));
+    if (
+      pointerActive &&
+      gameState !== "upgrade" &&
+      gameState !== "shop"
+    ) {
+      const difference = pointerX - player.x;
+
+      if (Math.abs(difference) > 10) {
+        move = Math.max(-1, Math.min(1, difference / 120));
+      }
     }
   }
 
   if (player.slowTimer > 0) {
     player.slowTimer -= dt;
+
     const slowByStack = [1, 0.75, 0.58, 0.40];
-    player.slowMultiplier = slowByStack[Math.min(3, player.slowStacks || 0)];
+
+    player.slowMultiplier =
+      slowByStack[
+        Math.min(3, player.slowStacks || 0)
+      ];
 
     if (player.slowTimer <= 0) {
       player.slowStacks = 0;
@@ -1706,24 +1707,47 @@ function updatePlayer(dt) {
     player.slowMultiplier = 1;
   }
 
-  player.velocityX = move * player.speed * player.runSpeedMultiplier * player.slowMultiplier;
+  player.velocityX =
+    move *
+    player.speed *
+    player.runSpeedMultiplier *
+    player.slowMultiplier;
+
   player.x += player.velocityX * dt;
 
   const halfWidth = player.width / 2;
-  player.x = Math.max(
-    halfWidth + 30,
-    Math.min(WORLD_WIDTH - halfWidth - 30, player.x)
-  );
+
+  player.x =
+    Math.max(
+      halfWidth + 30,
+      Math.min(
+        WORLD_WIDTH - halfWidth - 30,
+        player.x
+      )
+    );
 
   if (Math.abs(player.velocityX) > 5) {
-    player.facing = player.velocityX > 0 ? 1 : -1;
-    player.runTimer += dt * Math.abs(player.velocityX) / 80;
+    player.facing =
+      player.velocityX > 0 ? 1 : -1;
+
+    player.runTimer +=
+      dt *
+      Math.abs(player.velocityX) /
+      80;
   }
 
-  if (player.invincibleTimer > 0) player.invincibleTimer -= dt;
-  if (shieldShatterTimer > 0) shieldShatterTimer -= dt;
+  if (player.invincibleTimer > 0) {
+    player.invincibleTimer -= dt;
+  }
 
-  if ((!ball.launched && gameState === "waiting") || ballStuck) {
+  if (shieldShatterTimer > 0) {
+    shieldShatterTimer -= dt;
+  }
+
+  if (
+    (!ball.launched && gameState === "waiting") ||
+    ballStuck
+  ) {
     ball.x = player.x;
     ball.y = player.y - 58;
   }

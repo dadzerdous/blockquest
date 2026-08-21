@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.17.1**
+Current prototype: **v0.17.2**
 
 ## Current Direction
 
@@ -944,3 +944,13 @@ Some future runes can be equipment- or skill-specific instead of universal.
 - Removed the leftover `runes.ward` reference from room-start armor.
 - Removed the leftover `runes.ember` reference from Ball rendering; Cinder Ball now owns the Fire Ball visual as intended.
 - No balance changes from v0.17.
+
+
+## v0.17.2 — Game Loop Scope Hotfix
+- Fixed malformed Stun movement patch that accidentally inserted player-stun logic inside `updateExitChoice()`.
+- The missing block closure caused `updatePlayer()` and subsequent declarations to be scoped inside the door function.
+- `gameLoop()` therefore threw `ReferenceError: updatePlayer is not defined`.
+- Rebuilt `updateExitChoice()`, `commitExitDoor()`, `chooseDungeonExit()`, and `updatePlayer()` as clean top-level functions.
+- Stun still disables trolley control while active.
+- Door movement remains independent of combat stun.
+- `favicon.ico` 404 is unrelated and harmless.
