@@ -484,6 +484,8 @@ const rangerSkill = {
   damage: 1,
   speed: 720
 };
+const hunterDodge = { cooldown: 30, timer: 0 };
+
 let particles = [];
 const splashEffects = [];
 let attackTimer = 0;
@@ -888,6 +890,8 @@ function openEquipmentPicker(slot) {
   equipmentPicker.classList.remove("hidden");
 }
 function resetRun() {
+  hunterDodge.timer = 0;
+
   roomNumber = 1;
   currentRoomType = "battle";
   pendingRoomType = "battle";
@@ -1567,6 +1571,12 @@ function updatePostRewardShake(dt) {
 }
 
 function beginExitChoice() {
+  if (roomNumber === 4) {
+    exitChoice.active=false; exitChoice.chosen="boss"; pathHintEl.classList.add("hidden");
+    pendingRoomType="boss"; currentRoomType="boss"; roomNumber=5;
+    startRoom(); return;
+  }
+
   gameState = "exitChoice";
   exitChoice.active = true;
   player.x = WORLD_WIDTH / 2;
@@ -2184,19 +2194,7 @@ function updateBossHUD(boss) {
 
 function updateRangerSkill(dt) {
   rangerSkill.timer = Math.max(0, rangerSkill.timer - dt);
-  const ready = rangerSkill.timer <= 0;
-  const activeCooldown = rangerSkill.effectiveCooldown || rangerSkill.cooldown;
-  const fill = 1 - rangerSkill.timer / activeCooldown;
-
-  if (skillCooldownFillEl) {
-    skillCooldownFillEl.style.width = `${Math.max(0, Math.min(1, fill)) * 100}%`;
-  }
-
-  if (skillStatusEl) {
-    skillStatusEl.textContent = ready
-      ? "BOW SHOT READY — TAP ENEMY"
-      : `BOW SHOT ${rangerSkill.timer.toFixed(1)}s`;
-  }
+  hunterDodge.timer = Math.max(0, hunterDodge.timer - dt);
 }
 
 function enemyAtWorldPoint(x, y) {
@@ -2407,7 +2405,11 @@ function updateProjectiles(dt) {
       shot.y - shot.radius < player.y + player.height / 2
     ) {
       enemyProjectiles.splice(i, 1);
-      if (shot.type === "ice") {
+      if (hunterDodge.timer <= 0) {
+        hunterDodge.timer = hunterDodge.cooldown;
+        createFloatingText(player.x, player.y - 65, "DODGE!", "#fff6b0");
+        createParticles(player.x, player.y - 25, 18, "#fff6b0");
+      } else if (shot.type === "ice") {
         applyIceSlow();
       } else if (shot.type === "stun") {
         applyStun();
@@ -2803,47 +2805,17 @@ function drawExitChoice() {
 
 function drawDoor(x, y, w, h, icon, label, filter, detail = "") {
   ctx.save();
-
-  // Route glow remains visible even if the PNG fails to load.
-  ctx.globalAlpha = 0.40;
-  ctx.fillStyle =
-    label === "HARD" ? "#c43d34" :
-    label === "TREASURE" ? "#d2a933" :
-    label === "SHOP" ? "#8c55cc" :
-    "#3c91d1";
-
-  ctx.shadowBlur = 30;
-  ctx.shadowColor = ctx.fillStyle;
-  ctx.fillRect(x + 22, y + 22, w - 44, h - 38);
-
-  ctx.globalAlpha = 1;
-  ctx.shadowBlur = 0;
-
   if (doorImage.complete && doorImage.naturalWidth > 0) {
     ctx.filter = filter || "none";
     ctx.drawImage(doorImage, x, y, w, h);
     ctx.filter = "none";
   } else {
-    ctx.strokeStyle = "#ddd";
-    ctx.lineWidth = 7;
-    ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle="#ddd"; ctx.lineWidth=7; ctx.strokeRect(x,y,w,h);
   }
-
-  ctx.textAlign = "center";
-  ctx.shadowBlur = 8;
-  ctx.shadowColor = "#000";
-
-  ctx.font = "bold 30px Arial";
-  ctx.fillStyle = "#fff";
-  ctx.fillText(icon, x + w / 2, y + h - 73);
-
-  ctx.font = "bold 20px Arial";
-  ctx.fillText(label, x + w / 2, y + h - 45);
-
-  ctx.font = "bold 11px Arial";
-  ctx.fillStyle = "#eee5d4";
-  ctx.fillText(detail, x + w / 2, y + h - 25);
-
+  ctx.textAlign="center"; ctx.shadowBlur=8; ctx.shadowColor="#000";
+  ctx.font="bold 30px Arial"; ctx.fillStyle="#fff"; ctx.fillText(icon,x+w/2,y+h-73);
+  ctx.font="bold 20px Arial"; ctx.fillText(label,x+w/2,y+h-45);
+  ctx.font="bold 11px Arial"; ctx.fillStyle="#eee5d4"; ctx.fillText(detail,x+w/2,y+h-25);
   ctx.restore();
 }
 
@@ -2884,6 +2856,25 @@ function drawRail() {
     ctx.arc(x, railY + 41, 4, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+function drawHunterArrow() {
+  if (gameState === "exitChoice" || gameState === "postRewardShake") return;
+  const cd = rangerSkill.effectiveCooldown || rangerSkill.cooldown;
+  const amount = rangerSkill.timer <= 0 ? 1 : Math.max(0, 1 - rangerSkill.timer / cd);
+  if (amount <= .02) return;
+  ctx.save();
+  ctx.translate(player.x, player.y - 18);
+  ctx.globalAlpha = .1 + amount * .9;
+  ctx.strokeStyle="#ead7a5"; ctx.fillStyle="#ead7a5"; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(-30,0); ctx.lineTo(28,0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(33,0); ctx.lineTo(20,-8); ctx.lineTo(20,8); ctx.closePath(); ctx.fill();
+  if (rangerSkill.timer <= 0) {
+    const a=.45+Math.sin(performance.now()/130)*.25;
+    ctx.globalAlpha=a; ctx.strokeStyle="#fff6b0"; ctx.shadowBlur=18; ctx.shadowColor="#fff6b0"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,0,38,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawPlayer() {
@@ -3130,6 +3121,21 @@ function drawMobImage(image, brick, scaleX = 1, scaleY = 1, yOffset = 0) {
   return true;
 }
 
+function drawEnemyAura(brick) {
+  if (!brick.isMob) return;
+  let c=null;
+  if (brick.iceGoblin) c="#73ddff";
+  else if (brick.stunGoblin) c="#ffe35b";
+  else if (brick.darkFireGoblin || brick.fireGoblin) c="#ff674d";
+  else if (brick.greenGoblin) c="#75e66b";
+  if (!c) return;
+  ctx.save();
+  ctx.globalAlpha=.42+Math.sin(performance.now()/180+brick.x*.01)*.14;
+  ctx.strokeStyle=c; ctx.shadowBlur=20; ctx.shadowColor=c; ctx.lineWidth=5;
+  ctx.strokeRect(brick.x+4,brick.y+4,brick.width-8,brick.height-8);
+  ctx.restore();
+}
+
 function drawBricks(dt) {
   for (const brick of bricks) {
     if (!brick.alive) continue;
@@ -3139,6 +3145,7 @@ function drawBricks(dt) {
     const ratio = brick.hp / brick.maxHp;
 
     if (brick.isMob && gobImage.complete && gobImage.naturalWidth > 0) {
+      drawEnemyAura(brick);
       ctx.save();
 
       // Shooter goblins get a red hue shift so gob1.png can serve as
@@ -3376,6 +3383,7 @@ function gameLoop(timestamp) {
   drawProjectiles();
   drawRail();
   drawPlayer();
+  drawHunterArrow();
   drawExitChoice();
 
   if (gameState !== "exitChoice" && gameState !== "roomClear") {

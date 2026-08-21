@@ -805,3 +805,5 @@ body {
 }
 
 .runeChoices .upgradeCard.hidden{display:none!important;}
+
+#skillStatus, #skillCooldownFill { display:none !important; }

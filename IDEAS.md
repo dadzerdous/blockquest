@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.17.3**
+Current prototype: **v0.18**
 
 ## Current Direction
 
@@ -965,3 +965,12 @@ Some future runes can be equipment- or skill-specific instead of universal.
 - PC: WASD or arrows. Mobile: drag toward your destination.
 - Entering the actual portal area selects that route.
 - This movement is groundwork for a future interactive shopkeeper and walk-up items.
+
+
+## v0.18
+- Hunter arrow is now physical on the trolley: disappears on use, fades back during recharge, shimmers when ready.
+- Hunter automatically dodges one enemy projectile every 30 seconds.
+- Fire/Ice/Stun/Green enemies have stronger code-drawn auras.
+- Portal background glow removed.
+- Clearing Room 4 forces Room 5 miniboss instead of offering a route.
+- Shop remains inactive.
