@@ -423,7 +423,8 @@ const player = {
   runTimer: 0,
   slowTimer: 0,
   slowMultiplier: 1,
-  slowStacks: 0
+  slowStacks: 0,
+  stunTimer: 0
 };
 
 const ball = {
@@ -566,6 +567,28 @@ function shuffleEnemyPlacements() {
   });
 }
 
+function applyHardEnemyMix() {
+  if (roomNumber === 5 || currentRoomType !== "hard") return;
+
+  const mobs = bricks.filter(brick => brick.isMob);
+
+  // Hard rooms must contain an active threat, not only tougher Grey Grunts.
+  // Room 4 specifically introduces the Stun Grunt.
+  if (roomNumber >= 4 && mobs.length) {
+    const target = mobs[Math.floor(Math.random() * mobs.length)];
+
+    target.stunGoblin = true;
+    target.shooter = true;
+    target.shooterVariant = "stun";
+    target.fireGoblin = false;
+    target.darkFireGoblin = false;
+    target.iceGoblin = false;
+    target.greenGoblin = false;
+    target.hp = Math.max(target.hp, 4);
+    target.maxHp = Math.max(target.maxHp, 4);
+  }
+}
+
 function applyRouteThreat() {
   if (roomNumber === 5 || currentRoomType !== "hard") return;
 
@@ -675,6 +698,7 @@ function buildRoom() {
       let greenGoblin = false;
       let fireGoblin = false;
       let darkFireGoblin = false;
+      let stunGoblin = false;
       let raiderBoss = false;
 
       // Environment
@@ -725,6 +749,15 @@ function buildRoom() {
         darkFireGoblin = true;
       }
 
+      // Stun Grunt — stationary electric attacker.
+      if (type === "Z") {
+        hp = 4;
+        isMob = true;
+        shooter = true;
+        shooterVariant = "stun";
+        stunGoblin = true;
+      }
+
       // Armored Raider mini-boss
       if (type === "R") {
         hp = 28;
@@ -758,6 +791,7 @@ function buildRoom() {
         greenGoblin,
         fireGoblin,
         darkFireGoblin,
+        stunGoblin,
         raiderBoss,
 
         armor: raiderBoss ? 12 : 0,
@@ -781,6 +815,7 @@ function buildRoom() {
           ? `ROOM ${roomNumber} — HARD ROUTE`
           : `ROOM ${roomNumber} — STANDARD ROUTE`;
 
+  applyHardEnemyMix();
   applyRouteThreat();
   shuffleEnemyPlacements();
   updateHUD();
@@ -1455,7 +1490,12 @@ function updateExitChoice(dt) {
 
   let move = 0;
 
-  if (keys["arrowleft"] || keys["a"]) move -= 1;
+  if (player.stunTimer > 0) {
+    player.stunTimer = Math.max(0, player.stunTimer - dt);
+  }
+
+  if (player.stunTimer <= 0) {
+    if (keys["arrowleft"] || keys["a"]) move -= 1;
   if (keys["arrowright"] || keys["d"]) move += 1;
 
   if (pointerActive) {
@@ -1546,9 +1586,15 @@ function updatePlayer(dt) {
   let move = 0;
 
   if (keys["arrowleft"] || keys["a"]) move -= 1;
-  if (keys["arrowright"] || keys["d"]) move += 1;
+    if (keys["arrowright"] || keys["d"]) move += 1;
+  }
 
-  if (pointerActive && gameState !== "upgrade" && gameState !== "shop") {
+  if (
+    player.stunTimer <= 0 &&
+    pointerActive &&
+    gameState !== "upgrade" &&
+    gameState !== "shop"
+  ) {
     const difference = pointerX - player.x;
 
     if (Math.abs(difference) > 10) {
@@ -1678,11 +1724,21 @@ function checkBrickCollisions() {
   for (const brick of bricks) {
     if (!brick.alive) continue;
 
+    // Art contains a small amount of transparent padding. Use an inset
+    // collision face so the visible Ball actually reaches the visible block.
+    const insetX = Math.max(3, brick.width * 0.045);
+    const insetY = Math.max(2, brick.height * 0.055);
+
+    const left = brick.x + insetX;
+    const right = brick.x + brick.width - insetX;
+    const top = brick.y + insetY;
+    const bottom = brick.y + brick.height - insetY;
+
     if (
-      ball.x + ball.radius > brick.x &&
-      ball.x - ball.radius < brick.x + brick.width &&
-      ball.y + ball.radius > brick.y &&
-      ball.y - ball.radius < brick.y + brick.height
+      ball.x + ball.radius > left &&
+      ball.x - ball.radius < right &&
+      ball.y + ball.radius > top &&
+      ball.y - ball.radius < bottom
     ) {
       const equippedPiercing =
         progression.equipment.ball === "piercing";
@@ -1702,16 +1758,28 @@ function checkBrickCollisions() {
         damageToApply = ball.pierceDamageRemaining;
       }
 
-      const hpBefore = brick.hp + (brick.raiderBoss ? brick.armor : 0);
+      const hpBefore =
+        brick.hp +
+        (brick.raiderBoss ? brick.armor : 0);
 
-      damageBrick(brick, damageToApply, "ball");
+      damageBrick(
+        brick,
+        damageToApply,
+        "ball"
+      );
 
       if (equippedPiercing) {
         ball.pierceDamageRemaining =
-          Math.max(0, damageToApply - hpBefore);
+          Math.max(
+            0,
+            damageToApply - hpBefore
+          );
 
-        if (ball.pierceDamageRemaining > 0) {
-          // Ball continues through this destroyed target.
+        if (
+          !brick.alive &&
+          ball.pierceDamageRemaining > 0
+        ) {
+          // Piercing only passes through a target that was actually destroyed.
           continue;
         }
 
@@ -1719,13 +1787,13 @@ function checkBrickCollisions() {
       }
 
       const overlapLeft =
-        ball.x + ball.radius - brick.x;
+        ball.x + ball.radius - left;
       const overlapRight =
-        brick.x + brick.width - (ball.x - ball.radius);
+        right - (ball.x - ball.radius);
       const overlapTop =
-        ball.y + ball.radius - brick.y;
+        ball.y + ball.radius - top;
       const overlapBottom =
-        brick.y + brick.height - (ball.y - ball.radius);
+        bottom - (ball.y - ball.radius);
 
       const minOverlap =
         Math.min(
@@ -2127,6 +2195,8 @@ function updateEnemyAttacks(dt) {
 
         if (enemy.raiderBoss) {
           enemy.fireCooldown = enemy.armor > 0 ? 2.25 : 1.55;
+        } else if (enemy.shooterVariant === "stun") {
+          enemy.fireCooldown = 3.0;
         } else if (enemy.shooterVariant === "spread") {
           enemy.fireCooldown = 1.35;
         } else if (enemy.iceGoblin) {
@@ -2142,6 +2212,8 @@ function updateEnemyAttacks(dt) {
     if (enemy.fireCooldown <= 0) {
       if (enemy.raiderBoss) {
         enemy.fireCharge = 0.75;
+      } else if (enemy.shooterVariant === "stun") {
+        enemy.fireCharge = 0.8;
       } else if (enemy.shooterVariant === "spread") {
         enemy.fireCharge = 0.42;
       } else {
@@ -2179,6 +2251,18 @@ function fireEnemyShot(shooter) {
     return;
   }
 
+  if (shooter.shooterVariant === "stun") {
+    enemyProjectiles.push({
+      x,
+      y,
+      radius: 14,
+      vx: 0,
+      vy: 355,
+      type: "stun"
+    });
+    return;
+  }
+
   if (shooter.shooterVariant === "spread") {
     for (const vx of [-150, 0, 150]) {
       enemyProjectiles.push({x,y,radius:12,vx,vy:350,type:"damage"});
@@ -2204,6 +2288,8 @@ function updateProjectiles(dt) {
       enemyProjectiles.splice(i, 1);
       if (shot.type === "ice") {
         applyIceSlow();
+      } else if (shot.type === "stun") {
+        applyStun();
       } else {
         hurtPlayer();
       }
@@ -2256,6 +2342,25 @@ function applyIceSlow() {
     player.y - 45,
     player.slowStacks > 1 ? `FROZEN x${player.slowStacks}!` : "SLOWED!",
     "#bceeff"
+  );
+}
+
+function applyStun() {
+  // Briefly removes trolley control while the ball keeps moving.
+  player.stunTimer = Math.max(player.stunTimer || 0, 1.15);
+
+  createParticles(
+    player.x,
+    player.y - 20,
+    30,
+    "#ffe66d"
+  );
+
+  createFloatingText(
+    player.x,
+    player.y - 55,
+    "STUNNED!",
+    "#fff08a"
   );
 }
 
@@ -2577,38 +2682,45 @@ function drawExitChoice() {
 function drawDoor(x, y, w, h, icon, label, filter, detail = "") {
   ctx.save();
 
+  // Route glow remains visible even if the PNG fails to load.
+  ctx.globalAlpha = 0.40;
+  ctx.fillStyle =
+    label === "HARD" ? "#c43d34" :
+    label === "TREASURE" ? "#d2a933" :
+    label === "SHOP" ? "#8c55cc" :
+    "#3c91d1";
+
+  ctx.shadowBlur = 30;
+  ctx.shadowColor = ctx.fillStyle;
+  ctx.fillRect(x + 22, y + 22, w - 44, h - 38);
+
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+
   if (doorImage.complete && doorImage.naturalWidth > 0) {
     ctx.filter = filter || "none";
-    ctx.drawImage(
-      doorImage,
-      x,
-      y,
-      w,
-      h
-    );
+    ctx.drawImage(doorImage, x, y, w, h);
     ctx.filter = "none";
   } else {
-    ctx.fillStyle = "#151219";
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#777";
-    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 7;
     ctx.strokeRect(x, y, w, h);
   }
 
   ctx.textAlign = "center";
   ctx.shadowBlur = 8;
-  ctx.shadowColor = "#000000";
+  ctx.shadowColor = "#000";
 
-  ctx.font = "bold 28px Arial";
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText(icon, x + w / 2, y + h - 74);
+  ctx.font = "bold 30px Arial";
+  ctx.fillStyle = "#fff";
+  ctx.fillText(icon, x + w / 2, y + h - 73);
 
-  ctx.font = "bold 19px Arial";
-  ctx.fillText(label, x + w / 2, y + h - 46);
+  ctx.font = "bold 20px Arial";
+  ctx.fillText(label, x + w / 2, y + h - 45);
 
   ctx.font = "bold 11px Arial";
-  ctx.fillStyle = "#ded7c7";
-  ctx.fillText(detail, x + w / 2, y + h - 27);
+  ctx.fillStyle = "#eee5d4";
+  ctx.fillText(detail, x + w / 2, y + h - 25);
 
   ctx.restore();
 }
@@ -2665,6 +2777,10 @@ function drawPlayer() {
   if (player.slowTimer > 0 && player.slowStacks > 0) {
     const frost = 1 + player.slowStacks * 0.28;
     ctx.filter = `hue-rotate(155deg) saturate(${frost}) brightness(1.12)`;
+  }
+
+  if (player.stunTimer > 0) {
+    ctx.filter = "sepia(.8) saturate(2.2) brightness(1.35)";
   }
 
 
@@ -2906,6 +3022,8 @@ function drawBricks(dt) {
         ctx.filter = brick.armor > 0
           ? "grayscale(.45) brightness(.82) contrast(1.25)"
           : "none";
+      } else if (brick.stunGoblin) {
+        ctx.filter = "hue-rotate(48deg) saturate(2.1) brightness(1.2)";
       } else if (brick.darkFireGoblin) {
         ctx.filter = "hue-rotate(320deg) saturate(2) brightness(.66)";
       } else if (brick.fireGoblin || brick.shooter) {
@@ -3067,7 +3185,12 @@ function drawProjectiles() {
       ctx.closePath();
       ctx.fill();
     } else {
-      ctx.fillStyle = shot.type === "ice" ? "#91e9ff" : "#ff5d4c";
+      ctx.fillStyle =
+        shot.type === "ice"
+          ? "#91e9ff"
+          : shot.type === "stun"
+            ? "#ffe15a"
+            : "#ff5d4c";
       ctx.shadowBlur = 14;
       ctx.shadowColor = ctx.fillStyle;
       ctx.beginPath();

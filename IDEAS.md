@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.16.4**
+Current prototype: **v0.16.5**
 
 ## Current Direction
 
@@ -859,3 +859,25 @@ Treasure route is therefore a strong loot choice, not the only way treasure can 
 - Fire splash now has a visible expanding effect at its origin.
 - Visual FX are separate from damage logic.
 - Same asset is ready to tint for Fire, Ice, Poison, and Arcane effects later.
+
+
+## v0.16.5 — Portal Visibility / Collision Face / Stun Grunt
+
+### Portal
+- Cropped `assets/door.png` down to its visible portal content so the actual doorway fills the draw rectangle.
+- Added a route-colored glow behind every portal, so doors remain visible even if the image is still loading.
+- Standard blue, Hard red, Treasure gold, Shop purple.
+
+### Block Collision Readability
+- Brick/mob collision faces are inset slightly from their full canvas cell.
+- This compensates for transparent art padding and lets the visible Ball reach the visible square before bouncing.
+- Piercing now only continues through a target when that target was actually destroyed and excess damage remains.
+
+### Stun Grunt
+- Added the first Stun enemy power.
+- Stun Grunt is a yellow/electric stationary Grunt.
+- Telegraphs before firing.
+- Stun projectile does not deal HP damage.
+- On hit, trolley control is disabled for 1.15 seconds while the Ball continues moving.
+- Player/trolley receive a bright electric/stunned tint during the effect.
+- Hard Room 4 now guarantees at least one active Stun threat instead of only adding Grey-Grunt HP.
