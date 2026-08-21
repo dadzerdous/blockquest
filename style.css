@@ -786,13 +786,20 @@ body {
   border-radius: 4px;
   background: #302a28;
 }
-#weaponCooldownFill {
+#skillCooldownFill {
   display: block;
   width: 100%;
   height: 100%;
   background: #d5b45b;
 }
-#weaponStatus {
+#skillStatus {
   color: #b8aea0;
   font-size: clamp(7px, 1.05vh, 9px);
+}
+
+/* v0.17 — larger stat-rune pool */
+.runeChoices {
+  max-height: min(62vh, 650px);
+  overflow-y: auto;
+  padding-right: 4px;
 }

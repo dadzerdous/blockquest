@@ -45,8 +45,8 @@ const comboHudEl = document.getElementById("comboHud");
 const comboCountEl = document.getElementById("comboCount");
 const comboXpEl = document.getElementById("comboXp");
 const roomClearBannerEl = document.getElementById("roomClearBanner");
-const weaponCooldownFillEl = document.getElementById("weaponCooldownFill");
-const weaponStatusEl = document.getElementById("weaponStatus");
+const skillCooldownFillEl = document.getElementById("weaponCooldownFill");
+const skillStatusEl = document.getElementById("weaponStatus");
 const bossHudEl = document.getElementById("bossHud");
 const bossBarFillEl = document.getElementById("bossBarFill");
 const bossPhaseEl = document.getElementById("bossPhase");
@@ -62,11 +62,15 @@ const messageEl = document.getElementById("message");
 const upgradeOverlay = document.getElementById("upgradeOverlay");
 const shopOverlay = document.getElementById("shopOverlay");
 const runeHudTextEl = document.getElementById("runeHudText");
-const emberLevelEl = document.getElementById("emberLevel");
-const impactLevelEl = document.getElementById("impactLevel");
-const expansionLevelEl = document.getElementById("expansionLevel");
-const hasteLevelEl = document.getElementById("hasteLevel");
-const wardLevelEl = document.getElementById("wardLevel");
+const powerRuneLevelEl = document.getElementById("powerRuneLevel");
+const tempoRuneLevelEl = document.getElementById("tempoRuneLevel");
+const dragRuneLevelEl = document.getElementById("dragRuneLevel");
+const agilityRuneLevelEl = document.getElementById("agilityRuneLevel");
+const expansionRuneLevelEl = document.getElementById("expansionRuneLevel");
+const vitalityRuneLevelEl = document.getElementById("vitalityRuneLevel");
+const cooldownRuneLevelEl = document.getElementById("cooldownRuneLevel");
+const ballSizeRuneLevelEl = document.getElementById("ballSizeRuneLevel");
+const elementalRuneLevelEl = document.getElementById("elementalRuneLevel");
 
 const shieldOwnedEl = document.getElementById("shieldOwned");
 const glueCountEl = document.getElementById("glueCount");
@@ -190,11 +194,15 @@ const exitChoice = {
 };
 
 let runes = {
-  ember: 0,
-  impact: 0,
-  expansion: 0,
-  haste: 0,
-  ward: 0
+  power: 0,       // +10% ball damage each
+  tempo: 0,       // +8% ball speed each
+  drag: 0,        // -8% ball speed each
+  agility: 0,     // +10% trolley speed each
+  expansion: 0,   // +10% trolley width each
+  vitality: 0,    // +10% max HP each
+  cooldown: 0,    // -8% class-skill cooldown each
+  ballSize: 0,    // +8% ball radius each
+  elemental: 0    // +12% elemental effect strength each
 };
 
 let gold = 0;
@@ -330,7 +338,7 @@ const equipmentCatalog = {
   ball:{
     iron:{name:"Iron Ball",effect:"Standard rebound."},
     piercing:{name:"Piercing Ball",effect:"Excess damage carries through destroyed blocks."},
-    cinder:{name:"Cinder Ball",effect:"Fire splash on every hit; also counts as Fire vs Ice."}
+    cinder:{name:"Cinder Ball",effect:"Adds Fire to Ball hits: splash damage and bonus vs Ice."}
   }
 };
 let patchBoughtThisVisit = false;
@@ -415,6 +423,7 @@ const player = {
   height: 44,
   baseSpeed: 620,
   speed: 620,
+  runSpeedMultiplier: 1,
   velocityX: 0,
   hp: 5,
   maxHp: 5,
@@ -430,6 +439,7 @@ const player = {
 const ball = {
   x: player.x,
   y: player.y - 60,
+  baseRadius: 16,
   radius: 16,
   speed: 620,
   vx: 0,
@@ -439,6 +449,8 @@ const ball = {
   baseDamageMultiplier: 1,
   equipmentSpeedMultiplier: 1,
   equipmentDamageMultiplier: 1,
+  runDamageMultiplier: 1,
+  runSpeedMultiplier: 1,
   pierceDamageRemaining: 0
 };
 
@@ -446,10 +458,10 @@ let bricks = [];
 let enemyProjectiles = [];
 let playerProjectiles = [];
 
-const rangerWeapon = {
-  cooldown: 2.0,
+const rangerSkill = {
+  cooldown: 5.0,
   timer: 0,
-  damage: 3,
+  damage: 1,
   speed: 720
 };
 let particles = [];
@@ -863,11 +875,15 @@ function resetRun() {
   ballsLeft = maxBalls;
   resetHitCombo();
   runes = {
-    ember: 0,
-    impact: 0,
+    power: 0,
+    tempo: 0,
+    drag: 0,
+    agility: 0,
     expansion: 0,
-    haste: 0,
-    ward: 0
+    vitality: 0,
+    cooldown: 0,
+    ballSize: 0,
+    elemental: 0
   };
   hasOvershield = false;
   shieldReady = false;
@@ -882,6 +898,7 @@ function resetRun() {
   ball.damage = 1;
   applyPermanentStats();
   applyEquipment();
+  applyRunModifiers();
   player.hp = player.maxHp;
   player.x = WORLD_WIDTH / 2;
   player.slowTimer = 0;
@@ -907,7 +924,7 @@ function resetRun() {
 
 function startRoom() {
   playerProjectiles = [];
-  rangerWeapon.timer = 0;
+  rangerSkill.timer = 0;
   resetHitCombo();
   exitChoice.active = false;
   exitChoice.chosen = null;
@@ -952,8 +969,8 @@ function launchBall() {
     ballStuck = false;
     stuckTimer = 0;
     const angle = -Math.PI / 3;
-    ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier;
-    ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier;
+    ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
+    ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
     ball.launched = true;
     ball.pierceDamageRemaining = 0;
     gameState = "playing";
@@ -967,8 +984,8 @@ function launchBall() {
   ball.pierceDamageRemaining = 0;
 
   const angle = -Math.PI / 3;
-  ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier;
-  ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier;
+  ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
+  ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
 
   gameState = "playing";
   messageEl.style.display = "none";
@@ -1002,7 +1019,7 @@ canvas.addEventListener("pointerdown", event => {
     const worldY = ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT;
     const tappedEnemy = enemyAtWorldPoint(worldX, worldY);
 
-    if (tappedEnemy && fireRangerBow(tappedEnemy)) {
+    if (tappedEnemy && useRangerSkill(tappedEnemy)) {
       event.preventDefault();
       return;
     }
@@ -1287,24 +1304,11 @@ glueButton.addEventListener("click", armGlue);
 
 function chooseRune(type) {
   if (gameState !== "upgrade") return;
+  if (!(type in runes)) return;
 
   runes[type] += 1;
 
-  if (type === "impact") {
-    ball.damage += 1;
-  }
-
-  if (type === "expansion") {
-    player.width *= 1.15;
-  }
-
-  if (type === "haste") {
-    player.speed *= 1.15;
-  }
-
-  if (type === "ward") {
-    armorPoints += 1;
-  }
+  applyRunModifiers();
 
   upgradeOverlay.classList.add("hidden");
   updateRuneText();
@@ -1317,26 +1321,112 @@ function chooseRune(type) {
 
 
 
+function applyRunModifiers() {
+  // Caps protect the physical game from runaway stacking.
+  const damageMult = Math.min(2.5, 1 + runes.power * 0.10);
+
+  const speedUp = runes.tempo * 0.08;
+  const speedDown = runes.drag * 0.08;
+  const ballSpeedMult = Math.max(0.55, Math.min(1.75, 1 + speedUp - speedDown));
+
+  const trolleySpeedMult = Math.min(1.75, 1 + runes.agility * 0.10);
+  const widthMult = Math.min(1.60, 1 + runes.expansion * 0.10);
+  const hpMult = Math.min(2.0, 1 + runes.vitality * 0.10);
+
+  const cooldownReduction = Math.min(0.45, runes.cooldown * 0.08);
+  const ballRadiusMult = Math.min(1.50, 1 + runes.ballSize * 0.08);
+
+  ball.runDamageMultiplier = damageMult;
+  ball.runSpeedMultiplier = ballSpeedMult;
+  ball.radius = Math.round(ball.baseRadius * ballRadiusMult);
+
+  player.runSpeedMultiplier = trolleySpeedMult;
+  player.width = Math.min(
+    player.baseWidth * 1.60,
+    player.baseWidth *
+      (1 + progression.stats.control * 0.03) *
+      widthMult
+  );
+
+  const permanentMaxHp = 5 + progression.stats.vitality;
+  const newMaxHp = Math.max(
+    permanentMaxHp,
+    Math.round(permanentMaxHp * hpMult)
+  );
+
+  const hpDelta = newMaxHp - player.maxHp;
+  player.maxHp = newMaxHp;
+  if (hpDelta > 0) player.hp += hpDelta;
+  player.hp = Math.min(player.hp, player.maxHp);
+
+  rangerSkill.effectiveCooldown =
+    rangerSkill.cooldown * (1 - cooldownReduction);
+}
+
+function elementalStrengthMultiplier() {
+  return Math.min(2.0, 1 + runes.elemental * 0.12);
+}
+
 function updateRuneText() {
-  if (emberLevelEl) {
-    emberLevelEl.textContent = runes.ember > 0
-      ? `Fire active${runes.ember > 1 ? ` — explosion +${runes.ember}` : ""}`
-      : "Fire: inactive";
+  if (powerRuneLevelEl) {
+    powerRuneLevelEl.textContent =
+      `Ball damage: +${Math.min(150, runes.power * 10)}%`;
   }
 
-  if (impactLevelEl) impactLevelEl.textContent = `Bonus damage: +${runes.impact}`;
-  if (expansionLevelEl) expansionLevelEl.textContent = `Width bonus: ${Math.round((Math.pow(1.15, runes.expansion) - 1) * 100)}%`;
-  if (hasteLevelEl) hasteLevelEl.textContent = `Speed bonus: ${Math.round((Math.pow(1.15, runes.haste) - 1) * 100)}%`;
-  if (wardLevelEl) wardLevelEl.textContent = `Ward: +${runes.ward}`;
+  if (tempoRuneLevelEl) {
+    tempoRuneLevelEl.textContent =
+      `Ball speed: +${Math.min(75, runes.tempo * 8)}%`;
+  }
+
+  if (dragRuneLevelEl) {
+    dragRuneLevelEl.textContent =
+      `Ball speed: -${Math.min(45, runes.drag * 8)}%`;
+  }
+
+  if (agilityRuneLevelEl) {
+    agilityRuneLevelEl.textContent =
+      `Trolley speed: +${Math.min(75, runes.agility * 10)}%`;
+  }
+
+  if (expansionRuneLevelEl) {
+    expansionRuneLevelEl.textContent =
+      `Width: +${Math.min(60, runes.expansion * 10)}%`;
+  }
+
+  if (vitalityRuneLevelEl) {
+    vitalityRuneLevelEl.textContent =
+      `Max HP: +${Math.min(100, runes.vitality * 10)}%`;
+  }
+
+  if (cooldownRuneLevelEl) {
+    cooldownRuneLevelEl.textContent =
+      `Skill cooldown: -${Math.min(45, runes.cooldown * 8)}%`;
+  }
+
+  if (ballSizeRuneLevelEl) {
+    ballSizeRuneLevelEl.textContent =
+      `Ball size: +${Math.min(50, runes.ballSize * 8)}%`;
+  }
+
+  if (elementalRuneLevelEl) {
+    elementalRuneLevelEl.textContent =
+      `Element strength: +${Math.min(100, runes.elemental * 12)}%`;
+  }
 
   const active = [];
-  if (runes.ember) active.push(`🔥${runes.ember}`);
-  if (runes.impact) active.push(`💥${runes.impact}`);
-  if (runes.expansion) active.push(`↔️${runes.expansion}`);
-  if (runes.haste) active.push(`🏃${runes.haste}`);
-  if (runes.ward) active.push(`💙${runes.ward}`);
 
-  runeHudTextEl.textContent = active.length ? active.join("  ") : "None";
+  if (runes.power) active.push(`💥${runes.power}`);
+  if (runes.tempo) active.push(`⚡${runes.tempo}`);
+  if (runes.drag) active.push(`🐌${runes.drag}`);
+  if (runes.agility) active.push(`🏃${runes.agility}`);
+  if (runes.expansion) active.push(`↔️${runes.expansion}`);
+  if (runes.vitality) active.push(`❤️${runes.vitality}`);
+  if (runes.cooldown) active.push(`⌛${runes.cooldown}`);
+  if (runes.ballSize) active.push(`⚪${runes.ballSize}`);
+  if (runes.elemental) active.push(`✨${runes.elemental}`);
+
+  runeHudTextEl.textContent =
+    active.length ? active.join("  ") : "None";
 }
 
 function openShop() {
@@ -1616,7 +1706,7 @@ function updatePlayer(dt) {
     player.slowMultiplier = 1;
   }
 
-  player.velocityX = move * player.speed * player.slowMultiplier;
+  player.velocityX = move * player.speed * player.runSpeedMultiplier * player.slowMultiplier;
   player.x += player.velocityX * dt;
 
   const halfWidth = player.width / 2;
@@ -1712,8 +1802,8 @@ function checkPaddleCollision() {
     const maxAngle = Math.PI * 0.38;
     const angle = relativeHit * maxAngle;
 
-    ball.vx = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier;
-    ball.vy = -Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier;
+    ball.vx = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
+    ball.vy = -Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
 
     playHitSound();
     createParticles(ball.x, ball.y, 8, "#f7d98a");
@@ -1746,7 +1836,8 @@ function checkBrickCollisions() {
       const baseHitDamage =
         ball.damage *
         ball.baseDamageMultiplier *
-        ball.equipmentDamageMultiplier;
+        ball.equipmentDamageMultiplier *
+        ball.runDamageMultiplier;
 
       let damageToApply = baseHitDamage;
 
@@ -1834,12 +1925,12 @@ function damageBrick(brick, overrideDamage = null, source = "ball") {
       ? overrideDamage
       : ball.damage *
         ball.baseDamageMultiplier *
-        ball.equipmentDamageMultiplier;
+        ball.equipmentDamageMultiplier *
+        ball.runDamageMultiplier;
 
   const ballHasFire =
     isBallDamage &&
     (
-      runes.ember > 0 ||
       progression.equipment.ball === "cinder"
     );
 
@@ -1945,8 +2036,9 @@ function drawSplashEffects(){
 function fireExplosion(x, y, sourceBrick) {
   createSplashEffect(x,y,"fire",1);
 
-  const radius = 155 + Math.max(0, runes.ember - 1) * 18;
-  const splashDamage = 0.75 + Math.max(0, runes.ember - 1) * 0.25;
+  const elementMult = elementalStrengthMultiplier();
+  const radius = 155 * Math.min(1.5, elementMult);
+  const splashDamage = 0.75 * elementMult;
 
   createParticles(x, y, 28, "#ff7a35");
 
@@ -2063,18 +2155,19 @@ function updateBossHUD(boss) {
   }
 }
 
-function updateRangerWeapon(dt) {
-  rangerWeapon.timer = Math.max(0, rangerWeapon.timer - dt);
-  const ready = rangerWeapon.timer <= 0;
-  const fill = 1 - rangerWeapon.timer / rangerWeapon.cooldown;
+function updateRangerSkill(dt) {
+  rangerSkill.timer = Math.max(0, rangerSkill.timer - dt);
+  const ready = rangerSkill.timer <= 0;
+  const activeCooldown = rangerSkill.effectiveCooldown || rangerSkill.cooldown;
+  const fill = 1 - rangerSkill.timer / activeCooldown;
 
-  if (weaponCooldownFillEl) {
-    weaponCooldownFillEl.style.width = `${Math.max(0, Math.min(1, fill)) * 100}%`;
+  if (skillCooldownFillEl) {
+    skillCooldownFillEl.style.width = `${Math.max(0, Math.min(1, fill)) * 100}%`;
   }
-  if (weaponStatusEl) {
-    weaponStatusEl.textContent = ready
-      ? "BOW READY — TAP ENEMY"
-      : `BOW ${rangerWeapon.timer.toFixed(1)}s`;
+  if (skillStatusEl) {
+    skillStatusEl.textContent = ready
+      ? "BOW SHOT READY — TAP ENEMY"
+      : `BOW SHOT ${rangerSkill.timer.toFixed(1)}s`;
   }
 }
 
@@ -2095,10 +2188,10 @@ function enemyAtWorldPoint(x, y) {
   return null;
 }
 
-function fireRangerBow(target) {
+function useRangerSkill(target) {
   if (
     gameState !== "playing" ||
-    rangerWeapon.timer > 0 ||
+    rangerSkill.timer > 0 ||
     !target ||
     !target.alive ||
     !target.isMob
@@ -2115,14 +2208,14 @@ function fireRangerBow(target) {
   playerProjectiles.push({
     x,
     y,
-    vx: dx / length * rangerWeapon.speed,
-    vy: dy / length * rangerWeapon.speed,
+    vx: dx / length * rangerSkill.speed,
+    vy: dy / length * rangerSkill.speed,
     radius: 8,
-    damage: rangerWeapon.damage,
+    damage: rangerSkill.damage,
     target
   });
 
-  rangerWeapon.timer = rangerWeapon.cooldown;
+  rangerSkill.timer = rangerSkill.effectiveCooldown || rangerSkill.cooldown;
   return true;
 }
 
@@ -3231,7 +3324,7 @@ function gameLoop(timestamp) {
   updateExitChoice(dt);
 
   if (gameState === "playing") {
-    updateRangerWeapon(dt);
+    updateRangerSkill(dt);
     updatePlayerProjectiles(dt);
     updateBall(dt);
     updateBossMovement(dt);

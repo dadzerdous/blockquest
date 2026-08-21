@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.16.5**
+Current prototype: **v0.17**
 
 ## Current Direction
 
@@ -881,3 +881,58 @@ Treasure route is therefore a strong loot choice, not the only way treasure can 
 - On hit, trolley control is disabled for 1.15 seconds while the Ball continues moving.
 - Player/trolley receive a bright electric/stunned tint during the effect.
 - Hard Room 4 now guarantees at least one active Stun threat instead of only adding Grey-Grunt HP.
+
+
+## v0.17 — Skill / Equipment / Rune Rules
+
+### Core Rule
+**Skill = active player action.**
+**Equipment = changes gameplay rules.**
+**Runes = temporary numeric/stat boosts during a run.**
+
+### Ranger Skill — Bow Shot
+- Bow Shot is a class skill, not a weapon/equipment item.
+- Tap/click a living enemy to use it.
+- 1 direct skill damage.
+- 5 second base cooldown.
+- Unlimited uses, gated by cooldown.
+- Does not inherit Ball Fire, Cinder, piercing, Ball combo XP, or other Ball effects.
+- Cooldown Runes can reduce the cooldown, capped at 45% reduction.
+
+### Equipment
+Equipment remains permanent and chosen between runs.
+It can create mechanics rather than only numbers.
+
+Examples:
+- Cinder Ball = Ball gains Fire/splash behavior.
+- Piercing Ball = excess Ball damage carries through destroyed targets.
+- Future shield gear = grants shield behavior.
+- Future boots = movement handling.
+- Future helmet/chest/ring/amulet/trolley = defensive, elemental, or utility mechanics.
+
+### Runes
+Runes are now run-only stat modifiers.
+
+Current Rune pool:
+- Power: +10% Ball damage.
+- Tempo: +8% Ball speed.
+- Drag: -8% Ball speed.
+- Agility: +10% trolley speed.
+- Expansion: +10% trolley width.
+- Vitality: +10% max HP.
+- Focus: -8% class-skill cooldown.
+- Mass: +8% Ball size.
+- Element: +12% elemental-effect strength.
+
+### Caps
+Physical/stat caps prevent runaway builds from breaking the game:
+- Ball damage multiplier: 2.5x.
+- Ball speed: 55% to 175% of base.
+- Trolley speed: max 175%.
+- Trolley width: max 160%.
+- Max HP from runes: max +100%.
+- Class-skill cooldown reduction: max 45%.
+- Ball size: max +50%.
+- Elemental-effect strength: max 2x.
+
+Some future runes can be equipment- or skill-specific instead of universal.
