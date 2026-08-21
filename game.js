@@ -173,6 +173,7 @@ let lastTime = 0;
 let keys = {};
 let pointerActive = false;
 let pointerX = WORLD_WIDTH / 2;
+let pointerY = WORLD_HEIGHT / 2;
 let roomNumber = 1;
 
 let pendingRoomType = "battle";
@@ -186,6 +187,10 @@ const exitChoice = {
   heroX: WORLD_WIDTH / 2,
   heroY: 1110,
   speed: 390,
+  minX: 70,
+  maxX: WORLD_WIDTH - 70,
+  minY: 760,
+  maxY: 1135,
   facing: 1,
   hopTimer: 0,
   chosen: null,
@@ -204,6 +209,21 @@ let runes = {
   ballSize: 0,    // +8% ball radius each
   elemental: 0    // +12% elemental effect strength each
 };
+
+const runeCatalog = ["power","tempo","drag","agility","expansion","vitality","cooldown","ballSize","elemental"];
+let currentRuneOffer = [];
+function rollRuneOffer(count = 3) {
+  const pool = [...runeCatalog];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  currentRuneOffer = pool.slice(0, Math.min(count, pool.length));
+  document.querySelectorAll("[data-rune]").forEach(button => {
+    button.classList.toggle("hidden", !currentRuneOffer.includes(button.dataset.rune));
+  });
+}
+
 
 let gold = 0;
 
@@ -1054,6 +1074,7 @@ window.addEventListener("pointerup", () => {
 function setPointerPosition(event) {
   const rect = canvas.getBoundingClientRect();
   pointerX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
+  pointerY = ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT;
 }
 
 openProfilesButton.addEventListener("click", () => {
@@ -1305,6 +1326,7 @@ glueButton.addEventListener("click", armGlue);
 function chooseRune(type) {
   if (gameState !== "upgrade") return;
   if (!(type in runes)) return;
+  if (!currentRuneOffer.includes(type)) return;
 
   runes[type] += 1;
 
@@ -1554,64 +1576,45 @@ function beginExitChoice() {
   exitChoice.hopTimer = 0.45;
   exitChoice.chosen = null;
 
-  const routeSets = roomNumber <= 1
-    ? [
-        ["standard", "hard"],
-        ["standard", "treasure"]
-      ]
-    : [
-        ["standard", "hard"],
-        ["standard", "treasure"],
-        ["hard", "treasure"],
-        ["standard", "shop"],
-        ["hard", "shop"],
-        ["treasure", "shop"]
-      ];
-
+  const routeSets = [
+    ["standard", "hard"],
+    ["standard", "treasure"],
+    ["hard", "treasure"]
+  ];
   const pair = routeSets[Math.floor(Math.random() * routeSets.length)];
   exitChoice.leftType = pair[0];
   exitChoice.rightType = pair[1];
-
   pathHintEl.classList.remove("hidden");
 }
 
 function updateExitChoice(dt) {
   if (gameState !== "exitChoice") return;
-
-  let move = 0;
-
-  if (keys["arrowleft"] || keys["a"]) move -= 1;
-  if (keys["arrowright"] || keys["d"]) move += 1;
+  let moveX = 0, moveY = 0;
+  if (keys["arrowleft"] || keys["a"]) moveX -= 1;
+  if (keys["arrowright"] || keys["d"]) moveX += 1;
+  if (keys["arrowup"] || keys["w"]) moveY -= 1;
+  if (keys["arrowdown"] || keys["s"]) moveY += 1;
 
   if (pointerActive) {
-    const difference = pointerX - exitChoice.heroX;
-
-    if (Math.abs(difference) > 8) {
-      move = Math.max(-1, Math.min(1, difference / 90));
-    }
+    const dx = pointerX - exitChoice.heroX;
+    const dy = pointerY - exitChoice.heroY;
+    if (Math.abs(dx) > 10) moveX = Math.max(-1, Math.min(1, dx / 100));
+    if (Math.abs(dy) > 10) moveY = Math.max(-1, Math.min(1, dy / 100));
   }
+  if (moveX !== 0) exitChoice.facing = moveX > 0 ? 1 : -1;
+  if (exitChoice.hopTimer > 0) { exitChoice.hopTimer -= dt; return; }
+  const len = Math.hypot(moveX, moveY);
+  if (len > 1) { moveX /= len; moveY /= len; }
+  exitChoice.heroX += moveX * exitChoice.speed * dt;
+  exitChoice.heroY += moveY * exitChoice.speed * dt;
+  exitChoice.heroX = Math.max(exitChoice.minX, Math.min(exitChoice.maxX, exitChoice.heroX));
+  exitChoice.heroY = Math.max(exitChoice.minY, Math.min(exitChoice.maxY, exitChoice.heroY));
 
-  if (move !== 0) {
-    exitChoice.facing = move > 0 ? 1 : -1;
-  }
-
-  if (exitChoice.hopTimer > 0) {
-    exitChoice.hopTimer -= dt;
-    return;
-  }
-
-  exitChoice.heroX += move * exitChoice.speed * dt;
-  exitChoice.heroX =
-    Math.max(
-      70,
-      Math.min(WORLD_WIDTH - 70, exitChoice.heroX)
-    );
-
-  if (exitChoice.heroX <= 125) {
-    commitExitDoor("left");
-  } else if (exitChoice.heroX >= WORLD_WIDTH - 125) {
-    commitExitDoor("right");
-  }
+  const doorY = 810, doorW = 205, doorH = 300, r = 28;
+  const lx = 35, rx = WORLD_WIDTH - 35 - doorW;
+  const inDoor = (x,y) => exitChoice.heroX + r > x && exitChoice.heroX - r < x + doorW && exitChoice.heroY + r > y && exitChoice.heroY - r < y + doorH;
+  if (inDoor(lx, doorY)) commitExitDoor("left");
+  else if (inDoor(rx, doorY)) commitExitDoor("right");
 }
 
 function commitExitDoor(side) {
@@ -1691,7 +1694,7 @@ function updatePlayer(dt) {
   if (player.slowTimer > 0) {
     player.slowTimer -= dt;
 
-    const slowByStack = [1, 0.75, 0.58, 0.40];
+    const slowByStack = [1, 0.70, 0.40, 0.10];
 
     player.slowMultiplier =
       slowByStack[
@@ -2451,7 +2454,7 @@ function applyIceSlow() {
   player.slowStacks = Math.min(3, (player.slowStacks || 0) + 1);
   player.slowTimer = 3;
 
-  const slowByStack = [1, 0.75, 0.58, 0.40];
+  const slowByStack = [1, 0.70, 0.40, 0.10];
   player.slowMultiplier = slowByStack[player.slowStacks];
 
   createParticles(player.x, player.y, 28, "#9de7ff");
@@ -2559,6 +2562,7 @@ function checkVictory() {
     messageEl.style.display = "none";
 
     updateRuneText();
+    rollRuneOffer(3);
 
     upgradeOverlay.classList.add("rewardRise");
     upgradeOverlay.classList.remove("hidden");
@@ -2893,8 +2897,13 @@ function drawPlayer() {
 
   ctx.save();
   if (player.slowTimer > 0 && player.slowStacks > 0) {
-    const frost = 1 + player.slowStacks * 0.28;
-    ctx.filter = `hue-rotate(155deg) saturate(${frost}) brightness(1.12)`;
+    const tintByStack = [
+      "none",
+      "hue-rotate(145deg) saturate(1.7) brightness(1.18)",
+      "hue-rotate(155deg) saturate(2.3) brightness(1.30)",
+      "hue-rotate(165deg) saturate(3.0) brightness(1.48)"
+    ];
+    ctx.filter = tintByStack[Math.min(3, player.slowStacks)];
   }
 
   if (player.stunTimer > 0) {

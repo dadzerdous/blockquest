@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.17.2**
+Current prototype: **v0.17.3**
 
 ## Current Direction
 
@@ -954,3 +954,14 @@ Some future runes can be equipment- or skill-specific instead of universal.
 - Stun still disables trolley control while active.
 - Door movement remains independent of combat stun.
 - `favicon.ico` 404 is unrelated and harmless.
+
+
+## v0.17.3 — Fine-Tuning Pass
+- Freeze now tests 30% / 60% / 90% slow at stacks 1/2/3.
+- Freeze tint gets much stronger at each stack.
+- Rune rewards now roll exactly 3 random choices from the current pool.
+- Shop is removed from active route rolls for now; only Standard / Hard / Treasure appear.
+- After hopping off the trolley, route choice uses full 2D movement.
+- PC: WASD or arrows. Mobile: drag toward your destination.
+- Entering the actual portal area selects that route.
+- This movement is groundwork for a future interactive shopkeeper and walk-up items.
