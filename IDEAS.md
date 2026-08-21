@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.17**
+Current prototype: **v0.17.1**
 
 ## Current Direction
 
@@ -936,3 +936,11 @@ Physical/stat caps prevent runaway builds from breaking the game:
 - Elemental-effect strength: max 2x.
 
 Some future runes can be equipment- or skill-specific instead of universal.
+
+
+## v0.17.1 — Startup Hotfix
+- Fixed Ranger Skill HUD DOM IDs after the Weapon → Skill rename.
+- The old JS selectors were returning `null`, causing the first animation frame to throw and making the game appear not to load.
+- Removed the leftover `runes.ward` reference from room-start armor.
+- Removed the leftover `runes.ember` reference from Ball rendering; Cinder Ball now owns the Fire Ball visual as intended.
+- No balance changes from v0.17.

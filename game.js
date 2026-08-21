@@ -45,8 +45,8 @@ const comboHudEl = document.getElementById("comboHud");
 const comboCountEl = document.getElementById("comboCount");
 const comboXpEl = document.getElementById("comboXp");
 const roomClearBannerEl = document.getElementById("roomClearBanner");
-const skillCooldownFillEl = document.getElementById("weaponCooldownFill");
-const skillStatusEl = document.getElementById("weaponStatus");
+const skillCooldownFillEl = document.getElementById("skillCooldownFill");
+const skillStatusEl = document.getElementById("skillStatus");
 const bossHudEl = document.getElementById("bossHud");
 const bossBarFillEl = document.getElementById("bossBarFill");
 const bossPhaseEl = document.getElementById("bossPhase");
@@ -945,7 +945,7 @@ function startRoom() {
   enemyProjectiles = [];
   attackTimer = 0;
   shieldReady = hasOvershield;
-  armorPoints = progression.stats.defense + runes.ward;
+  armorPoints = progression.stats.defense;
 
   gameState = "waiting";
 
@@ -2164,6 +2164,7 @@ function updateRangerSkill(dt) {
   if (skillCooldownFillEl) {
     skillCooldownFillEl.style.width = `${Math.max(0, Math.min(1, fill)) * 100}%`;
   }
+
   if (skillStatusEl) {
     skillStatusEl.textContent = ready
       ? "BOW SHOT READY — TAP ENEMY"
@@ -3018,7 +3019,7 @@ function drawDriver(x, y) {
 }
 
 function drawBall() {
-  if (runes.ember > 0) {
+  if (progression.equipment.ball === "cinder") {
     ctx.save();
 
     const glow = ctx.createRadialGradient(
