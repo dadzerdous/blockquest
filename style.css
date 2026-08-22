@@ -807,3 +807,11 @@ body {
 .runeChoices .upgradeCard.hidden{display:none!important;}
 
 #skillStatus, #skillCooldownFill { display:none !important; }
+
+/* v0.18.1 — physical skill cues replace the old Ranger HUD */
+#weaponHud,
+#skillStatus,
+#skillCooldownFill,
+.weaponCooldown {
+  display: none !important;
+}

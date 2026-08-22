@@ -2313,7 +2313,7 @@ function updateEnemyAttacks(dt) {
         fireEnemyShot(enemy);
 
         if (enemy.raiderBoss) {
-          enemy.fireCooldown = enemy.armor > 0 ? 2.25 : 1.55;
+          enemy.fireCooldown = enemy.armor > 0 ? 1.65 : 1.10;
         } else if (enemy.shooterVariant === "stun") {
           enemy.fireCooldown = 3.0;
         } else if (enemy.shooterVariant === "spread") {
@@ -2330,7 +2330,7 @@ function updateEnemyAttacks(dt) {
 
     if (enemy.fireCooldown <= 0) {
       if (enemy.raiderBoss) {
-        enemy.fireCharge = 0.75;
+        enemy.fireCharge = 0.58;
       } else if (enemy.shooterVariant === "stun") {
         enemy.fireCharge = 0.8;
       } else if (enemy.shooterVariant === "spread") {
@@ -2353,7 +2353,7 @@ function fireEnemyShot(shooter) {
     const dx = targetX - x;
     const dy = targetY - y;
     const length = Math.hypot(dx, dy) || 1;
-    const speed = shooter.armor > 0 ? 360 : 430;
+    const speed = shooter.armor > 0 ? 455 : 535;
     const vx = dx / length * speed;
     const vy = dy / length * speed;
 
@@ -2760,14 +2760,14 @@ function drawExitChoice() {
   ctx.fillRect(0, 110, WORLD_WIDTH, 1040);
 
   const doorY = 810;
-  const doorW = 205;
+  const doorW = 235;
   const doorH = 300;
 
   const left = routeDoorInfo(exitChoice.leftType);
   const right = routeDoorInfo(exitChoice.rightType);
 
   drawDoor(
-    35,
+    24,
     doorY,
     doorW,
     doorH,
@@ -2778,7 +2778,7 @@ function drawExitChoice() {
   );
 
   drawDoor(
-    WORLD_WIDTH - 35 - doorW,
+    WORLD_WIDTH - 24 - doorW,
     doorY,
     doorW,
     doorH,
@@ -2859,21 +2859,127 @@ function drawRail() {
 }
 
 function drawHunterArrow() {
-  if (gameState === "exitChoice" || gameState === "postRewardShake") return;
-  const cd = rangerSkill.effectiveCooldown || rangerSkill.cooldown;
-  const amount = rangerSkill.timer <= 0 ? 1 : Math.max(0, 1 - rangerSkill.timer / cd);
-  if (amount <= .02) return;
+  if (
+    gameState === "exitChoice" ||
+    gameState === "postRewardShake"
+  ) return;
+
+  const cooldown =
+    rangerSkill.effectiveCooldown ||
+    rangerSkill.cooldown;
+
+  const recharge =
+    rangerSkill.timer <= 0
+      ? 1
+      : Math.max(
+          0,
+          1 - rangerSkill.timer / cooldown
+        );
+
+  if (recharge <= 0.02) return;
+
   ctx.save();
-  ctx.translate(player.x, player.y - 18);
-  ctx.globalAlpha = .1 + amount * .9;
-  ctx.strokeStyle="#ead7a5"; ctx.fillStyle="#ead7a5"; ctx.lineWidth=4;
-  ctx.beginPath(); ctx.moveTo(-30,0); ctx.lineTo(28,0); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(33,0); ctx.lineTo(20,-8); ctx.lineTo(20,8); ctx.closePath(); ctx.fill();
+
+  // Mount the arrow at the FRONT / TOP of the trolley,
+  // pointing toward the playfield.
+  const x = player.x;
+  const y = player.y - 48;
+
+  ctx.translate(x, y);
+  ctx.globalAlpha =
+    0.08 +
+    recharge * 0.92;
+
+  // Vertical shaft.
+  ctx.strokeStyle = "#e8d4a1";
+  ctx.fillStyle = "#e8d4a1";
+  ctx.lineWidth = 4;
+
+  ctx.beginPath();
+  ctx.moveTo(0, 24);
+  ctx.lineTo(0, -24);
+  ctx.stroke();
+
+  // Arrow head pointing UP.
+  ctx.beginPath();
+  ctx.moveTo(0, -31);
+  ctx.lineTo(-8, -18);
+  ctx.lineTo(8, -18);
+  ctx.closePath();
+  ctx.fill();
+
+  // Small fletching at the bottom.
+  ctx.beginPath();
+  ctx.moveTo(0, 21);
+  ctx.lineTo(-7, 31);
+  ctx.lineTo(0, 27);
+  ctx.lineTo(7, 31);
+  ctx.closePath();
+  ctx.fill();
+
+  // Shimmer only when fully ready.
   if (rangerSkill.timer <= 0) {
-    const a=.45+Math.sin(performance.now()/130)*.25;
-    ctx.globalAlpha=a; ctx.strokeStyle="#fff6b0"; ctx.shadowBlur=18; ctx.shadowColor="#fff6b0"; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.arc(0,0,38,0,Math.PI*2); ctx.stroke();
+    const shimmer =
+      0.38 +
+      Math.sin(performance.now() / 115) * 0.22;
+
+    ctx.globalAlpha = shimmer;
+    ctx.strokeStyle = "#fff6b0";
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = "#fff6b0";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.arc(0, -4, 25, 0, Math.PI * 2);
+    ctx.stroke();
   }
+
+  ctx.restore();
+}
+
+function drawHunterDodgeReady() {
+  if (
+    gameState !== "playing" &&
+    gameState !== "waiting"
+  ) return;
+
+  const ready =
+    hunterDodge.timer <= 0;
+
+  const progress =
+    ready
+      ? 1
+      : Math.max(
+          0,
+          1 - hunterDodge.timer / hunterDodge.cooldown
+        );
+
+  if (progress <= 0.03) return;
+
+  ctx.save();
+
+  ctx.globalAlpha =
+    ready
+      ? 0.36 + Math.sin(performance.now() / 160) * 0.10
+      : 0.06 + progress * 0.16;
+
+  ctx.strokeStyle = "#fff2b5";
+  ctx.shadowBlur = ready ? 16 : 5;
+  ctx.shadowColor = "#fff2b5";
+  ctx.lineWidth = ready ? 3 : 2;
+
+  ctx.beginPath();
+  ctx.ellipse(
+    player.x,
+    player.y - 22,
+    player.width / 2 + 18,
+    72,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.stroke();
+
   ctx.restore();
 }
 
@@ -3121,6 +3227,34 @@ function drawMobImage(image, brick, scaleX = 1, scaleY = 1, yOffset = 0) {
   return true;
 }
 
+function drawMobBacking(brick) {
+  if (!brick.isMob) return;
+
+  ctx.save();
+
+  // Neutral backing keeps every mob readable regardless of the source PNG.
+  ctx.globalAlpha = 0.78;
+  ctx.fillStyle = "#5e6268";
+  ctx.fillRect(
+    brick.x + 3,
+    brick.y + 3,
+    brick.width - 6,
+    brick.height - 6
+  );
+
+  ctx.globalAlpha = 0.34;
+  ctx.strokeStyle = "#b7bcc2";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(
+    brick.x + 3,
+    brick.y + 3,
+    brick.width - 6,
+    brick.height - 6
+  );
+
+  ctx.restore();
+}
+
 function drawEnemyAura(brick) {
   if (!brick.isMob) return;
   let c=null;
@@ -3145,6 +3279,7 @@ function drawBricks(dt) {
     const ratio = brick.hp / brick.maxHp;
 
     if (brick.isMob && gobImage.complete && gobImage.naturalWidth > 0) {
+      drawMobBacking(brick);
       drawEnemyAura(brick);
       ctx.save();
 
@@ -3177,17 +3312,15 @@ function drawBricks(dt) {
       }
 
       if (brick.raiderBoss) {
-        // Raider has different source dimensions/padding; force exact cell size
-        // so its prison block matches every other enemy block.
-        if (raiderImage.complete && raiderImage.naturalWidth > 0) {
-          ctx.drawImage(
-            raiderImage,
-            brick.x,
-            brick.y - 3,
-            brick.width,
-            brick.height + 6
-          );
-        }
+        // Keep the Raider's visible height, but fit it naturally inside the
+        // same cell instead of stretching the source art sideways.
+        drawMobImage(
+          raiderImage,
+          brick,
+          1.0,
+          1.18,
+          -2
+        );
       } else {
         drawMobImage(
           gobImage,
@@ -3383,6 +3516,7 @@ function gameLoop(timestamp) {
   drawProjectiles();
   drawRail();
   drawPlayer();
+  drawHunterDodgeReady();
   drawHunterArrow();
   drawExitChoice();
 

@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18**
+Current prototype: **v0.18.1**
 
 ## Current Direction
 
@@ -974,3 +974,32 @@ Some future runes can be equipment- or skill-specific instead of universal.
 - Portal background glow removed.
 - Clearing Room 4 forces Room 5 miniboss instead of offering a route.
 - Shop remains inactive.
+
+
+## v0.18.1 — Room 5 Feel / In-World Readability
+
+### Hunter Skill
+- Old Ranger skill HUD is fully hidden.
+- Physical Bow arrow is now mounted at the front/top of the trolley and points upward toward the playfield.
+- Arrow still disappears when fired, fades back during recharge, and shimmers when ready.
+
+### Hunter Dodge
+- Dodge readiness is shown with a subtle white/gold in-world outline around the hero/trolley.
+- It gradually returns during the 30-second recharge.
+- It is deliberately not blue so it cannot be confused with Freeze.
+
+### Mob Readability
+- Every mob now gets a neutral grey backing rectangle behind both the aura and character art.
+- Element aura stays outside/on top of that backing.
+- This is intended as a readability experiment before committing to custom mob-frame art.
+
+### Room 5 Raider
+- Raider shoots more frequently.
+- Armored phase cooldown: ~1.65s.
+- Enraged phase cooldown: ~1.10s.
+- Telegraph is slightly shorter.
+- Arrow projectile speed raised significantly.
+- Raider image is no longer stretched sideways; it is fit naturally into the same gameplay cell over the neutral mob backing.
+
+### Portals
+- Portals widened from 205 to 235 world units.
