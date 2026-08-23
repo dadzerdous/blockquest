@@ -83,43 +83,58 @@ function routeDoorInfo(type) {
 function drawExitChoice() {
   if (gameState !== "exitChoice") return;
 
-  ctx.fillStyle = "rgba(7, 7, 10, .42)";
-  ctx.fillRect(0, 110, WORLD_WIDTH, 1040);
+  ctx.fillStyle =
+    "rgba(7, 7, 10, .30)";
 
-  const doorY = 810;
-  const doorW = 235;
-  const doorH = 300;
-
-  const left = routeDoorInfo(exitChoice.leftType);
-  const right = routeDoorInfo(exitChoice.rightType);
-
-  drawDoor(
-    24,
-    doorY,
-    doorW,
-    doorH,
-    left.icon,
-    left.label,
-    left.filter,
-    left.detail
+  ctx.fillRect(
+    0,
+    110,
+    WORLD_WIDTH,
+    1040
   );
 
-  drawDoor(
-    WORLD_WIDTH - 24 - doorW,
-    doorY,
-    doorW,
-    doorH,
-    right.icon,
-    right.label,
-    right.filter,
-    right.detail
-  );
+  const doors =
+    exitChoice.doors || [];
 
-  let heroY = exitChoice.heroY;
+  for (const door of doors) {
+    const node =
+      routeSectionOne.nodes[
+        door.nodeId
+      ];
 
-  if (exitChoice.hopTimer > 0) {
-    const t = 1 - exitChoice.hopTimer / 0.45;
-    heroY -= Math.sin(t * Math.PI) * 55;
+    if (!node) continue;
+
+    const info =
+      routeDoorInfo(
+        node.type
+      );
+
+    drawDoor(
+      door.x,
+      door.y,
+      door.w,
+      door.h,
+      info.icon,
+      info.label,
+      info.filter,
+      info.detail
+    );
+  }
+
+  let heroY =
+    exitChoice.heroY;
+
+  if (
+    exitChoice.hopTimer > 0
+  ) {
+    const t =
+      1 -
+      exitChoice.hopTimer / 0.45;
+
+    heroY -=
+      Math.sin(
+        t * Math.PI
+      ) * 55;
   }
 
   drawHeroSprite(
@@ -140,9 +155,15 @@ function drawDoor(x, y, w, h, icon, label, filter, detail = "") {
     ctx.strokeStyle="#ddd"; ctx.lineWidth=7; ctx.strokeRect(x,y,w,h);
   }
   ctx.textAlign="center"; ctx.shadowBlur=8; ctx.shadowColor="#000";
-  ctx.font="bold 30px Arial"; ctx.fillStyle="#fff"; ctx.fillText(icon,x+w/2,y+h-73);
-  ctx.font="bold 20px Arial"; ctx.fillText(label,x+w/2,y+h-45);
-  ctx.font="bold 11px Arial"; ctx.fillStyle="#eee5d4"; ctx.fillText(detail,x+w/2,y+h-25);
+  const compact = w < 170;
+  ctx.font = compact ? "bold 23px Arial" : "bold 30px Arial";
+  ctx.fillStyle="#fff";
+  ctx.fillText(icon,x+w/2,y+h-(compact?60:73));
+  ctx.font = compact ? "bold 15px Arial" : "bold 20px Arial";
+  ctx.fillText(label,x+w/2,y+h-(compact?37:45));
+  ctx.font = compact ? "bold 8px Arial" : "bold 11px Arial";
+  ctx.fillStyle="#eee5d4";
+  ctx.fillText(detail,x+w/2,y+h-(compact?20:25));
   ctx.restore();
 }
 

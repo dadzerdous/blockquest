@@ -8,16 +8,17 @@ const routeSectionOne = {
   nodes: {
     "1A": { stage:1, x:50, type:"standard", exits:["2A","2B"] },
 
-    "2A": { stage:2, x:27, type:"hard", exits:["3A"] },
-    "2B": { stage:2, x:73, type:"treasure", exits:["3B","3C"] },
+    "2A": { stage:2, x:25, type:"hard", exits:["3A"] },
+    "2B": { stage:2, x:72, type:"treasure", exits:["3B","3C","3D"] },
 
-    "3A": { stage:3, x:18, type:"standard", exits:["4A","4B","4C"] },
-    "3B": { stage:3, x:52, type:"hard", exits:["4B"] },
-    "3C": { stage:3, x:82, type:"standard", exits:["4B","4C"] },
+    "3A": { stage:3, x:18, type:"standard", exits:["4A","4B"] },
+    "3B": { stage:3, x:44, type:"hard", exits:["4B"] },
+    "3C": { stage:3, x:68, type:"standard", exits:["4B","4C"] },
+    "3D": { stage:3, x:88, type:"treasure", exits:["4C"] },
 
-    "4A": { stage:4, x:16, type:"hard", exits:["5A"] },
+    "4A": { stage:4, x:18, type:"hard", exits:["5A"] },
     "4B": { stage:4, x:50, type:"standard", exits:["5A"] },
-    "4C": { stage:4, x:84, type:"treasure", exits:["5A"] },
+    "4C": { stage:4, x:82, type:"treasure", exits:["5A"] },
 
     "5A": { stage:5, x:50, type:"boss", label:"HERMAN", exits:[] }
   }
@@ -163,92 +164,333 @@ function advanceRouteGraph(chosenType) {
   }
 }
 
+function getCurrentGraphChoices() {
+  const current =
+    routeSectionOne.nodes[
+      routeGraphState.currentNodeId
+    ];
+
+  return current
+    ? (current.exits || []).slice()
+    : [];
+}
+
+function getDoorLayoutForChoices(choiceIds) {
+  if (choiceIds.length === 1) {
+    return [{
+      slot: "center",
+      nodeId: choiceIds[0],
+      x: WORLD_WIDTH / 2 - 92,
+      y: 855,
+      w: 184,
+      h: 255
+    }];
+  }
+
+  if (choiceIds.length === 2) {
+    return [
+      {
+        slot: "left",
+        nodeId: choiceIds[0],
+        x: 76,
+        y: 855,
+        w: 176,
+        h: 255
+      },
+      {
+        slot: "right",
+        nodeId: choiceIds[1],
+        x: WORLD_WIDTH - 76 - 176,
+        y: 855,
+        w: 176,
+        h: 255
+      }
+    ];
+  }
+
+  if (choiceIds.length >= 3) {
+    return [
+      {
+        slot: "left",
+        nodeId: choiceIds[0],
+        x: 42,
+        y: 870,
+        w: 154,
+        h: 230
+      },
+      {
+        slot: "center",
+        nodeId: choiceIds[1],
+        x: WORLD_WIDTH / 2 - 77,
+        y: 870,
+        w: 154,
+        h: 230
+      },
+      {
+        slot: "right",
+        nodeId: choiceIds[2],
+        x: WORLD_WIDTH - 42 - 154,
+        y: 870,
+        w: 154,
+        h: 230
+      }
+    ];
+  }
+
+  return [];
+}
+
 function beginExitChoice() {
   if (roomNumber === 4) {
     hideRouteMinimap();
-    exitChoice.active=false; exitChoice.chosen="boss"; pathHintEl.classList.add("hidden");
-    pendingRoomType="boss"; currentRoomType="boss"; roomNumber=5;
-    startRoom(); return;
+
+    const current =
+      routeSectionOne.nodes[
+        routeGraphState.currentNodeId
+      ];
+
+    const bossId =
+      current?.exits?.[0] || "5A";
+
+    routeGraphState.currentNodeId =
+      bossId;
+
+    if (
+      !routeGraphState.visited.includes(
+        bossId
+      )
+    ) {
+      routeGraphState.visited.push(
+        bossId
+      );
+    }
+
+    exitChoice.active = false;
+    exitChoice.chosen = "boss";
+    exitChoice.graphChoices = [];
+    exitChoice.doors = [];
+
+    pathHintEl.classList.add("hidden");
+
+    pendingRoomType = "boss";
+    currentRoomType = "boss";
+    roomNumber = 5;
+
+    startRoom();
+    return;
   }
 
   gameState = "exitChoice";
   exitChoice.active = true;
+
   player.x = WORLD_WIDTH / 2;
   exitChoice.heroX = WORLD_WIDTH / 2;
-  exitChoice.heroY = 1110;
+  exitChoice.heroY = 1140;
   exitChoice.facing = player.facing || 1;
   exitChoice.hopTimer = 0.45;
   exitChoice.chosen = null;
 
-  const routeSets = [
-    ["standard", "hard"],
-    ["standard", "treasure"],
-    ["hard", "treasure"]
-  ];
-  const pair = routeSets[Math.floor(Math.random() * routeSets.length)];
-  exitChoice.leftType = pair[0];
-  exitChoice.rightType = pair[1];
+  const choices =
+    getCurrentGraphChoices();
+
+  exitChoice.graphChoices =
+    choices.slice();
+
+  exitChoice.doors =
+    getDoorLayoutForChoices(
+      choices
+    );
+
+  // Compatibility for old UI references.
+  exitChoice.leftType =
+    choices[0]
+      ? routeSectionOne.nodes[
+          choices[0]
+        ]?.type
+      : null;
+
+  exitChoice.rightType =
+    choices.length > 1
+      ? routeSectionOne.nodes[
+          choices[
+            choices.length - 1
+          ]
+        ]?.type
+      : null;
+
   showRouteMinimap();
   pathHintEl.classList.remove("hidden");
 }
 
 function updateExitChoice(dt) {
   if (gameState !== "exitChoice") return;
-  let moveX = 0, moveY = 0;
+
+  let moveX = 0;
+  let moveY = 0;
+
   if (keys["arrowleft"] || keys["a"]) moveX -= 1;
   if (keys["arrowright"] || keys["d"]) moveX += 1;
   if (keys["arrowup"] || keys["w"]) moveY -= 1;
   if (keys["arrowdown"] || keys["s"]) moveY += 1;
 
   if (pointerActive) {
-    const dx = pointerX - exitChoice.heroX;
-    const dy = pointerY - exitChoice.heroY;
-    if (Math.abs(dx) > 10) moveX = Math.max(-1, Math.min(1, dx / 100));
-    if (Math.abs(dy) > 10) moveY = Math.max(-1, Math.min(1, dy / 100));
+    const dx =
+      pointerX - exitChoice.heroX;
+
+    const dy =
+      pointerY - exitChoice.heroY;
+
+    if (Math.abs(dx) > 10) {
+      moveX =
+        Math.max(
+          -1,
+          Math.min(1, dx / 100)
+        );
+    }
+
+    if (Math.abs(dy) > 10) {
+      moveY =
+        Math.max(
+          -1,
+          Math.min(1, dy / 100)
+        );
+    }
   }
-  if (moveX !== 0) exitChoice.facing = moveX > 0 ? 1 : -1;
-  if (exitChoice.hopTimer > 0) { exitChoice.hopTimer -= dt; return; }
-  const len = Math.hypot(moveX, moveY);
-  if (len > 1) { moveX /= len; moveY /= len; }
-  exitChoice.heroX += moveX * exitChoice.speed * dt;
-  exitChoice.heroY += moveY * exitChoice.speed * dt;
-  exitChoice.heroX = Math.max(exitChoice.minX, Math.min(exitChoice.maxX, exitChoice.heroX));
-  exitChoice.heroY = Math.max(exitChoice.minY, Math.min(exitChoice.maxY, exitChoice.heroY));
 
-  const doorY = 810, doorW = 205, doorH = 300, r = 28;
-  const lx = 35, rx = WORLD_WIDTH - 35 - doorW;
-  const inDoor = (x,y) => exitChoice.heroX + r > x && exitChoice.heroX - r < x + doorW && exitChoice.heroY + r > y && exitChoice.heroY - r < y + doorH;
-  if (inDoor(lx, doorY)) commitExitDoor("left");
-  else if (inDoor(rx, doorY)) commitExitDoor("right");
-}
+  if (moveX !== 0) {
+    exitChoice.facing =
+      moveX > 0 ? 1 : -1;
+  }
 
-function commitExitDoor(side) {
-  if (gameState !== "exitChoice" || exitChoice.chosen) return;
-
-  const type =
-    side === "left"
-      ? exitChoice.leftType
-      : exitChoice.rightType;
-
-  if (!type) {
-    console.warn("Exit door had no assigned route type:", side);
+  if (exitChoice.hopTimer > 0) {
+    exitChoice.hopTimer -= dt;
     return;
   }
 
-  chooseDungeonExit(type);
+  const len =
+    Math.hypot(moveX, moveY);
+
+  if (len > 1) {
+    moveX /= len;
+    moveY /= len;
+  }
+
+  exitChoice.heroX +=
+    moveX *
+    exitChoice.speed *
+    dt;
+
+  exitChoice.heroY +=
+    moveY *
+    exitChoice.speed *
+    dt;
+
+  exitChoice.heroX =
+    Math.max(
+      exitChoice.minX,
+      Math.min(
+        exitChoice.maxX,
+        exitChoice.heroX
+      )
+    );
+
+  exitChoice.heroY =
+    Math.max(
+      exitChoice.minY,
+      Math.min(
+        exitChoice.maxY,
+        exitChoice.heroY
+      )
+    );
+
+  const heroRadius = 28;
+
+  for (
+    const door of
+    (exitChoice.doors || [])
+  ) {
+    const inside =
+      exitChoice.heroX + heroRadius > door.x &&
+      exitChoice.heroX - heroRadius < door.x + door.w &&
+      exitChoice.heroY + heroRadius > door.y &&
+      exitChoice.heroY - heroRadius < door.y + door.h;
+
+    if (inside) {
+      commitExitDoor(
+        door.nodeId
+      );
+      return;
+    }
+  }
 }
 
-function chooseDungeonExit(type) {
-  if (gameState !== "exitChoice" || exitChoice.chosen) return;
+function commitExitDoor(nodeId) {
+  if (
+    gameState !== "exitChoice" ||
+    exitChoice.chosen
+  ) {
+    return;
+  }
+
+  const node =
+    routeSectionOne.nodes[nodeId];
+
+  if (!node) {
+    console.warn(
+      "Exit door had no graph node:",
+      nodeId
+    );
+    return;
+  }
+
+  chooseDungeonExit(
+    node.type,
+    nodeId
+  );
+}
+
+function chooseDungeonExit(
+  type,
+  nodeId = null
+) {
+  if (
+    gameState !== "exitChoice" ||
+    exitChoice.chosen
+  ) {
+    return;
+  }
 
   const normalizedType =
     type === "battle"
       ? "standard"
       : type;
 
-  exitChoice.chosen = normalizedType;
-  advanceRouteGraph(normalizedType);
+  exitChoice.chosen =
+    normalizedType;
+
+  if (nodeId) {
+    routeGraphState.currentNodeId =
+      nodeId;
+
+    if (
+      !routeGraphState.visited.includes(
+        nodeId
+      )
+    ) {
+      routeGraphState.visited.push(
+        nodeId
+      );
+    }
+  } else {
+    advanceRouteGraph(
+      normalizedType
+    );
+  }
+
   exitChoice.active = false;
+  exitChoice.doors = [];
+  exitChoice.graphChoices = [];
+
   hideRouteMinimap();
   pathHintEl.classList.add("hidden");
 
@@ -258,8 +500,12 @@ function chooseDungeonExit(type) {
     return;
   }
 
-  pendingRoomType = normalizedType;
-  currentRoomType = normalizedType;
+  pendingRoomType =
+    normalizedType;
+
+  currentRoomType =
+    normalizedType;
+
   roomNumber += 1;
 
   console.log(

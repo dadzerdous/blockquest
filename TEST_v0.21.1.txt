@@ -1,0 +1,41 @@
+ARKANOID RPG v0.21.1 — ROUTE + DOOR COUNT TEST
+
+VERSION
+[ ] Browser title says v0.21.1
+[ ] Game loads without red console errors
+
+MAP
+[ ] Map is higher
+[ ] Map is taller and less cramped
+[ ] Nodes/lines are easier to read
+[ ] Doors and hero remain visible below it
+
+ONE CHOICE
+[ ] A one-exit graph node shows exactly ONE portal
+[ ] The one portal is centered
+[ ] It sends me to the correct node
+
+TWO CHOICES
+[ ] Two graph exits show exactly TWO portals
+[ ] Left/right portal types match the graph
+[ ] Each portal sends me to the exact chosen node
+
+THREE CHOICES
+[ ] Three graph exits show THREE portals
+[ ] They are left / center / right
+[ ] All three labels fit/read
+[ ] All three are walkable
+[ ] Each sends me to the correct node
+
+DOOR FEEL
+[ ] Doors are a little smaller
+[ ] Doors sit slightly lower
+[ ] Hero has enough room to move
+[ ] Collision feels correct
+
+NOTES:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________

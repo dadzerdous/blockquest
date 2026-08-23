@@ -1955,3 +1955,49 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   }
   .graphNode small { font-size:6px !important; }
 }
+
+/* v0.21.1 — taller map + physical 1/2/3 door layouts */
+.routeGraphMap {
+  top: 27% !important;
+  width: min(90%, 680px) !important;
+  padding: 12px 16px 10px !important;
+}
+
+.routeGraph {
+  height: 350px !important;
+}
+
+.graphNode {
+  width: 80px !important;
+  height: 44px !important;
+}
+
+.graphNode.type-boss {
+  width: 98px !important;
+  height: 50px !important;
+}
+
+#pathHint {
+  top: 11.8% !important;
+}
+
+@media (max-width:700px) {
+  .routeGraphMap {
+    top: 26% !important;
+    width: 93% !important;
+  }
+
+  .routeGraph {
+    height: 300px !important;
+  }
+
+  .graphNode {
+    width: 64px !important;
+    height: 38px !important;
+  }
+
+  .graphNode.type-boss {
+    width: 80px !important;
+    height: 44px !important;
+  }
+}
