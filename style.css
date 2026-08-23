@@ -1187,3 +1187,74 @@ body {
     max-width: none;
   }
 }
+
+/* v0.19.6 — frame integration */
+.frameTop {
+  left: 31% !important;
+  right: 31% !important;
+  top: 4.15% !important;
+  height: 5.8% !important;
+  z-index: 8 !important;
+}
+.roomPlaque {
+  min-width: 0 !important;
+  width: 100%;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(12px, 2.1vw, 19px) !important;
+  line-height: 1;
+  color: #f5dfb6 !important;
+  /* dark backing masks most of the placeholder ROOM 1 baked into frame-1 */
+  background: rgba(38,22,13,.82) !important;
+  border-radius: 3px !important;
+}
+.framePauseButton {
+  right: -81% !important;
+  top: -12% !important;
+  width: 58px !important;
+  height: 58px !important;
+}
+
+/* Put real run money over the placeholder money plate. */
+.frameMoney {
+  right: 5.7% !important;
+  bottom: 13.2% !important;
+  min-width: 48px;
+  justify-content: center;
+}
+.frameMoney .moneyBagIcon {
+  display: none;
+}
+.frameMoney strong {
+  font-size: clamp(15px, 2.7vw, 24px);
+  color: #ffe49a;
+}
+
+/* Slightly widen gameplay opening and tighten its lower edge toward the rails. */
+.frameCanvasInset {
+  left: 13.5% !important;
+  width: 74% !important;
+  top: 8.4% !important;
+  height: 76.9% !important;
+}
+
+/* Launch prompt belongs to the game rather than below the physical doorway. */
+#launchHint {
+  z-index: 10;
+}
+
+/* The persistent control hint should not consume phone height. */
+@media (max-width:700px) {
+  #mobileHint {
+    position: absolute;
+    left: 50%;
+    bottom: 1.2%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 78%;
+    opacity: .55;
+    pointer-events: none;
+  }
+}

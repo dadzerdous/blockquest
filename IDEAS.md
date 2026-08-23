@@ -1245,3 +1245,12 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 - Gameplay is positioned inside the doorway opening using percentage coordinates.
 - Frame, gameplay, plaque, Rune display, Pause hotspot, and money display now scale together on PC and mobile.
 - This is still placeholder frame artwork and can be replaced later.
+
+
+## v0.19.6 — Frame Integration Pass
+- Dynamic Room label now overlays the placeholder frame plaque rather than sitting above it.
+- Real run money is positioned over the frame's money plate; redundant emoji bag is hidden.
+- Pause hit target moved to the artwork's red X.
+- Gameplay opening widened slightly and extended toward the track seam.
+- Mobile control hint no longer reserves permanent layout height.
+- Placeholder `frame-1.png` still contains baked sample Rune values / ROOM 1 / money; a future clean frame asset should use blank sockets, blank plaque, and blank money plate.
