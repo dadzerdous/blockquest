@@ -1258,3 +1258,98 @@ body {
     pointer-events: none;
   }
 }
+
+/* v0.20.2 — combined room + frame background */
+.dungeonFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  background: url("assets/bg-dungeon-framed.png") center / 100% 100% no-repeat !important;
+}
+.frameArt { display: none !important; }
+
+.frameCanvasInset {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: hidden;
+  z-index: 2 !important;
+}
+.frameCanvasInset #gameCanvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.frameTop {
+  position: absolute !important;
+  left: 25% !important;
+  right: 25% !important;
+  top: 3.2% !important;
+  height: 8.5% !important;
+  z-index: 7 !important;
+}
+.roomPlaque {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ead4a7 !important;
+  font-size: clamp(13px, 2.4vw, 21px) !important;
+  text-shadow: 0 2px 3px #000, 1px 1px 0 #2a180d !important;
+}
+.framePauseButton {
+  position: absolute !important;
+  right: -48% !important;
+  top: -10% !important;
+  width: 64px !important;
+  height: 64px !important;
+  background: transparent !important;
+  color: transparent !important;
+  border: 0 !important;
+  z-index: 8 !important;
+}
+
+/* No baked rune slots in this background. We'll redesign rune display separately. */
+.frameRunes { display: none !important; }
+
+.frameMoney {
+  position: absolute !important;
+  right: 4.5% !important;
+  bottom: 5.4% !important;
+  z-index: 7 !important;
+  background: rgba(0,0,0,.48);
+  border: 1px solid rgba(225,190,105,.45);
+  border-radius: 8px;
+  padding: 3px 8px;
+}
+.frameMoney .moneyBagIcon { display: inline !important; }
+
+#gameShell {
+  width: min(100vw, calc(100dvh * 2 / 3)) !important;
+  max-width: 1024px;
+  margin: 0 auto;
+}
+@media (max-width:700px) {
+  #gameShell {
+    width: min(100vw, calc(100dvh * 2 / 3)) !important;
+    max-width: none;
+  }
+}
