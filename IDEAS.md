@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.7**
+Current prototype: **v0.18.8**
 
 ## Current Direction
 
@@ -1103,4 +1103,12 @@ Goal: establish a safer baseline before Cleanup Pass 2.
 - Removed the premature preload registry added in v0.18.6.
 - It referenced `brickImage1` before that image variable was declared, which stopped the entire script at startup.
 - Asset preloading will be reintroduced correctly in the planned title/start-screen pass, after all image objects are declared.
+- No gameplay changes.
+
+
+## v0.18.8 — Pause Stability Hotfix
+- Removed all scene redraw calls from the paused branch.
+- Pause now freezes simulation and simply keeps the last rendered canvas frame visible.
+- The pause overlay remains normal DOM above the frozen canvas.
+- This avoids calling nonexistent/renamed draw helpers such as `drawWalls()`.
 - No gameplay changes.

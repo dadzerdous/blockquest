@@ -3674,21 +3674,8 @@ if (pauseButton) pauseButton.addEventListener("click", togglePause);
 if (resumeButton) resumeButton.addEventListener("click", resumeGame);
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k==="p"||k==="escape"){e.preventDefault();togglePause();}});
 function gameLoop(timestamp) {if (gameState === "paused") {
-    // Keep the last frame visible without advancing any simulation.
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBackground();
-    drawWalls();
-    drawRail();
-    drawBricks(0);
-    drawSplashEffects();
-    drawFallingPickups();
-    drawPlayerProjectiles();
-    drawProjectiles();
-    drawPlayer();
-    drawHunterDodgeReady();
-    drawHunterArrow();
-    drawBall();
-    drawExitChoice();
+    // Do not redraw or update while paused.
+    // The last rendered canvas frame remains visible under the pause overlay.
     requestAnimationFrame(gameLoop);
     return;
   }
