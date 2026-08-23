@@ -1,0 +1,19 @@
+ARKANOID RPG v0.19.5 — FRAME TEST
+
+[ ] Entire doorway frame is visible
+[ ] Frame is not zoomed/cropped
+[ ] Gameplay sits inside the doorway opening
+[ ] Gameplay fills the opening reasonably well
+[ ] Left/right stonework does not cover important gameplay
+[ ] Top plaque is visible
+[ ] Pause hotspot lines up acceptably
+[ ] Tracks are visible at the bottom
+[ ] Money sits near track level
+[ ] PC scaling looks right
+[ ] Mobile uses most of the available screen
+[ ] Touch/drag still matches the visible player
+[ ] No console errors
+
+FRAME NOTES:
+__________________________________________________
+__________________________________________________

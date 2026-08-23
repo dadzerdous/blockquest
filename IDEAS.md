@@ -1237,3 +1237,11 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 
 ### Damage Numbers
 - Floating combat text is being standardized with a dark outline for readability against the dungeon background.
+
+
+## v0.19.5 — Frame Fit Hotfix
+- Reworked frame sizing around the actual `frame-1.png` aspect ratio (699×910).
+- The frame image now establishes the outer coordinate system instead of being stretched around the old 9:14 canvas.
+- Gameplay is positioned inside the doorway opening using percentage coordinates.
+- Frame, gameplay, plaque, Rune display, Pause hotspot, and money display now scale together on PC and mobile.
+- This is still placeholder frame artwork and can be replaced later.

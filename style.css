@@ -1097,3 +1097,93 @@ body {
     box-sizing: border-box;
   }
 }
+
+/* v0.19.5 — frame-fit hotfix
+   frame-1.png native size: 699 x 910
+   The frame establishes the coordinate system; gameplay is positioned inside its opening.
+*/
+#gameShell {
+  width: min(100vw, calc(100dvh * 699 / 910));
+  max-width: 699px;
+  margin: 0 auto;
+}
+
+.dungeonFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 699 / 910;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.frameArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain !important;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Approximate transparent/open play area of the supplied doorway art.
+   All values are percentages of the frame, so PC/mobile scale together. */
+.frameCanvasInset {
+  position: absolute !important;
+  left: 14.5% !important;
+  top: 20.5% !important;
+  width: 72.0% !important;
+  height: 72.8% !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  overflow: hidden;
+  z-index: 2 !important;
+  background: #07080a;
+}
+
+.frameCanvasInset #gameCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Dynamic UI overlays above frame art. */
+.frameTop {
+  position: absolute !important;
+  left: 31% !important;
+  right: 31% !important;
+  top: 4.0% !important;
+  height: 5.2% !important;
+  z-index: 7 !important;
+}
+.roomPlaque {
+  font-size: clamp(11px, 2.2vw, 18px);
+}
+.framePauseButton {
+  position: absolute !important;
+  right: -78% !important;
+  top: -8% !important;
+  z-index: 8 !important;
+}
+.frameRunes {
+  position: absolute !important;
+  left: 3.5% !important;
+  top: 35% !important;
+  bottom: 18% !important;
+  width: 9% !important;
+  z-index: 7 !important;
+}
+.frameMoney {
+  position: absolute !important;
+  right: 5.5% !important;
+  bottom: 3.4% !important;
+  z-index: 7 !important;
+}
+
+@media (max-width:700px) {
+  #gameShell {
+    width: min(100vw, calc(100dvh * 699 / 910));
+    max-width: none;
+  }
+}
