@@ -277,6 +277,36 @@ function drawHunterDodgeReady() {
   ctx.restore();
 }
 
+
+function drawMountedHeroImage(image, sx, sy, sw, sh, dx, dy, dw, dh, mountedIdle, backFrame) {
+  if (mountedIdle) {
+    ctx.drawImage(
+      heroSpriteSheetImage,
+      backFrame.x,
+      backFrame.y,
+      backFrame.w,
+      backFrame.h,
+      dx,
+      dy,
+      dw,
+      dh
+    );
+    return;
+  }
+
+  ctx.drawImage(
+    image,
+    sx,
+    sy,
+    sw,
+    sh,
+    dx,
+    dy,
+    dw,
+    dh
+  );
+}
+
 function drawPlayer() {
   let x = player.x;
   let y = player.y;
@@ -366,24 +396,35 @@ function drawPlayer() {
   if (gameState !== "exitChoice") {
     const mountedIdle =
       Math.abs(player.velocityX || 0) < 8 &&
-      heroBackImages[0] &&
-      heroBackImages[0].complete &&
-      heroBackImages[0].naturalWidth > 0;
+      player.hp >= player.maxHp &&
+      heroSpriteSheetImage.complete &&
+      heroSpriteSheetImage.naturalWidth > 0;
+
+    const mountedBackFrame =
+      heroSpriteAtlas.walkBack[0];
 
     const mountedHeroImage =
       mountedIdle
-        ? heroBackImages[0]
+        ? heroSpriteSheetImage
         : heroImage;
 
     const heroH = 92;
     const heroW =
-      mountedHeroImage.naturalHeight > 0
+      mountedIdle
         ? heroH *
           (
-            mountedHeroImage.naturalWidth /
-            mountedHeroImage.naturalHeight
+            mountedBackFrame.w /
+            mountedBackFrame.h
           )
-        : 58;
+        : (
+            mountedHeroImage.naturalHeight > 0
+              ? heroH *
+                (
+                  mountedHeroImage.naturalWidth /
+                  mountedHeroImage.naturalHeight
+                )
+              : 58
+          );
 
     if (
       mountedHeroImage.complete &&
@@ -408,7 +449,7 @@ function drawPlayer() {
         ctx.save();
         ctx.globalAlpha = 0.28;
         ctx.filter = "grayscale(1) brightness(.85)";
-        ctx.drawImage(
+        drawMountedHeroImage(
           mountedHeroImage,
           0,
           0,
@@ -417,7 +458,9 @@ function drawPlayer() {
           heroX,
           heroY,
           heroW,
-          fadedHeight
+          fadedHeight,
+          mountedIdle,
+          mountedBackFrame
         );
         ctx.restore();
       }
@@ -432,7 +475,7 @@ function drawPlayer() {
           mountedHeroImage.naturalHeight *
           hpRatio;
 
-        ctx.drawImage(
+        drawMountedHeroImage(
           mountedHeroImage,
           0,
           sourceY,
@@ -441,7 +484,9 @@ function drawPlayer() {
           heroX,
           heroY + fadedHeight,
           heroW,
-          fullColorHeight
+          fullColorHeight,
+          mountedIdle,
+          mountedBackFrame
         );
       }
     }
@@ -451,31 +496,38 @@ function drawPlayer() {
   ctx.restore();
 }
 
-const heroIdleCleanImage = new Image();
-heroIdleCleanImage.src = "assets/hero_idle_clean.png";
+const heroSpriteSheetImage = new Image();
+heroSpriteSheetImage.src = "assets/hero_trolley_spritesheet.png";
 
-const heroMoveImages = [
-  "assets/hero_move_1.png",
-  "assets/hero_move_2.png",
-  "assets/hero_move_3.png",
-  "assets/hero_move_4.png"
-].map(src => {
-  const image = new Image();
-  image.src = src;
-  return image;
-});
+/*
+  Single-sheet navigation atlas.
+  All frames are cropped directly from the existing sprite sheet,
+  so no extra hero PNG files are required in /assets.
+*/
+const heroSpriteAtlas = {
+  idle: [
+    // HERO - IDLE, first front/neutral pose
+    { x: 22, y: 40, w: 112, h: 160 }
+  ],
 
-const heroBackImages = [
-  "assets/hero_back_1.png",
-  "assets/hero_back_2.png",
-  "assets/hero_back_3.png"
-].map(src => {
-  const image = new Image();
-  image.src = src;
-  return image;
-});
+  walkRight: [
+    // HERO - WALK RIGHT row
+    { x: 520, y: 48, w: 112, h: 154 },
+    { x: 625, y: 48, w: 112, h: 154 },
+    { x: 730, y: 48, w: 112, h: 154 },
+    { x: 835, y: 48, w: 112, h: 154 },
+    { x: 940, y: 48, w: 112, h: 154 }
+  ],
 
-function getHeroNavigationImage() {
+  walkBack: [
+    // HERO - BACK VIEW row
+    { x: 1125, y: 445, w: 110, h: 155 },
+    { x: 1265, y: 445, w: 110, h: 155 },
+    { x: 1405, y: 445, w: 110, h: 155 }
+  ]
+};
+
+function getHeroNavigationFrame() {
   const moveX =
     exitChoice.moveX || 0;
 
@@ -488,69 +540,62 @@ function getHeroNavigationImage() {
 
   if (!moving) {
     return {
-      image: heroIdleCleanImage,
+      frame: heroSpriteAtlas.idle[0],
       flipX: exitChoice.facing < 0
     };
   }
 
-  // UP = away from camera, toward the dungeon/doors.
-  // Use the actual backpack/back-view row.
+  // UP = away from the camera / toward the dungeon.
   if (
     moveY < -0.20 &&
     Math.abs(moveY) >=
       Math.abs(moveX) * 0.55
   ) {
-    const frameIndex =
+    const frames =
+      heroSpriteAtlas.walkBack;
+
+    const index =
       Math.floor(
         performance.now() / 145
-      ) %
-      heroBackImages.length;
+      ) % frames.length;
 
     return {
-      image:
-        heroBackImages[
-          frameIndex
-        ],
+      frame: frames[index],
       flipX: false
     };
   }
 
-  const frameIndex =
+  const frames =
+    heroSpriteAtlas.walkRight;
+
+  const index =
     Math.floor(
       performance.now() / 120
-    ) %
-    heroMoveImages.length;
+    ) % frames.length;
 
   return {
-    image:
-      heroMoveImages[
-        frameIndex
-      ],
+    frame: frames[index],
     flipX: moveX < 0
   };
 }
 
 function drawHeroSprite(x, y, facing = 1, scale = 1) {
-  const selection =
-    getHeroNavigationImage();
-
-  const image =
-    selection.image;
-
   if (
-    image &&
-    image.complete &&
-    image.naturalWidth > 0
+    heroSpriteSheetImage.complete &&
+    heroSpriteSheetImage.naturalWidth > 0
   ) {
+    const selection =
+      getHeroNavigationFrame();
+
+    const frame =
+      selection.frame;
+
     const drawH =
       118 * scale;
 
     const drawW =
       drawH *
-      (
-        image.naturalWidth /
-        image.naturalHeight
-      );
+      (frame.w / frame.h);
 
     ctx.save();
     ctx.translate(x, y);
@@ -560,7 +605,11 @@ function drawHeroSprite(x, y, facing = 1, scale = 1) {
     }
 
     ctx.drawImage(
-      image,
+      heroSpriteSheetImage,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
       -drawW / 2,
       -drawH,
       drawW,
@@ -571,7 +620,6 @@ function drawHeroSprite(x, y, facing = 1, scale = 1) {
     return;
   }
 
-  // Original hero remains a safe fallback.
   if (
     typeof heroImage !== "undefined" &&
     heroImage.complete &&
@@ -605,12 +653,7 @@ function drawHeroSprite(x, y, facing = 1, scale = 1) {
   }
 
   ctx.fillStyle = "#4f7bc4";
-  ctx.fillRect(
-    x - 18,
-    y - 50,
-    36,
-    60
-  );
+  ctx.fillRect(x - 18, y - 50, 36, 60);
 }
 
 function drawDriver(x, y) {

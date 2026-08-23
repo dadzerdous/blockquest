@@ -1,0 +1,25 @@
+ARKANOID RPG v0.21.5 — SINGLE-SPRITESHEET HOTFIX
+
+ASSETS
+[ ] No 404 errors for hero_idle_clean / hero_move / hero_back PNGs
+[ ] hero_trolley_spritesheet.png loads successfully
+
+UNMOUNTED
+[ ] Neutral pose appears
+[ ] Left/right walking animates
+[ ] Walking UP shows backpack/back
+[ ] No stray blue fragment beside hero
+
+MOUNTED
+[ ] At full HP and stopped, hero faces UP/back
+[ ] Moving left/right uses normal directional pose
+[ ] No new rendering errors
+
+NOTE:
+For this hotfix, the mounted back-facing idle is used at FULL HP.
+When HP is partially depleted, the original mounted sprite is retained
+so the existing HP fade effect remains intact. We can make the back-view
+support the split-color HP effect in the next polish pass.
+
+CONSOLE ERRORS:
+__________________________________________________
