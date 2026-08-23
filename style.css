@@ -844,3 +844,67 @@ body {
 #gameShell {
   position: relative;
 }
+
+/* v0.19 — Dungeon doorway frame */
+#roomTitle,
+#goldHud,
+#runeHud {
+  display: none !important;
+}
+.dungeonFrame{
+  position:relative;
+  box-sizing:border-box;
+  width:100%;
+  padding:64px 28px 48px;
+  background:linear-gradient(90deg,#282322 0%,#514840 12%,#302a28 25%,#302a28 75%,#514840 88%,#282322 100%);
+  border:5px solid #171416;
+  border-radius:18px 18px 9px 9px;
+  box-shadow:inset 0 0 0 3px rgba(225,205,175,.08),inset 0 0 28px rgba(0,0,0,.72);
+}
+.frameCanvasInset{
+  overflow:hidden;
+  border:5px solid #211d20;
+  border-radius:7px;
+  background:#09090b;
+}
+.frameCanvasInset canvas{display:block;width:100%;height:auto}
+.frameTop{
+  position:absolute;
+  top:8px;left:24px;right:24px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+}
+.roomPlaque{
+  min-width:190px;
+  padding:8px 18px;
+  border:2px solid rgba(225,205,170,.32);
+  border-radius:5px;
+  background:rgba(80,65,50,.92);
+  color:#eadabd;
+  text-align:center;font-weight:900;letter-spacing:.08em;
+  box-shadow:inset 0 0 10px rgba(0,0,0,.55);
+}
+.framePauseButton{
+  position:absolute;right:0;top:-2px;
+  width:42px;height:42px;border:0;background:transparent;
+  color:#9c8e7e;font:900 34px/1 Arial;cursor:pointer;
+  text-shadow:0 1px #000;
+}
+.framePauseButton:hover{color:#f0ddba}
+.frameMoney{
+  position:absolute;right:18px;bottom:7px;
+  display:flex;align-items:center;gap:5px;
+  color:#f3d16d;font-size:18px;font-weight:900;
+}
+.moneyBagIcon{font-size:25px}
+.frameRunes{
+  position:absolute;left:4px;top:74px;bottom:48px;width:22px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  pointer-events:none;
+}
+.frameRune{
+  display:flex;flex-direction:column;align-items:center;
+  color:#d9caaa;font-size:13px;font-weight:900;
+  text-shadow:0 1px #000;
+}
+.frameRune strong{color:#fff1b8;font-size:11px}
+.dangerButton{border-color:#7d3e3e!important;color:#ffd6d1!important}

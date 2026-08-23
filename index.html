@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.18.9</title>
+  <title>Spike Trolley RPG v0.19</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -15,13 +15,31 @@
         <div> <span id="enemyCount">0</span></div>
       </div>
 
-      <canvas id="gameCanvas" width="900" height="1400">
-</canvas>
-      <button id="pauseButton" class="pauseButton" type="button" aria-label="Pause game">Ⅱ</button>
+      <div id="dungeonFrame" class="dungeonFrame">
+        <div class="frameTop">
+          <div id="roomPlaque" class="roomPlaque">ROOM 1</div>
+          <button id="pauseButton" class="framePauseButton" type="button" aria-label="Pause game">×</button>
+        </div>
+
+        <div id="frameRunes" class="frameRunes" aria-label="Runes collected"></div>
+
+        <div class="frameCanvasInset">
+          <canvas id="gameCanvas" width="900" height="1400"></canvas>
+        </div>
+
+        <div id="frameMoney" class="frameMoney" aria-label="Run money">
+          <span class="moneyBagIcon">💰</span>
+          <strong id="frameMoneyValue">0</strong>
+        </div>
+      </div>
+
       <div id="pauseOverlay" class="hidden">
         <div class="pausePanel">
-          <h1>PAUSED</h1>
+          <div class="eyebrow">PAUSED</div>
+          <h1>Dungeon Paused</h1>
           <button id="resumeButton" class="primaryLobbyButton" type="button">RESUME</button>
+          <button id="pauseOptionsButton" class="secondaryLobbyButton" type="button">⚙️ OPTIONS</button>
+          <button id="endRunButton" class="secondaryLobbyButton dangerButton" type="button">END RUN</button>
         </div>
       </div>
 
@@ -31,7 +49,7 @@
 <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.18.9</div>
+      <div id="versionBadge">v0.19</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>

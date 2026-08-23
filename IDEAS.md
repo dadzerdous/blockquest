@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.9**
+Current prototype: **v0.19**
 
 ## Current Direction
 
@@ -1157,3 +1157,28 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 
 - Room 5: Herman / Raider introduction → Raiders can later become normal enemies.
 - Room 15: Hidden Goblin introduction → Hidden Goblins can later become normal enemies.
+
+
+## v0.19 — Dungeon Frame / Pause Menu / Pill Visibility
+
+### Dungeon Frame
+- Gameplay is now framed like a dungeon doorway rather than a generic UI border.
+- A plaque above the opening displays the current Room.
+- Pause is represented by an etched-style `X` in the upper-right stonework.
+- Run money is shown as a bag + number at the lower-right below the player.
+- Collected Runes appear vertically along the left side of the doorway frame.
+- Existing Room title / Gold / Rune HUD elements remain in the DOM for stability but are visually hidden.
+
+### Pause Menu
+- Resume.
+- Options.
+- End Run → resets the run and returns to the title/lobby.
+- Options opened from Pause return to the Pause menu when closed.
+
+### Pills
+- Wide Paddle is still the only Pill.
+- For testing, Pill odds increased to 12% from normal bricks and 35% from Treasure bricks.
+- Pill replaces money from that brick; one block does not produce both.
+
+### Money
+- Temporary money pickup changed from a circle to a gold diamond so it cannot be confused as easily with enemy shots.

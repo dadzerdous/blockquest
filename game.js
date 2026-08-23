@@ -2,6 +2,11 @@ const canvas = document.getElementById("gameCanvas");
 const pauseButton=document.getElementById("pauseButton");
 const pauseOverlay=document.getElementById("pauseOverlay");
 const resumeButton=document.getElementById("resumeButton");
+const roomPlaqueEl=document.getElementById("roomPlaque");
+const frameMoneyValueEl=document.getElementById("frameMoneyValue");
+const frameRunesEl=document.getElementById("frameRunes");
+const pauseOptionsButton=document.getElementById("pauseOptionsButton");
+const endRunButton=document.getElementById("endRunButton");
 const ctx = canvas.getContext("2d");
 
 const heroShieldEl = document.getElementById("heroShield");
@@ -172,6 +177,7 @@ function playHitSound() {
 
 let gameState = "waiting";
 let pausedFromState = null;
+let optionsOpenedFromPause = false;
 let lastTime = 0;
 let keys = {};
 let pointerActive = false;
@@ -1113,7 +1119,13 @@ openOptionsButton.addEventListener("click", () => {
 
 closeOptionsButton.addEventListener("click", () => {
   optionsOverlay.classList.add("hidden");
-  runLobby.classList.remove("hidden");
+
+  if (optionsOpenedFromPause) {
+    optionsOpenedFromPause = false;
+    pauseOverlay.classList.remove("hidden");
+  } else {
+    runLobby.classList.remove("hidden");
+  }
 });
 
 musicVolumeInput.addEventListener("input", () => {
@@ -1537,6 +1549,7 @@ function updateShopUI() {
   if (healBtn) healBtn.disabled = patchBoughtThisVisit || gold < 6 || player.hp >= player.maxHp;
   if (ballBtn) ballBtn.disabled = gold < 10 || ballsLeft >= maxBalls;
 
+  updateFrameHUD();
   updateGlueButton();
 }
 
@@ -2209,8 +2222,8 @@ function trySpawnBrickReward(brick) {
   // rare Pill replaces the normal money drop.
   const pillChance =
     brick.treasure
-      ? 0.16
-      : 0.035;
+      ? 0.35
+      : 0.12;
 
   if (Math.random() < pillChance && !roomPills.wide) {
     spawnPickup(
@@ -2349,15 +2362,19 @@ function drawFallingPickups() {
     );
 
     if (pickup.type === "money") {
-      ctx.shadowBlur = 12;
+      ctx.save();
+      ctx.rotate(Math.PI / 4);
+      ctx.shadowBlur = 10;
       ctx.shadowColor = "#ffd867";
-      ctx.fillStyle = "#f5c84c";
-      ctx.beginPath();
-      ctx.arc(0, 0, pickup.radius, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = "#e0b640";
+      ctx.fillRect(-10, -10, 20, 20);
+      ctx.strokeStyle = "#fff0a8";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-10, -10, 20, 20);
+      ctx.restore();
 
-      ctx.fillStyle = "#6d5317";
-      ctx.font = "bold 13px Arial";
+      ctx.fillStyle = "#5c4713";
+      ctx.font = "bold 12px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("$", 0, 1);
@@ -2856,6 +2873,36 @@ function updateParticles(dt) {
     p.life -= dt;
 
     if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function updateFrameHUD() {
+  if (roomPlaqueEl) {
+    roomPlaqueEl.textContent = roomNumber === 5
+      ? "ROOM 5 — MINI-BOSS"
+      : `ROOM ${roomNumber}`;
+  }
+
+  if (frameMoneyValueEl) {
+    frameMoneyValueEl.textContent = gold;
+  }
+
+  if (frameRunesEl) {
+    const entries = [
+      ["💥", runes.power],
+      ["⚡", runes.tempo],
+      ["🐌", runes.drag],
+      ["🏃", runes.agility],
+      ["↔", runes.expansion],
+      ["❤", runes.vitality],
+      ["⌛", runes.cooldown],
+      ["●", runes.ballSize],
+      ["✦", runes.elemental]
+    ].filter(([, value]) => value > 0);
+
+    frameRunesEl.innerHTML = entries
+      .map(([icon, value]) => `<div class="frameRune"><span>${icon}</span><strong>${value}</strong></div>`)
+      .join("");
   }
 }
 
@@ -3672,6 +3719,24 @@ function resumeGame(){if(gameState!=="paused")return;gameState=pausedFromState||
 function togglePause(){gameState==="paused"?resumeGame():pauseGame();}
 if (pauseButton) pauseButton.addEventListener("click", togglePause);
 if (resumeButton) resumeButton.addEventListener("click", resumeGame);
+if (pauseOptionsButton) {
+  pauseOptionsButton.addEventListener("click", () => {
+    optionsOpenedFromPause = true;
+    pauseOverlay.classList.add("hidden");
+    applySoundSettings();
+    optionsOverlay.classList.remove("hidden");
+  });
+}
+if (endRunButton) {
+  endRunButton.addEventListener("click", () => {
+    pauseOverlay.classList.add("hidden");
+    pausedFromState = null;
+    resetRun();
+    gameState = "lobby";
+    runLobby.classList.remove("hidden");
+  });
+}
+
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k==="p"||k==="escape"){e.preventDefault();togglePause();}});
 function gameLoop(timestamp) {if (gameState === "paused") {
     // Do not redraw or update while paused.
