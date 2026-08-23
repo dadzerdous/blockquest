@@ -1,0 +1,50 @@
+ARKANOID RPG v0.20.1 — MULTI-FILE REFACTOR TEST
+
+IMPORTANT: This build is intended to behave exactly like v0.19.6. No gameplay changes were intentionally made.
+
+STARTUP / STRUCTURE
+[ ] Game loads normally
+[ ] No black screen
+[ ] No red console errors
+[ ] Console does NOT show Identifier has already been declared
+[ ] Console does NOT show a missing function/reference error
+[ ] Splash shows BUILD v0.20.1
+
+BASIC GAME LOOP
+[ ] Start Run works
+[ ] Ball launches
+[ ] Paddle controls work
+[ ] Hunter arrow works
+[ ] Dodge still works
+[ ] Pause / Resume works
+[ ] Options from Pause works
+[ ] End Run works
+
+ROOM FLOW
+[ ] Room 1 enemies/bricks load
+[ ] Money drops
+[ ] XP drops
+[ ] Wide Pill can appear/work
+[ ] Rune screen shows 3 choices
+[ ] Rune selection works
+[ ] Route doors work
+[ ] Off-trolley movement works
+[ ] Room 4 forces Room 5
+[ ] Room 5 miniboss works
+
+VISUALS
+[ ] Frame still appears exactly as before
+[ ] Damage numbers still work
+[ ] Music / hit sound still work
+[ ] Mobile scaling/touch still work (if tested)
+
+IF SOMETHING BREAKS, PLEASE INCLUDE THE FILE + LINE FROM THE CONSOLE ERROR.
+
+BUGS / DIFFERENCES FROM v0.19.6:
+__________________________________________________
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________
+__________________________________________________

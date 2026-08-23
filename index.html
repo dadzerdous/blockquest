@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.19.6</title>
+  <title>Spike Trolley RPG v0.20.1</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -50,7 +50,7 @@
 <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.19.6</div>
+      <div id="versionBadge">v0.20.1</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
@@ -341,6 +341,13 @@
     </div>
   </div>
 
-  <script src="game.js"></script>
+  <!-- v0.20: game code split by responsibility; keep this order. -->
+  <script src="01-core.js"></script>
+  <script src="02-rooms.js"></script>
+  <script src="03-ui-input.js"></script>
+  <script src="04-gameplay.js"></script>
+  <script src="05-flow-hud.js"></script>
+  <script src="06-render.js"></script>
+  <script src="07-main.js"></script>
 </body>
 </html>

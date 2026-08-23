@@ -1254,3 +1254,28 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 - Gameplay opening widened slightly and extended toward the track seam.
 - Mobile control hint no longer reserves permanent layout height.
 - Placeholder `frame-1.png` still contains baked sample Rune values / ROOM 1 / money; a future clean frame asset should use blank sockets, blank plaque, and blank money plate.
+
+## v0.20 — JavaScript Structure Refactor
+
+No gameplay/design changes intended in this build.
+
+The previous single `game.js` has been split into ordered classic browser scripts:
+
+1. `js/01-core.js` — DOM references, assets/audio, settings, global state, profiles/progression, permanent stats, combo state.
+2. `js/02-rooms.js` — encounter layouts, room generation/threat modifiers, equipment application, run/room reset, ball launch.
+3. `js/03-ui-input.js` — pointer/keyboard/UI listeners, profiles UI, Rune rewards/modifiers, Shop legacy code, room-clear transition helpers.
+4. `js/04-gameplay.js` — route movement, player/ball physics, collisions, damage, Fire FX, boss logic, falling rewards, Hunter skill, enemy attacks/status effects.
+5. `js/05-flow-hud.js` — victory/loss/lobby flow, particles/floating text, frame HUD and gameplay HUD updates.
+6. `js/06-render.js` — background, doors, rail, player/Hunter visuals, ball, enemies/bricks, projectiles, particles.
+7. `js/07-main.js` — pause controls, main game loop, startup initialization.
+
+These remain normal `<script>` files rather than ES modules. This intentionally preserves the existing shared global state and avoids changing GitHub Pages/mobile loading behavior while making the project much easier to navigate and debug.
+
+**Important:** Keep the script tags in the current order. `game.js` is no longer referenced by `index.html`; an older copy may remain in the repository harmlessly, but future edits should be made in the `js/` files.
+
+
+## v0.20.1 — Flat File Layout
+- Kept the multi-file JavaScript refactor.
+- All JavaScript files now live in the same folder as `index.html`.
+- `assets/` remains the only subfolder.
+- No gameplay changes.
