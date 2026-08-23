@@ -287,21 +287,70 @@ function applyEquipment() {
     ball.equipmentDamageMultiplier = 0.90;
   }
 }
-function updateLoadoutUI() {
-  const g = equipmentCatalog.gloves[progression.equipment.gloves];
-  const b = equipmentCatalog.ball[progression.equipment.ball];
-  glovesNameEl.textContent=g.name; glovesEffectEl.textContent=g.effect;
-  ballNameEl.textContent=b.name; ballEffectEl.textContent=b.effect;
+let activePrepareSlot = "ball";
+
+function equipmentStatsHtml(item) {
+  return (item.stats || [])
+    .map(stat => `<span>${stat}</span>`)
+    .join("");
 }
+
+function updateLoadoutUI() {
+  const gloves = equipmentCatalog.gloves[progression.equipment.gloves];
+  const ballItem = equipmentCatalog.ball[progression.equipment.ball];
+
+  if (glovesNameEl) glovesNameEl.textContent = gloves.name;
+  if (ballNameEl) ballNameEl.textContent = ballItem.name;
+
+  document.querySelectorAll(".prepareSlot[data-slot]").forEach(button => {
+    button.classList.toggle("active", button.dataset.slot === activePrepareSlot);
+  });
+
+  renderPrepareSlot(activePrepareSlot);
+}
+
+function renderPrepareSlot(slot) {
+  activePrepareSlot = slot;
+
+  const selectedId = progression.equipment[slot];
+  const selected = equipmentCatalog[slot]?.[selectedId];
+  if (!selected) return;
+
+  if (prepareSlotLabelEl) prepareSlotLabelEl.textContent = slot.toUpperCase();
+  if (prepareItemNameEl) prepareItemNameEl.textContent = selected.name;
+  if (prepareItemEffectEl) prepareItemEffectEl.textContent = selected.effect;
+  if (prepareStatsEl) prepareStatsEl.innerHTML = equipmentStatsHtml(selected);
+
+  openEquipmentPicker(slot);
+}
+
 function openEquipmentPicker(slot) {
-  equipmentPicker.innerHTML = `<strong>Choose ${slot.toUpperCase()}</strong>`;
+  activePrepareSlot = slot;
+  equipmentPicker.innerHTML = "";
+
   for (const id of progression.equipment.unlocked[slot] || []) {
-    const item=equipmentCatalog[slot][id], btn=document.createElement("button");
-    btn.className="equipmentChoice";
-    btn.innerHTML=`<strong>${item.name}</strong><small>${item.effect}</small>`;
-    btn.onclick=()=>{progression.equipment[slot]=id;saveProgression();updateLoadoutUI();equipmentPicker.classList.add("hidden");};
-    equipmentPicker.appendChild(btn);
+    const item = equipmentCatalog[slot][id];
+    const button = document.createElement("button");
+
+    button.className = "equipmentChoice prepareChoice";
+    if (progression.equipment[slot] === id) button.classList.add("equipped");
+
+    button.innerHTML = `
+      <span class="prepareChoiceName">${item.name}</span>
+      <span class="prepareChoiceEffect">${item.effect}</span>
+      <span class="prepareChoiceStats">${(item.stats || []).join(" • ")}</span>
+    `;
+
+    button.onclick = () => {
+      progression.equipment[slot] = id;
+      applyEquipment();
+      saveProgression();
+      updateLoadoutUI();
+    };
+
+    equipmentPicker.appendChild(button);
   }
+
   equipmentPicker.classList.remove("hidden");
 }
 function resetRun() {

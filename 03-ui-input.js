@@ -289,9 +289,24 @@ function createProfile(index, overwrite) {
   runLobby.classList.remove("hidden");
 }
 
-openLoadoutButton.addEventListener("click",()=>{runLobby.classList.add("hidden");loadoutOverlay.classList.remove("hidden");updateLoadoutUI();});
-closeLoadoutButton.addEventListener("click",()=>{loadoutOverlay.classList.add("hidden");equipmentPicker.classList.add("hidden");runLobby.classList.remove("hidden");});
-document.querySelectorAll(".equipmentSlot[data-slot]").forEach(b=>b.addEventListener("click",()=>openEquipmentPicker(b.dataset.slot)));
+openLoadoutButton.addEventListener("click", () => {
+  runLobby.classList.add("hidden");
+  loadoutOverlay.classList.remove("hidden");
+  activePrepareSlot = "ball";
+  updateLoadoutUI();
+});
+
+closeLoadoutButton.addEventListener("click", () => {
+  loadoutOverlay.classList.add("hidden");
+  runLobby.classList.remove("hidden");
+});
+
+document.querySelectorAll(".prepareSlot[data-slot]").forEach(button => {
+  button.addEventListener("click", () => {
+    activePrepareSlot = button.dataset.slot;
+    updateLoadoutUI();
+  });
+});
 
 openStatsButton.addEventListener("click", () => {
   runLobby.classList.add("hidden");

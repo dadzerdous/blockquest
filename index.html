@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG — v0.21.6</title>
+  <title>Spike Trolley RPG — v0.21.7</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -56,7 +56,7 @@
 <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.21.6</div>
+      <div id="versionBadge">v0.21.7</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
@@ -92,7 +92,7 @@
           <div class="lobbyActions mainMenuActions">
             <button id="startRunButton" class="primaryLobbyButton">▶ START RUN</button>
             <button id="openStatsButton" class="secondaryLobbyButton">⭐ ALLOCATE STATS</button>
-            <button id="openLoadoutButton" class="secondaryLobbyButton">🎒 LOADOUT</button>
+            <button id="openLoadoutButton" class="secondaryLobbyButton">⚔️ PREPARE</button>
             <button id="openProfilesButton" class="secondaryLobbyButton">👤 PROFILES / NEW GAME</button>
             <button id="openOptionsButton" class="secondaryLobbyButton">⚙️ OPTIONS</button>
           </div>
@@ -148,22 +148,49 @@
       </div>
 
       <div id="loadoutOverlay" class="hidden">
-        <div class="upgradePanel loadoutPanel">
-          <div class="eyebrow">BETWEEN RUNS</div>
-          <h1>Equipment Loadout</h1>
-          <p>Equipment is permanent. Swap freely before starting a run.</p>
-          <div class="equipmentGrid">
-            <button class="equipmentSlot" data-slot="gloves"><span>🧤 GLOVES</span><strong id="glovesName">Adventurer Gloves</strong><small id="glovesEffect">Balanced ball handling.</small></button>
-            <button class="equipmentSlot" data-slot="ball"><span>⚪ BALL</span><strong id="ballName">Iron Ball</strong><small id="ballEffect">Standard rebound.</small></button>
-            <button class="equipmentSlot lockedSlot"><span>🪖 HELMET</span><strong>Coming soon</strong></button>
-            <button class="equipmentSlot lockedSlot"><span>🥋 CHEST</span><strong>Coming soon</strong></button>
-            <button class="equipmentSlot lockedSlot"><span>👢 BOOTS</span><strong>Coming soon</strong></button>
-            <button class="equipmentSlot lockedSlot"><span>💍 RING</span><strong>Coming soon</strong></button>
-            <button class="equipmentSlot lockedSlot"><span>📿 AMULET</span><strong>Coming soon</strong></button>
-            <button class="equipmentSlot lockedSlot"><span>🛒 TROLLEY</span><strong>Coming soon</strong></button>
+        <div class="preparePanel">
+          <div class="prepareHeader">
+            <div>
+              <div class="eyebrow">BEFORE THE RUN</div>
+              <h1>Prepare</h1>
+              <p>Choose permanent starting equipment. Runes are still found during the run.</p>
+            </div>
+            <button id="closeLoadout" class="prepareBack">BACK</button>
           </div>
-          <div id="equipmentPicker" class="equipmentPicker hidden"></div>
-          <button id="closeLoadout" class="leaveShop">BACK</button>
+
+          <div class="prepareBody">
+            <div class="prepareSlots">
+              <button class="prepareSlot active" data-slot="ball">
+                <span class="prepareSlotIcon">⚪</span>
+                <span class="prepareSlotText"><small>BALL</small><strong id="ballName">Iron Ball</strong></span>
+              </button>
+              <button class="prepareSlot" data-slot="gloves">
+                <span class="prepareSlotIcon">🧤</span>
+                <span class="prepareSlotText"><small>GLOVES</small><strong id="glovesName">Adventurer Gloves</strong></span>
+              </button>
+              <button class="prepareSlot lockedSlot" disabled><span class="prepareSlotIcon">🪖</span><span class="prepareSlotText"><small>HELMET</small><strong>Locked</strong></span></button>
+              <button class="prepareSlot lockedSlot" disabled><span class="prepareSlotIcon">🥋</span><span class="prepareSlotText"><small>CHEST</small><strong>Locked</strong></span></button>
+              <button class="prepareSlot lockedSlot" disabled><span class="prepareSlotIcon">👢</span><span class="prepareSlotText"><small>BOOTS</small><strong>Locked</strong></span></button>
+              <button class="prepareSlot lockedSlot" disabled><span class="prepareSlotIcon">💍</span><span class="prepareSlotText"><small>RING</small><strong>Locked</strong></span></button>
+              <button class="prepareSlot lockedSlot" disabled><span class="prepareSlotIcon">📿</span><span class="prepareSlotText"><small>AMULET</small><strong>Locked</strong></span></button>
+              <button class="prepareSlot lockedSlot" disabled><span class="prepareSlotIcon">🛒</span><span class="prepareSlotText"><small>TROLLEY</small><strong>Locked</strong></span></button>
+            </div>
+
+            <div class="prepareDetail">
+              <div class="prepareDetailHead">
+                <div>
+                  <small id="prepareSlotLabel">BALL</small>
+                  <h2 id="prepareItemName">Iron Ball</h2>
+                </div>
+                <div class="prepareEquippedBadge">EQUIPPED</div>
+              </div>
+              <p id="prepareItemEffect" class="prepareItemEffect">Reliable standard rebound.</p>
+              <div id="prepareStats" class="prepareStats"></div>
+              <div class="prepareChoiceTitle">AVAILABLE</div>
+              <div id="equipmentPicker" class="equipmentPicker preparePicker"></div>
+              <div class="prepareHint">Select an item to equip it immediately.</div>
+            </div>
+          </div>
         </div>
       </div>
 

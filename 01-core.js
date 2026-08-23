@@ -243,6 +243,10 @@ const openLoadoutButton = document.getElementById("openLoadoutButton");
 const loadoutOverlay = document.getElementById("loadoutOverlay");
 const closeLoadoutButton = document.getElementById("closeLoadout");
 const equipmentPicker = document.getElementById("equipmentPicker");
+const prepareSlotLabelEl = document.getElementById("prepareSlotLabel");
+const prepareItemNameEl = document.getElementById("prepareItemName");
+const prepareItemEffectEl = document.getElementById("prepareItemEffect");
+const prepareStatsEl = document.getElementById("prepareStats");
 const glovesNameEl = document.getElementById("glovesName");
 const glovesEffectEl = document.getElementById("glovesEffect");
 const ballNameEl = document.getElementById("ballName");
@@ -562,15 +566,15 @@ if (!progression) {
 
 let armorPoints = 0;
 const equipmentCatalog = {
-  gloves:{
-    adventurer:{name:"Adventurer Gloves",effect:"Balanced ball handling."},
-    heavy:{name:"Heavy Gloves",effect:"Ball -15% speed, +25% damage."},
-    quick:{name:"Quick Gloves",effect:"Ball +15% speed, -10% damage."}
+  gloves: {
+    adventurer: { name:"Adventurer Gloves", effect:"Balanced ball handling with no penalties.", stats:["Ball Speed 100%","Ball Damage 100%"] },
+    heavy: { name:"Heavy Gloves", effect:"Hit harder at the cost of a slower ball.", stats:["Ball Speed 85%","Ball Damage 125%"] },
+    quick: { name:"Quick Gloves", effect:"Faster ball control at the cost of some damage.", stats:["Ball Speed 115%","Ball Damage 90%"] }
   },
-  ball:{
-    iron:{name:"Iron Ball",effect:"Standard rebound."},
-    piercing:{name:"Piercing Ball",effect:"Excess damage carries through destroyed blocks."},
-    cinder:{name:"Cinder Ball",effect:"Adds Fire to Ball hits: splash damage and bonus vs Ice."}
+  ball: {
+    iron: { name:"Iron Ball", effect:"Reliable standard rebound. No special properties.", stats:["Rebound: Standard","Element: None"] },
+    piercing: { name:"Piercing Ball", effect:"Excess damage carries through a target when the hit destroys it.", stats:["Trait: Damage Carry","Element: None"] },
+    cinder: { name:"Cinder Ball", effect:"Fire hits splash nearby targets and deal bonus damage against Ice enemies.", stats:["Trait: Fire Splash","Element: Fire"] }
   }
 };
 let patchBoughtThisVisit = false;

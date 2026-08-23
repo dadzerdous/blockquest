@@ -2027,3 +2027,21 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
     height: 345px !important;
   }
 }
+
+/* v0.21.7 — Prepare / equipment */
+.preparePanel{width:min(920px,94vw);max-height:88dvh;overflow:hidden;padding:20px;border:1px solid rgba(214,190,143,.42);border-radius:14px;background:rgba(17,15,20,.97);box-shadow:0 18px 55px rgba(0,0,0,.62)}
+.prepareHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:14px;border-bottom:1px solid rgba(214,190,143,.18)}
+.prepareHeader h1{margin:2px 0 4px}.prepareHeader p{margin:0;max-width:590px;opacity:.72}.prepareBack{flex:0 0 auto;padding:9px 15px}
+.prepareBody{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;padding-top:16px;min-height:480px}
+.prepareSlots{display:flex;flex-direction:column;gap:7px}
+.prepareSlot{display:flex;align-items:center;gap:10px;width:100%;min-height:51px;padding:8px 10px;text-align:left;border:1px solid rgba(255,255,255,.11);border-radius:9px;background:rgba(255,255,255,.035);color:#eee7d8}
+.prepareSlot:not(.lockedSlot):hover{background:rgba(255,255,255,.07)}.prepareSlot.active{border-color:rgba(237,199,92,.75);background:rgba(237,199,92,.09);box-shadow:0 0 14px rgba(237,199,92,.12)}
+.prepareSlotIcon{width:28px;text-align:center;font-size:20px}.prepareSlotText{min-width:0;display:flex;flex-direction:column}.prepareSlotText small{font-size:8px;letter-spacing:.12em;opacity:.55}.prepareSlotText strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.prepareSlot.lockedSlot{opacity:.32;cursor:default}
+.prepareDetail{min-width:0;padding:16px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(0,0,0,.22)}
+.prepareDetailHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.prepareDetailHead small{color:#d7bd7b;letter-spacing:.14em;font-size:9px}.prepareDetailHead h2{margin:4px 0 0;font-size:25px}
+.prepareEquippedBadge{padding:5px 9px;border:1px solid rgba(237,199,92,.45);border-radius:999px;color:#f2d574;font-size:8px;font-weight:900;letter-spacing:.1em}
+.prepareItemEffect{margin:13px 0;max-width:620px;line-height:1.45;opacity:.86}.prepareStats{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}.prepareStats span{padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.06);font-size:10px;color:#ddd5c6}
+.prepareChoiceTitle{margin-bottom:7px;font-size:9px;font-weight:900;letter-spacing:.14em;color:#b7aa91}.preparePicker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.prepareChoice{display:flex;flex-direction:column;align-items:flex-start;min-height:92px;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:9px;background:rgba(255,255,255,.035);color:#eee8dc;text-align:left}.prepareChoice:hover{background:rgba(255,255,255,.075)}.prepareChoice.equipped{border-color:rgba(237,199,92,.72);background:rgba(237,199,92,.09)}
+.prepareChoiceName{font-size:13px;font-weight:900}.prepareChoiceEffect{margin-top:4px;font-size:10px;line-height:1.35;opacity:.74}.prepareChoiceStats{margin-top:auto;padding-top:7px;font-size:8px;color:#d9bf78}.prepareHint{margin-top:12px;font-size:9px;opacity:.46}
+@media(max-width:700px){.preparePanel{width:96vw;max-height:92dvh;padding:12px;overflow:auto}.prepareHeader p{font-size:10px}.prepareBody{grid-template-columns:112px minmax(0,1fr);gap:9px;min-height:0}.prepareSlot{min-height:45px;gap:5px;padding:6px}.prepareSlotIcon{width:21px;font-size:15px}.prepareSlotText small{font-size:6px}.prepareSlotText strong{font-size:9px}.prepareDetail{padding:10px}.prepareDetailHead h2{font-size:18px}.preparePicker{grid-template-columns:1fr}.prepareChoice{min-height:75px}}
