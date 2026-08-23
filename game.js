@@ -966,6 +966,7 @@ function startRoom() {
   fallingPickups = [];
   roomPills.wide = false;
   roomPills.wideMultiplier = 1;
+  roomPills.wideMultiplier = 1;
 
   playerProjectiles = [];
   rangerSkill.timer = 0;
@@ -3279,9 +3280,7 @@ function drawPlayer() {
   ctx.scale(facing, 1);
 
   const trolleyW = player.width * 1.24;
-  const trolleyH = trolleyBodyImage.naturalWidth > 0
-    ? trolleyW * (trolleyBodyImage.naturalHeight / trolleyBodyImage.naturalWidth)
-    : 92;
+  const trolleyH = player.height * 1.55;
 
   if (trolleyBodyImage.complete && trolleyBodyImage.naturalWidth > 0) {
     ctx.drawImage(
@@ -3735,6 +3734,10 @@ function drawParticles() {
       ctx.fillStyle = p.color;
       ctx.font = "bold 22px Arial";
       ctx.textAlign = "center";
+      ctx.lineWidth = 5;
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(0,0,0,.88)";
+      ctx.strokeText(p.text, p.x, p.y);
       ctx.fillText(p.text, p.x, p.y);
     } else {
       ctx.fillStyle = p.color;

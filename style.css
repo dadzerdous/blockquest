@@ -960,3 +960,140 @@ body {
   letter-spacing: .14em;
   opacity: .62;
 }
+
+/* v0.19.4 — replaceable dungeon frame art */
+.dungeonFrame {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+.frameArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.frameCanvasInset,
+.frameTop,
+.frameRunes,
+.frameMoney {
+  position: relative;
+  z-index: 3;
+}
+
+/* Keep gameplay inside the transparent doorway opening. */
+.frameCanvasInset {
+  margin: 0 auto;
+  width: 78%;
+  aspect-ratio: 9 / 14;
+  border: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden;
+  background: #07080a;
+}
+
+/* Plaque remains code-driven over the artwork so the art can be replaced later. */
+.frameTop {
+  position: absolute;
+  z-index: 4;
+  top: 2.1%;
+  left: 16%;
+  right: 16%;
+  height: 6%;
+}
+
+.roomPlaque {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #f1d4a0;
+  text-shadow:
+    0 2px 2px #000,
+    -1px -1px 0 #3d2513,
+    1px -1px 0 #3d2513,
+    -1px 1px 0 #3d2513,
+    1px 1px 0 #3d2513;
+}
+
+/* Pause X sits on the artwork's upper-right plaque. */
+.framePauseButton {
+  z-index: 5;
+  right: -8%;
+  top: 0;
+  color: rgba(255,255,255,0);
+  width: 52px;
+  height: 52px;
+}
+
+/* Runes occupy the left stone column. */
+.frameRunes {
+  z-index: 4;
+  position: absolute;
+  left: 1.8%;
+  top: 29%;
+  bottom: 20%;
+  width: 10%;
+  gap: 6px;
+}
+
+/* Money sits at rail/track level. */
+.frameMoney {
+  z-index: 4;
+  position: absolute;
+  right: 5.2%;
+  bottom: 4.6%;
+  color: #ffe399;
+  text-shadow:
+    0 2px 2px #000,
+    -1px -1px 0 #271b0b,
+    1px -1px 0 #271b0b,
+    -1px 1px 0 #271b0b,
+    1px 1px 0 #271b0b;
+}
+
+/* The artwork's tracks are the bottom edge. */
+.dungeonFrame {
+  padding: 13.2% 0 8.8%;
+}
+
+html, body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+#gameShell {
+  width: min(100vw, calc(100dvh * 9 / 14));
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+  body {
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  #gameShell {
+    width: min(100vw, calc(100dvh * 9 / 14));
+    max-width: none;
+  }
+
+  .dungeonFrame {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

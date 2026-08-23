@@ -1215,3 +1215,25 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 - Splash/title screen now displays the current build number.
 - Removed the dungeon frame's bottom border.
 - The trolley tracks now serve visually as the bottom edge of the doorway/game frame.
+
+
+## v0.19.4 — Frame Art / Responsive Fit / Wide Pill / Damage Readability
+
+### Frame
+- Wired `assets/frame-1.png` as replaceable dungeon doorway artwork.
+- Gameplay/UI positions remain code-driven so the frame image can be swapped later.
+- Room plaque, Rune display, Pause hotspot, and money readout overlay the art.
+
+### PC + Mobile
+- The whole game shell now scales as one 9:14 framed unit.
+- Uses `100dvh` on mobile and fits by both viewport width and height.
+- Desktop remains capped instead of stretching indefinitely.
+
+### Wide Pill
+- Wide effect now uses a room-only persistent multiplier.
+- Recalculating stats after collecting other pickups should no longer remove it.
+- Trolley visual height is fixed independently from its width.
+- Wide resets only when the room changes.
+
+### Damage Numbers
+- Floating combat text is being standardized with a dark outline for readability against the dungeon background.
