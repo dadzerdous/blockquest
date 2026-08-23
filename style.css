@@ -838,3 +838,9 @@ body {
 #heroStat {
   display: none !important;
 }
+
+
+/* v0.18.9 — groundwork for upcoming framed game UI */
+#gameShell {
+  position: relative;
+}

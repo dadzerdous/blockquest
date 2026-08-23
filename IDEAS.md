@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.8**
+Current prototype: **v0.18.9**
 
 ## Current Direction
 
@@ -1112,3 +1112,48 @@ Goal: establish a safer baseline before Cleanup Pass 2.
 - The pause overlay remains normal DOM above the frozen canvas.
 - This avoids calling nonexistent/renamed draw helpers such as `drawWalls()`.
 - No gameplay changes.
+
+
+## Future Encounter — Room 10: Captain of the Guards
+
+**Role:** Area boss / defensive final exam for the first 10-room section.
+
+- Captain of the Guards is NOT a healing boss.
+- His identity is **armor, defense, and repairing the battlefield**.
+- Starts with very heavy armor.
+- Can use **REBUILD** to restore only wall/brick positions that originally existed on his board and have already been destroyed.
+- REBUILD cannot create arbitrary new walls.
+- Rebuilt walls should likely return at partial HP and the ability should be clearly telegraphed / limited rather than constant.
+- Captain may be protected by normal Raiders/guards during the fight.
+- Once Captain's armor is broken, he **loses REBUILD**.
+- After armor break he becomes more aggressive and the fight shifts toward finishing his exposed HP.
+- Save true enemy HP healing/regeneration for a later boss, potentially the Room 20 boss.
+- Exact layout, timing, HP, armor amount, Raider count, and final name can be fine-tuned later.
+
+### Intended fight shape
+1. Break through defensive walls / guards.
+2. Captain repairs some destroyed fortifications.
+3. Work through his heavy armor.
+4. Armor breaks → REBUILD ends.
+5. Captain becomes more aggressive → finish his HP.
+
+
+## Future Encounter — Room 15: Hidden Goblin Miniboss
+
+**Role:** Introduces the Hidden Goblin archetype.
+
+- Room is packed with a **large number of bricks**.
+- Hidden Goblin is concealed somewhere among the brick field.
+- The player has to discover it naturally while breaking through the board.
+- Hidden Goblin remains part of the room-clear requirement: **the room cannot be beaten until it dies**.
+- At roughly **50% HP**, its disguise breaks and the Hidden Goblin fully reveals itself.
+- Hits while hidden may eventually get subtle unusual feedback, but should not immediately give away its position.
+- Defeating the Room 15 miniboss permanently unlocks **Hidden Goblins** for eligible later normal-room enemy pools.
+- Start with Hidden Goblin as its own archetype rather than secretly randomizing into every elemental/enemy type.
+- Exact HP, board density, reveal animation, and post-reveal behavior can be fine-tuned later.
+
+### Encounter progression pattern
+Miniboss encounters can introduce advanced enemy mechanics, then defeating that miniboss allows the associated archetype to appear naturally later.
+
+- Room 5: Herman / Raider introduction → Raiders can later become normal enemies.
+- Room 15: Hidden Goblin introduction → Hidden Goblins can later become normal enemies.
