@@ -99,9 +99,9 @@ function renderRouteGraph() {
     el.style.left=`${node.x}%`;
     el.style.top=`${graphNodeY(node.stage)}%`;
     el.dataset.nodeId=id;
-    el.innerHTML=node.type==="boss"
-      ? `5<small>${node.label || "BOSS"}</small>`
-      : `${node.stage}<small>${routeTypeLabel(node.type)}</small>`;
+    el.innerHTML = node.type === "boss"
+      ? `<span>${node.stage}</span><small>${node.label || "BOSS"}</small>`
+      : `<span>${node.stage}</span><small>${routeTypeLabel(node.type)}</small>`;
     routeGraphEl.appendChild(el);
 
     if (choices.includes(id)) {

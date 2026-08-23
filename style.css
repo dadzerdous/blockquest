@@ -1780,3 +1780,178 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   .graphNode{width:40px;height:31px;font-size:13px}
   .graphNode.type-boss{width:62px;height:37px}
 }
+
+/* v0.21.0 — code-drawn dungeon map visual pass */
+.routeGraphMap {
+  top: 33% !important;
+  width: min(84%, 620px) !important;
+  padding: 12px 16px 10px !important;
+  border: 2px solid rgba(199,164,102,.66) !important;
+  border-radius: 9px !important;
+  background:
+    linear-gradient(rgba(14,13,17,.965), rgba(18,15,20,.965)),
+    radial-gradient(circle at 50% 35%, rgba(120,87,44,.12), transparent 60%) !important;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.65),
+    inset 0 0 0 1px rgba(255,231,181,.05),
+    inset 0 0 24px rgba(0,0,0,.58) !important;
+}
+.routeGraphMap .routeMapTitle {
+  margin: 0 0 8px !important;
+  padding: 0 0 7px !important;
+  border-bottom: 1px solid rgba(194,164,105,.24);
+  color: #dec99d !important;
+  font-size: clamp(11px,1.7vw,15px) !important;
+  letter-spacing: .16em !important;
+  text-shadow: 0 2px 2px #000;
+}
+.routeGraph { height: 285px !important; }
+
+.routeEdge {
+  height: 2px !important;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(199,179,137,.45) 0 7px,
+      transparent 7px 12px
+    ) !important;
+  box-shadow: none !important;
+}
+.routeEdge.edge-active {
+  height: 3px !important;
+  background: linear-gradient(90deg,#f5d267,#ffe27d) !important;
+  box-shadow: 0 0 8px rgba(243,203,80,.55),0 0 2px #ffe99e !important;
+}
+
+.graphNode {
+  width: 88px !important;
+  height: 48px !important;
+  border-radius: 11px !important;
+  padding: 5px 7px !important;
+  background: linear-gradient(180deg,rgba(37,33,37,.98),rgba(19,18,22,.98)) !important;
+  border: 2px solid rgba(196,189,176,.54) !important;
+  color: #e9dfcb !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025),0 4px 8px rgba(0,0,0,.34);
+}
+.graphNode::before {
+  display:block;
+  font-size:15px;
+  line-height:1;
+  margin-bottom:2px;
+}
+.graphNode.type-standard::before { content:"⚔"; }
+.graphNode.type-hard::before { content:"☠"; }
+.graphNode.type-treasure::before { content:"▣"; }
+.graphNode.type-shop::before { content:"◆"; }
+.graphNode.type-boss::before { content:"☠"; }
+
+.graphNode small {
+  display:block !important;
+  margin-top:3px !important;
+  font-size:7px !important;
+  letter-spacing:.04em !important;
+  line-height:1 !important;
+  opacity:.96;
+}
+.graphNode.type-standard {
+  border-color:rgba(213,208,198,.72) !important;
+  color:#f1eadc !important;
+}
+.graphNode.type-hard {
+  border-color:#c74f45 !important;
+  color:#ff9b8e !important;
+}
+.graphNode.type-hard::before { color:#ef5d50; }
+.graphNode.type-treasure {
+  border-color:#bd9432 !important;
+  color:#ffd66d !important;
+}
+.graphNode.type-treasure::before { color:#f5bb37; }
+.graphNode.type-shop {
+  border-color:#62a980 !important;
+  color:#bff6d2 !important;
+}
+.graphNode.type-boss {
+  width:104px !important;
+  height:54px !important;
+  border-radius:12px !important;
+  border-color:#c65e48 !important;
+  color:#ffb08f !important;
+}
+.graphNode.state-past {
+  opacity:.34 !important;
+  filter:grayscale(.35);
+}
+.graphNode.state-future {
+  opacity:.32 !important;
+  filter:grayscale(.25);
+}
+.graphNode.state-locked {
+  opacity:.18 !important;
+  filter:grayscale(.65);
+}
+.graphNode.state-choice {
+  opacity:.96 !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04),0 0 12px rgba(218,196,153,.16),inset 0 0 0 1px rgba(255,255,255,.025) !important;
+}
+.graphNode.state-current {
+  opacity:1 !important;
+  border-color:#f0c54e !important;
+  color:#ffe38a !important;
+  box-shadow:0 0 0 2px rgba(248,202,67,.14),0 0 18px rgba(248,202,67,.58),inset 0 0 14px rgba(248,202,67,.10) !important;
+  transform:translate(-50%,-50%) scale(1.06) !important;
+}
+.graphNode.state-current::after {
+  content:"▼";
+  position:absolute;
+  left:50%;
+  top:-18px;
+  transform:translateX(-50%);
+  color:#f4cc55;
+  font-size:13px;
+  text-shadow:0 0 8px rgba(244,204,85,.75);
+}
+.graphChoiceTag { display:none !important; }
+
+.routeLegend {
+  margin-top:5px !important;
+  padding-top:6px !important;
+  border-top:1px solid rgba(194,164,105,.20);
+  font-size:7px !important;
+  letter-spacing:.06em !important;
+  color:rgba(226,214,191,.64) !important;
+}
+#pathHint {
+  top:14% !important;
+  width:auto !important;
+  max-width:76% !important;
+  padding-left:14px !important;
+  padding-right:14px !important;
+}
+
+/* Slightly smaller portals while keeping their existing art. */
+.exitDoorVisual {
+  transform: scale(.90);
+  transform-origin: bottom center;
+}
+
+@media (max-width:700px) {
+  .routeGraphMap {
+    top:31% !important;
+    width:88% !important;
+    padding:9px 10px 8px !important;
+  }
+  .routeGraph { height:245px !important; }
+  .graphNode {
+    width:72px !important;
+    height:42px !important;
+    font-size:12px !important;
+  }
+  .graphNode.type-boss {
+    width:88px !important;
+    height:48px !important;
+  }
+  .graphNode small { font-size:6px !important; }
+}
