@@ -825,3 +825,16 @@ body {
 #enemyCount {
   display: none !important;
 }
+
+/* v0.18.5 cleanup */
+#weaponHud,
+#skillStatus,
+#skillCooldownFill,
+.weaponCooldown,
+#heroHud,
+#enemyHud,
+#heroHp,
+#enemyCount,
+#heroStat {
+  display: none !important;
+}

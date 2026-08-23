@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.4**
+Current prototype: **v0.18.5**
 
 ## Current Direction
 
@@ -1059,3 +1059,26 @@ This build intentionally does not add permanent Pill unlocks, Bestiary, favored 
 ### HUD Cleanup
 - HERO and ENEMIES labels/counters are removed/hidden from the top HUD.
 - Room/combat information stays focused on things the player actually needs.
+
+
+## v0.18.5 — Cleanup Pass 1
+
+Structural cleanup only. No gameplay additions.
+
+### Fixed
+- Pause button and pause overlay moved outside `<canvas>` so they exist as normal DOM elements.
+- Pause/resume hooks made safer.
+- Removed obsolete Ranger Skill HUD markup and JS hooks; physical Hunter arrow is now the sole skill-readiness display.
+- Removed obsolete Hero HP and Enemy Count HUD markup; HP is represented on the hero sprite.
+- Cleaned stale UI references instead of continuing to hide dead markup with CSS.
+- Ran duplicate-function and DOM-ID sanity checks.
+
+### Intentionally Not Changed
+- No enemy balance changes.
+- No rune model changes.
+- No Shop work.
+- No new Pills.
+- No Black Hole caster.
+- No Room 6 content.
+
+Goal: establish a safer baseline before Cleanup Pass 2.

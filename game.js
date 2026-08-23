@@ -4,7 +4,6 @@ const pauseOverlay=document.getElementById("pauseOverlay");
 const resumeButton=document.getElementById("resumeButton");
 const ctx = canvas.getContext("2d");
 
-const heroHpEl = document.getElementById("heroHp");
 const heroShieldEl = document.getElementById("heroShield");
 const goldHudEl = document.getElementById("goldHud");
 const levelHudEl = document.getElementById("levelHud");
@@ -48,8 +47,6 @@ const comboHudEl = document.getElementById("comboHud");
 const comboCountEl = document.getElementById("comboCount");
 const comboXpEl = document.getElementById("comboXp");
 const roomClearBannerEl = document.getElementById("roomClearBanner");
-const skillCooldownFillEl = document.getElementById("skillCooldownFill");
-const skillStatusEl = document.getElementById("skillStatus");
 const bossHudEl = document.getElementById("bossHud");
 const bossBarFillEl = document.getElementById("bossBarFill");
 const bossPhaseEl = document.getElementById("bossPhase");
@@ -58,7 +55,6 @@ const levelTextEl = document.getElementById("levelText");
 const xpFillEl = document.getElementById("xpFill");
 const xpTextEl = document.getElementById("xpText");
 const availablePointsEl = document.getElementById("availablePoints");
-const enemyCountEl = document.getElementById("enemyCount");
 const roomTitleEl = document.getElementById("roomTitle");
 const messageEl = document.getElementById("message");
 
@@ -3673,8 +3669,8 @@ function canPauseGame(){return ["playing","waiting","exitChoice","postRewardShak
 function pauseGame(){if(!canPauseGame())return;pausedFromState=gameState;gameState="paused";pauseOverlay.classList.remove("hidden");}
 function resumeGame(){if(gameState!=="paused")return;gameState=pausedFromState||"waiting";pausedFromState=null;pauseOverlay.classList.add("hidden");}
 function togglePause(){gameState==="paused"?resumeGame():pauseGame();}
-pauseButton.addEventListener("click",togglePause);
-resumeButton.addEventListener("click",resumeGame);
+if (pauseButton) pauseButton.addEventListener("click", togglePause);
+if (resumeButton) resumeButton.addEventListener("click", resumeGame);
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k==="p"||k==="escape"){e.preventDefault();togglePause();}});
 function gameLoop(timestamp) {if (gameState === "paused") {
     // Keep the last frame visible without advancing any simulation.
