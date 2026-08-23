@@ -2474,3 +2474,65 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
     font-size: 9px;
   }
 }
+
+/* v0.22.2 — dungeon-themed Prepare Back button */
+.prepareBack{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-width:86px;
+  min-height:38px;
+  padding:7px 13px 7px 9px;
+  border:1px solid #a8874e;
+  border-radius:5px;
+  background:
+    linear-gradient(180deg,rgba(96,74,49,.96),rgba(45,33,27,.98));
+  color:#eee0bd;
+  font-family:inherit;
+  font-weight:900;
+  letter-spacing:.09em;
+  text-shadow:0 2px 2px rgba(0,0,0,.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255,231,177,.16),
+    inset 0 -2px 0 rgba(0,0,0,.32),
+    0 3px 8px rgba(0,0,0,.38);
+}
+.prepareBack::before,
+.prepareBack::after{
+  content:"";
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:#c4a267;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.28),0 1px 2px #000;
+}
+.prepareBack:hover{
+  filter:brightness(1.14);
+  border-color:#d1ad68;
+  transform:translateY(-1px);
+}
+.prepareBack:active{
+  transform:translateY(1px);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,.45),
+    0 1px 3px rgba(0,0,0,.4);
+}
+.prepareBackArrow{
+  font-size:22px;
+  line-height:12px;
+  color:#e8c878;
+  transform:translateY(-1px);
+}
+@media(max-width:600px){
+  .prepareBack{
+    min-width:72px;
+    min-height:32px;
+    gap:4px;
+    padding:5px 8px 5px 6px;
+    font-size:8px;
+  }
+  .prepareBackArrow{font-size:18px}
+  .prepareBack::before,
+  .prepareBack::after{width:3px;height:3px}
+}
