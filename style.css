@@ -2028,20 +2028,382 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   }
 }
 
-/* v0.21.7 — Prepare / equipment */
-.preparePanel{width:min(920px,94vw);max-height:88dvh;overflow:hidden;padding:20px;border:1px solid rgba(214,190,143,.42);border-radius:14px;background:rgba(17,15,20,.97);box-shadow:0 18px 55px rgba(0,0,0,.62)}
-.prepareHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:14px;border-bottom:1px solid rgba(214,190,143,.18)}
-.prepareHeader h1{margin:2px 0 4px}.prepareHeader p{margin:0;max-width:590px;opacity:.72}.prepareBack{flex:0 0 auto;padding:9px 15px}
-.prepareBody{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;padding-top:16px;min-height:480px}
-.prepareSlots{display:flex;flex-direction:column;gap:7px}
-.prepareSlot{display:flex;align-items:center;gap:10px;width:100%;min-height:51px;padding:8px 10px;text-align:left;border:1px solid rgba(255,255,255,.11);border-radius:9px;background:rgba(255,255,255,.035);color:#eee7d8}
-.prepareSlot:not(.lockedSlot):hover{background:rgba(255,255,255,.07)}.prepareSlot.active{border-color:rgba(237,199,92,.75);background:rgba(237,199,92,.09);box-shadow:0 0 14px rgba(237,199,92,.12)}
-.prepareSlotIcon{width:28px;text-align:center;font-size:20px}.prepareSlotText{min-width:0;display:flex;flex-direction:column}.prepareSlotText small{font-size:8px;letter-spacing:.12em;opacity:.55}.prepareSlotText strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.prepareSlot.lockedSlot{opacity:.32;cursor:default}
-.prepareDetail{min-width:0;padding:16px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(0,0,0,.22)}
-.prepareDetailHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.prepareDetailHead small{color:#d7bd7b;letter-spacing:.14em;font-size:9px}.prepareDetailHead h2{margin:4px 0 0;font-size:25px}
-.prepareEquippedBadge{padding:5px 9px;border:1px solid rgba(237,199,92,.45);border-radius:999px;color:#f2d574;font-size:8px;font-weight:900;letter-spacing:.1em}
-.prepareItemEffect{margin:13px 0;max-width:620px;line-height:1.45;opacity:.86}.prepareStats{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}.prepareStats span{padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.06);font-size:10px;color:#ddd5c6}
-.prepareChoiceTitle{margin-bottom:7px;font-size:9px;font-weight:900;letter-spacing:.14em;color:#b7aa91}.preparePicker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.prepareChoice{display:flex;flex-direction:column;align-items:flex-start;min-height:92px;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:9px;background:rgba(255,255,255,.035);color:#eee8dc;text-align:left}.prepareChoice:hover{background:rgba(255,255,255,.075)}.prepareChoice.equipped{border-color:rgba(237,199,92,.72);background:rgba(237,199,92,.09)}
-.prepareChoiceName{font-size:13px;font-weight:900}.prepareChoiceEffect{margin-top:4px;font-size:10px;line-height:1.35;opacity:.74}.prepareChoiceStats{margin-top:auto;padding-top:7px;font-size:8px;color:#d9bf78}.prepareHint{margin-top:12px;font-size:9px;opacity:.46}
-@media(max-width:700px){.preparePanel{width:96vw;max-height:92dvh;padding:12px;overflow:auto}.prepareHeader p{font-size:10px}.prepareBody{grid-template-columns:112px minmax(0,1fr);gap:9px;min-height:0}.prepareSlot{min-height:45px;gap:5px;padding:6px}.prepareSlotIcon{width:21px;font-size:15px}.prepareSlotText small{font-size:6px}.prepareSlotText strong{font-size:9px}.prepareDetail{padding:10px}.prepareDetailHead h2{font-size:18px}.preparePicker{grid-template-columns:1fr}.prepareChoice{min-height:75px}}
+
+/* v0.21.8 — compact Prepare: Paddle / Ball / Gear */
+#loadoutOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  box-sizing: border-box;
+  overflow: auto;
+  background: rgba(4, 4, 8, .82);
+}
+#loadoutOverlay.hidden {
+  display: none;
+}
+
+.preparePanel,
+.preparePanel * {
+  box-sizing: border-box;
+}
+
+.preparePanel {
+  width: min(760px, calc(100vw - 28px));
+  max-width: 100%;
+  max-height: min(760px, calc(100dvh - 28px));
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid rgba(214,190,143,.42);
+  border-radius: 14px;
+  background: rgba(17,15,20,.98);
+  box-shadow: 0 18px 55px rgba(0,0,0,.62);
+}
+
+.prepareHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(214,190,143,.18);
+}
+
+.prepareTitleBlock {
+  min-width: 0;
+}
+
+.prepareHeader h1 {
+  margin: 2px 0 3px;
+  font-size: clamp(25px, 5vw, 36px);
+}
+
+.prepareHeader p {
+  margin: 0;
+  max-width: 520px;
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: .72;
+}
+
+.prepareBack {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+}
+
+.prepareBody {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  padding-top: 14px;
+}
+
+.prepareSlots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.prepareSlot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  padding: 9px;
+  text-align: left;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 9px;
+  background: rgba(255,255,255,.035);
+  color: #eee7d8;
+}
+
+.prepareSlot:not(.lockedSlot):hover {
+  background: rgba(255,255,255,.07);
+}
+
+.prepareSlot.active {
+  border-color: rgba(237,199,92,.75);
+  background: rgba(237,199,92,.09);
+  box-shadow: 0 0 14px rgba(237,199,92,.12);
+}
+
+.prepareSlotIcon {
+  flex: 0 0 27px;
+  width: 27px;
+  text-align: center;
+  font-size: 19px;
+}
+
+.prepareSlotText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.prepareSlotText small {
+  font-size: 8px;
+  letter-spacing: .12em;
+  opacity: .55;
+}
+
+.prepareSlotText strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.prepareSlot.lockedSlot {
+  opacity: .48;
+  cursor: default;
+}
+
+.prepareDetail {
+  min-width: 0;
+  overflow: hidden;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 11px;
+  background: rgba(0,0,0,.22);
+}
+
+.prepareDetailHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.prepareDetailHead > div:first-child {
+  min-width: 0;
+}
+
+.prepareDetailHead small {
+  color: #d7bd7b;
+  letter-spacing: .14em;
+  font-size: 8px;
+}
+
+.prepareDetailHead h2 {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(20px, 4vw, 27px);
+}
+
+.prepareEquippedBadge {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid rgba(237,199,92,.45);
+  border-radius: 999px;
+  color: #f2d574;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.prepareItemEffect {
+  margin: 11px 0;
+  max-width: 100%;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  opacity: .86;
+}
+
+.prepareStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.prepareStats span {
+  max-width: 100%;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  overflow-wrap: anywhere;
+  font-size: 9px;
+  color: #ddd5c6;
+}
+
+.prepareChoiceTitle {
+  margin-bottom: 6px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  color: #b7aa91;
+}
+
+.preparePicker {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  min-width: 0;
+}
+
+.prepareChoice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  min-height: 78px;
+  padding: 9px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 9px;
+  background: rgba(255,255,255,.035);
+  color: #eee8dc;
+  text-align: left;
+  white-space: normal;
+}
+
+.prepareChoice:hover {
+  background: rgba(255,255,255,.075);
+}
+
+.prepareChoice.equipped {
+  border-color: rgba(237,199,92,.72);
+  background: rgba(237,199,92,.09);
+}
+
+.prepareChoiceName,
+.prepareChoiceEffect,
+.prepareChoiceStats {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.prepareChoiceName {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.prepareChoiceEffect {
+  margin-top: 3px;
+  font-size: 9px;
+  line-height: 1.35;
+  opacity: .74;
+}
+
+.prepareChoiceStats {
+  margin-top: 6px;
+  font-size: 8px;
+  color: #d9bf78;
+}
+
+.prepareHint {
+  margin-top: 9px;
+  font-size: 8px;
+  opacity: .46;
+}
+
+@media (max-width: 600px) {
+  #loadoutOverlay {
+    padding: 6px;
+    align-items: flex-start;
+  }
+
+  .preparePanel {
+    width: calc(100vw - 12px);
+    max-height: calc(100dvh - 12px);
+    margin: 0;
+    padding: 11px;
+    border-radius: 10px;
+  }
+
+  .prepareHeader {
+    gap: 8px;
+    padding-bottom: 9px;
+  }
+
+  .prepareHeader p {
+    font-size: 9px;
+  }
+
+  .prepareBack {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+
+  .prepareBody {
+    grid-template-columns: 98px minmax(0, 1fr);
+    gap: 7px;
+    padding-top: 9px;
+  }
+
+  .prepareSlots {
+    gap: 6px;
+  }
+
+  .prepareSlot {
+    min-height: 52px;
+    gap: 4px;
+    padding: 6px 5px;
+  }
+
+  .prepareSlotIcon {
+    flex-basis: 19px;
+    width: 19px;
+    font-size: 14px;
+  }
+
+  .prepareSlotText small {
+    font-size: 6px;
+  }
+
+  .prepareSlotText strong {
+    font-size: 8px;
+  }
+
+  .prepareDetail {
+    padding: 9px;
+  }
+
+  .prepareEquippedBadge {
+    display: none;
+  }
+
+  .prepareItemEffect {
+    margin: 8px 0;
+    font-size: 9px;
+  }
+
+  .prepareStats {
+    margin-bottom: 10px;
+  }
+
+  .prepareStats span {
+    padding: 4px 5px;
+    font-size: 7px;
+  }
+
+  .prepareChoice {
+    min-height: 66px;
+    padding: 7px;
+  }
+
+  .prepareChoiceName {
+    font-size: 10px;
+  }
+
+  .prepareChoiceEffect {
+    font-size: 8px;
+  }
+
+  .prepareChoiceStats {
+    font-size: 7px;
+  }
+}

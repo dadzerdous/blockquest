@@ -316,7 +316,10 @@ function renderPrepareSlot(slot) {
   const selected = equipmentCatalog[slot]?.[selectedId];
   if (!selected) return;
 
-  if (prepareSlotLabelEl) prepareSlotLabelEl.textContent = slot.toUpperCase();
+  if (prepareSlotLabelEl) {
+    prepareSlotLabelEl.textContent =
+      slot === "gloves" ? "GEAR" : slot.toUpperCase();
+  }
   if (prepareItemNameEl) prepareItemNameEl.textContent = selected.name;
   if (prepareItemEffectEl) prepareItemEffectEl.textContent = selected.effect;
   if (prepareStatsEl) prepareStatsEl.innerHTML = equipmentStatsHtml(selected);

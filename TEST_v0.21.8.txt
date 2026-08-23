@@ -1,0 +1,19 @@
+ARKANOID RPG v0.21.8 — PREPARE COMPACT TEST
+
+[ ] Prepare shows ONLY three main categories: BALL / PADDLE / GEAR
+[ ] Ball is selectable and shows ball choices
+[ ] Gear is selectable and currently contains the glove choices
+[ ] Paddle shows Standard Trolley and is visibly unavailable for now
+[ ] Helmet / Chest / Boots / Ring / Amulet are no longer separate menu rows
+[ ] Nothing is cut off on the right side
+[ ] Long Cinder/Piercing descriptions wrap inside the panel
+[ ] Prepare fits desktop window
+[ ] Prepare fits mobile width
+[ ] Prepare can scroll vertically on a short screen
+[ ] Back button remains visible/reachable
+[ ] Equipping Ball/Gear still works
+[ ] No red console errors
+
+NOTES:
+__________________________________________________
+__________________________________________________
