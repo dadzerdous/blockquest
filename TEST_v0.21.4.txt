@@ -1,0 +1,24 @@
+ARKANOID RPG v0.21.4 — HERO FACING / CLEAN SPRITES
+
+UNMOUNTED HERO
+[ ] Blue stray/tint beside hero is gone
+[ ] Standing still uses a clean neutral sprite
+[ ] Walking left/right animates cleanly
+[ ] Walking UP toward the dungeon shows his BACK/backpack
+[ ] Up animation has no neighboring sprite fragments
+
+MOUNTED HERO
+[ ] When trolley is moving left/right, hero still faces movement direction
+[ ] When trolley STOPS, hero turns to face UP / away from camera
+[ ] Stationary mounted hero shows his backpack/back
+[ ] HP color/fade visual still works on mounted hero
+[ ] Hero does not flicker rapidly between poses while barely moving
+
+OTHER
+[ ] Route map still works
+[ ] 1/2/3 door choices still work
+[ ] No red console errors
+
+NOTES:
+__________________________________________________
+__________________________________________________

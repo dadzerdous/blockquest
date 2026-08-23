@@ -361,14 +361,34 @@ function drawPlayer() {
   }
 
   // Hero is deliberately much closer to the trolley deck now.
-  // Draw directly in the already-mirrored trolley coordinate system.
+  // When the trolley is stationary, the hero faces UP / away from camera.
+  // Moving left/right keeps the directional combat pose.
   if (gameState !== "exitChoice") {
-    const heroH = 92;
-    const heroW = heroImage.naturalHeight > 0
-      ? heroH * (heroImage.naturalWidth / heroImage.naturalHeight)
-      : 58;
+    const mountedIdle =
+      Math.abs(player.velocityX || 0) < 8 &&
+      heroBackImages[0] &&
+      heroBackImages[0].complete &&
+      heroBackImages[0].naturalWidth > 0;
 
-    if (heroImage.complete && heroImage.naturalWidth > 0) {
+    const mountedHeroImage =
+      mountedIdle
+        ? heroBackImages[0]
+        : heroImage;
+
+    const heroH = 92;
+    const heroW =
+      mountedHeroImage.naturalHeight > 0
+        ? heroH *
+          (
+            mountedHeroImage.naturalWidth /
+            mountedHeroImage.naturalHeight
+          )
+        : 58;
+
+    if (
+      mountedHeroImage.complete &&
+      mountedHeroImage.naturalWidth > 0
+    ) {
       const heroX = -heroW / 2;
       const heroY = -trolleyH * 0.36 - heroH + 8;
 
@@ -389,11 +409,11 @@ function drawPlayer() {
         ctx.globalAlpha = 0.28;
         ctx.filter = "grayscale(1) brightness(.85)";
         ctx.drawImage(
-          heroImage,
+          mountedHeroImage,
           0,
           0,
-          heroImage.naturalWidth,
-          heroImage.naturalHeight * (fadedHeight / heroH),
+          mountedHeroImage.naturalWidth,
+          mountedHeroImage.naturalHeight * (fadedHeight / heroH),
           heroX,
           heroY,
           heroW,
@@ -405,18 +425,18 @@ function drawPlayer() {
       // Draw remaining HP from the bottom upward in full color.
       if (fullColorHeight > 0) {
         const sourceY =
-          heroImage.naturalHeight *
+          mountedHeroImage.naturalHeight *
           (1 - hpRatio);
 
         const sourceH =
-          heroImage.naturalHeight *
+          mountedHeroImage.naturalHeight *
           hpRatio;
 
         ctx.drawImage(
-          heroImage,
+          mountedHeroImage,
           0,
           sourceY,
-          heroImage.naturalWidth,
+          mountedHeroImage.naturalWidth,
           sourceH,
           heroX,
           heroY + fadedHeight,
@@ -431,40 +451,31 @@ function drawPlayer() {
   ctx.restore();
 }
 
-const heroSpriteSheetImage = new Image();
-heroSpriteSheetImage.src = "assets/hero_trolley_spritesheet.png";
+const heroIdleCleanImage = new Image();
+heroIdleCleanImage.src = "assets/hero_idle_clean.png";
 
-/*
-  Sprite sheet source rectangles.
-  This first animation pass intentionally uses only the clean hero rows:
-  - idle: first neutral pose
-  - walkRight: top walking row
-  - walkBack: backpack/back-facing walking row
+const heroMoveImages = [
+  "assets/hero_move_1.png",
+  "assets/hero_move_2.png",
+  "assets/hero_move_3.png",
+  "assets/hero_move_4.png"
+].map(src => {
+  const image = new Image();
+  image.src = src;
+  return image;
+});
 
-  Left-facing movement mirrors walkRight in canvas.
-*/
-const heroSpriteAtlas = {
-  idle: [
-    { x: 24, y: 42, w: 112, h: 158 }
-  ],
+const heroBackImages = [
+  "assets/hero_back_1.png",
+  "assets/hero_back_2.png",
+  "assets/hero_back_3.png"
+].map(src => {
+  const image = new Image();
+  image.src = src;
+  return image;
+});
 
-  walkRight: [
-    { x: 526, y: 48, w: 112, h: 154 },
-    { x: 629, y: 48, w: 112, h: 154 },
-    { x: 733, y: 48, w: 112, h: 154 },
-    { x: 837, y: 48, w: 112, h: 154 },
-    { x: 941, y: 48, w: 112, h: 154 }
-  ],
-
-  walkBack: [
-    { x: 586, y: 454, w: 112, h: 150 },
-    { x: 704, y: 454, w: 112, h: 150 },
-    { x: 823, y: 454, w: 112, h: 150 },
-    { x: 944, y: 454, w: 112, h: 150 }
-  ]
-};
-
-function getHeroNavigationFrame() {
+function getHeroNavigationImage() {
   const moveX =
     exitChoice.moveX || 0;
 
@@ -477,61 +488,69 @@ function getHeroNavigationFrame() {
 
   if (!moving) {
     return {
-      frame: heroSpriteAtlas.idle[0],
+      image: heroIdleCleanImage,
       flipX: exitChoice.facing < 0
     };
   }
 
-  // Moving upward means walking away from camera toward a door.
+  // UP = away from camera, toward the dungeon/doors.
+  // Use the actual backpack/back-view row.
   if (
     moveY < -0.20 &&
-    Math.abs(moveY) >= Math.abs(moveX) * 0.65
+    Math.abs(moveY) >=
+      Math.abs(moveX) * 0.55
   ) {
-    const frames =
-      heroSpriteAtlas.walkBack;
-
     const frameIndex =
       Math.floor(
-        performance.now() / 135
-      ) % frames.length;
+        performance.now() / 145
+      ) %
+      heroBackImages.length;
 
     return {
-      frame: frames[frameIndex],
+      image:
+        heroBackImages[
+          frameIndex
+        ],
       flipX: false
     };
   }
 
-  const frames =
-    heroSpriteAtlas.walkRight;
-
   const frameIndex =
     Math.floor(
-      performance.now() / 115
-    ) % frames.length;
+      performance.now() / 120
+    ) %
+    heroMoveImages.length;
 
   return {
-    frame: frames[frameIndex],
+    image:
+      heroMoveImages[
+        frameIndex
+      ],
     flipX: moveX < 0
   };
 }
 
 function drawHeroSprite(x, y, facing = 1, scale = 1) {
+  const selection =
+    getHeroNavigationImage();
+
+  const image =
+    selection.image;
+
   if (
-    heroSpriteSheetImage.complete &&
-    heroSpriteSheetImage.naturalWidth > 0
+    image &&
+    image.complete &&
+    image.naturalWidth > 0
   ) {
-    const selection =
-      getHeroNavigationFrame();
-
-    const frame =
-      selection.frame;
-
     const drawH =
       118 * scale;
 
     const drawW =
       drawH *
-      (frame.w / frame.h);
+      (
+        image.naturalWidth /
+        image.naturalHeight
+      );
 
     ctx.save();
     ctx.translate(x, y);
@@ -541,11 +560,7 @@ function drawHeroSprite(x, y, facing = 1, scale = 1) {
     }
 
     ctx.drawImage(
-      heroSpriteSheetImage,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
+      image,
       -drawW / 2,
       -drawH,
       drawW,
@@ -556,7 +571,7 @@ function drawHeroSprite(x, y, facing = 1, scale = 1) {
     return;
   }
 
-  // Existing single-image fallback.
+  // Original hero remains a safe fallback.
   if (
     typeof heroImage !== "undefined" &&
     heroImage.complete &&
@@ -565,8 +580,10 @@ function drawHeroSprite(x, y, facing = 1, scale = 1) {
     const h = 118 * scale;
     const w =
       h *
-      (heroImage.naturalWidth /
-       heroImage.naturalHeight);
+      (
+        heroImage.naturalWidth /
+        heroImage.naturalHeight
+      );
 
     ctx.save();
     ctx.translate(x, y);
