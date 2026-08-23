@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG — v0.21.8</title>
+  <title>Spike Trolley RPG — v0.21.9</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -56,7 +56,7 @@
 <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.21.8</div>
+      <div id="versionBadge">v0.21.9</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
@@ -186,21 +186,30 @@
             </div>
 
             <div class="prepareDetail">
-              <div class="prepareDetailHead">
+              <div class="prepareDetailTop">
                 <div>
                   <small id="prepareSlotLabel">BALL</small>
-                  <h2 id="prepareItemName">Iron Ball</h2>
+                  <h2 id="prepareCategoryTitle">Choose a Ball</h2>
                 </div>
-                <div class="prepareEquippedBadge">EQUIPPED</div>
               </div>
 
-              <p id="prepareItemEffect" class="prepareItemEffect">Reliable standard rebound.</p>
-              <div id="prepareStats" class="prepareStats"></div>
+              <div class="prepareChoiceTitle">OPTIONS</div>
+              <div id="equipmentPicker" class="equipmentPicker prepareTileGrid"></div>
 
-              <div class="prepareChoiceTitle">AVAILABLE</div>
-              <div id="equipmentPicker" class="equipmentPicker preparePicker"></div>
+              <div class="prepareDescriptionPanel">
+                <div class="prepareDescriptionHead">
+                  <div>
+                    <small>SELECTED</small>
+                    <h3 id="prepareItemName">Iron Ball</h3>
+                  </div>
+                  <div id="prepareEquippedBadge" class="prepareEquippedBadge">EQUIPPED</div>
+                </div>
 
-              <div class="prepareHint">Select an item to equip it immediately.</div>
+                <p id="prepareItemEffect" class="prepareItemEffect">Reliable standard rebound.</p>
+                <div id="prepareStats" class="prepareStats"></div>
+
+                <button id="prepareEquipButton" class="prepareEquipButton">EQUIP</button>
+              </div>
             </div>
           </div>
         </div>

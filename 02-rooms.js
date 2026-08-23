@@ -288,6 +288,7 @@ function applyEquipment() {
   }
 }
 let activePrepareSlot = "ball";
+let inspectedPrepareItem = null;
 
 function equipmentStatsHtml(item) {
   return (item.stats || [])
@@ -295,66 +296,295 @@ function equipmentStatsHtml(item) {
     .join("");
 }
 
+function prepareItemVisual(slot, id) {
+  if (slot === "ball") {
+    const visualClass = {
+      iron: "ballIron",
+      piercing: "ballPiercing",
+      cinder: "ballCinder"
+    }[id] || "ballIron";
+
+    return `
+      <div class="prepareTileArt ${visualClass}">
+        <div class="prepareBallCore"></div>
+      </div>
+    `;
+  }
+
+  if (slot === "gloves") {
+    const gloveIcon = {
+      adventurer: "🧤",
+      heavy: "🥊",
+      quick: "🪶"
+    }[id] || "🧤";
+
+    return `
+      <div class="prepareTileArt gearTileArt">
+        <span>${gloveIcon}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="prepareTileArt">
+      <span>?</span>
+    </div>
+  `;
+}
+
 function updateLoadoutUI() {
-  const gloves = equipmentCatalog.gloves[progression.equipment.gloves];
-  const ballItem = equipmentCatalog.ball[progression.equipment.ball];
+  const gloves =
+    equipmentCatalog.gloves[
+      progression.equipment.gloves
+    ];
 
-  if (glovesNameEl) glovesNameEl.textContent = gloves.name;
-  if (ballNameEl) ballNameEl.textContent = ballItem.name;
+  const ballItem =
+    equipmentCatalog.ball[
+      progression.equipment.ball
+    ];
 
-  document.querySelectorAll(".prepareSlot[data-slot]").forEach(button => {
-    button.classList.toggle("active", button.dataset.slot === activePrepareSlot);
-  });
+  if (glovesNameEl) {
+    glovesNameEl.textContent =
+      gloves.name;
+  }
 
-  renderPrepareSlot(activePrepareSlot);
+  if (ballNameEl) {
+    ballNameEl.textContent =
+      ballItem.name;
+  }
+
+  document
+    .querySelectorAll(".prepareSlot[data-slot]")
+    .forEach(button => {
+      button.classList.toggle(
+        "active",
+        button.dataset.slot === activePrepareSlot
+      );
+    });
+
+  const unlocked =
+    progression.equipment.unlocked[
+      activePrepareSlot
+    ] || [];
+
+  if (
+    !inspectedPrepareItem ||
+    !unlocked.includes(
+      inspectedPrepareItem
+    )
+  ) {
+    inspectedPrepareItem =
+      progression.equipment[
+        activePrepareSlot
+      ] || unlocked[0];
+  }
+
+  renderPrepareSlot(
+    activePrepareSlot
+  );
 }
 
 function renderPrepareSlot(slot) {
   activePrepareSlot = slot;
 
-  const selectedId = progression.equipment[slot];
-  const selected = equipmentCatalog[slot]?.[selectedId];
+  const unlocked =
+    progression.equipment.unlocked[slot] || [];
+
+  if (!unlocked.length) return;
+
+  if (
+    !inspectedPrepareItem ||
+    !unlocked.includes(inspectedPrepareItem)
+  ) {
+    inspectedPrepareItem =
+      progression.equipment[slot] ||
+      unlocked[0];
+  }
+
+  const selected =
+    equipmentCatalog[slot]?.[
+      inspectedPrepareItem
+    ];
+
   if (!selected) return;
 
-  if (prepareSlotLabelEl) {
-    prepareSlotLabelEl.textContent =
-      slot === "gloves" ? "GEAR" : slot.toUpperCase();
+  const slotLabel =
+    slot === "gloves"
+      ? "GEAR"
+      : slot.toUpperCase();
+
+  const labelEl =
+    document.getElementById(
+      "prepareSlotLabel"
+    );
+
+  const categoryTitleEl =
+    document.getElementById(
+      "prepareCategoryTitle"
+    );
+
+  const itemNameEl =
+    document.getElementById(
+      "prepareItemName"
+    );
+
+  const itemEffectEl =
+    document.getElementById(
+      "prepareItemEffect"
+    );
+
+  const statsEl =
+    document.getElementById(
+      "prepareStats"
+    );
+
+  const badgeEl =
+    document.getElementById(
+      "prepareEquippedBadge"
+    );
+
+  const equipButton =
+    document.getElementById(
+      "prepareEquipButton"
+    );
+
+  if (labelEl) {
+    labelEl.textContent =
+      slotLabel;
   }
-  if (prepareItemNameEl) prepareItemNameEl.textContent = selected.name;
-  if (prepareItemEffectEl) prepareItemEffectEl.textContent = selected.effect;
-  if (prepareStatsEl) prepareStatsEl.innerHTML = equipmentStatsHtml(selected);
 
-  openEquipmentPicker(slot);
-}
+  if (categoryTitleEl) {
+    categoryTitleEl.textContent =
+      slot === "ball"
+        ? "Choose a Ball"
+        : "Choose Gear";
+  }
 
-function openEquipmentPicker(slot) {
-  activePrepareSlot = slot;
-  equipmentPicker.innerHTML = "";
+  if (itemNameEl) {
+    itemNameEl.textContent =
+      selected.name;
+  }
 
-  for (const id of progression.equipment.unlocked[slot] || []) {
-    const item = equipmentCatalog[slot][id];
-    const button = document.createElement("button");
+  if (itemEffectEl) {
+    itemEffectEl.textContent =
+      selected.effect;
+  }
 
-    button.className = "equipmentChoice prepareChoice";
-    if (progression.equipment[slot] === id) button.classList.add("equipped");
+  if (statsEl) {
+    statsEl.innerHTML =
+      equipmentStatsHtml(
+        selected
+      );
+  }
 
-    button.innerHTML = `
-      <span class="prepareChoiceName">${item.name}</span>
-      <span class="prepareChoiceEffect">${item.effect}</span>
-      <span class="prepareChoiceStats">${(item.stats || []).join(" • ")}</span>
-    `;
+  const equipped =
+    progression.equipment[slot] ===
+    inspectedPrepareItem;
 
-    button.onclick = () => {
-      progression.equipment[slot] = id;
+  if (badgeEl) {
+    badgeEl.textContent =
+      equipped
+        ? "EQUIPPED"
+        : "NOT EQUIPPED";
+
+    badgeEl.classList.toggle(
+      "notEquipped",
+      !equipped
+    );
+  }
+
+  if (equipButton) {
+    equipButton.disabled =
+      equipped;
+
+    equipButton.textContent =
+      equipped
+        ? "EQUIPPED"
+        : "EQUIP";
+
+    equipButton.onclick = () => {
+      progression.equipment[slot] =
+        inspectedPrepareItem;
+
       applyEquipment();
       saveProgression();
       updateLoadoutUI();
     };
-
-    equipmentPicker.appendChild(button);
   }
 
-  equipmentPicker.classList.remove("hidden");
+  renderEquipmentTiles(slot);
+}
+
+function renderEquipmentTiles(slot) {
+  equipmentPicker.innerHTML = "";
+
+  for (
+    const id of
+    progression.equipment.unlocked[slot] || []
+  ) {
+    const item =
+      equipmentCatalog[slot][id];
+
+    const button =
+      document.createElement(
+        "button"
+      );
+
+    button.className =
+      "prepareTile";
+
+    if (
+      id ===
+      inspectedPrepareItem
+    ) {
+      button.classList.add(
+        "selected"
+      );
+    }
+
+    if (
+      progression.equipment[slot] ===
+      id
+    ) {
+      button.classList.add(
+        "equipped"
+      );
+    }
+
+    button.innerHTML = `
+      ${prepareItemVisual(slot, id)}
+      <span class="prepareTileName">${item.name}</span>
+      ${
+        progression.equipment[slot] === id
+          ? '<span class="prepareTileEquipped">EQUIPPED</span>'
+          : ''
+      }
+    `;
+
+    button.onclick = () => {
+      inspectedPrepareItem =
+        id;
+
+      renderPrepareSlot(
+        slot
+      );
+    };
+
+    equipmentPicker.appendChild(
+      button
+    );
+  }
+
+  equipmentPicker.classList.remove(
+    "hidden"
+  );
+}
+
+function openEquipmentPicker(slot) {
+  inspectedPrepareItem =
+    progression.equipment[slot];
+
+  renderPrepareSlot(slot);
 }
 function resetRun() {
   if (typeof routeGraphState !== "undefined") {

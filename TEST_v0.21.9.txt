@@ -1,0 +1,28 @@
+ARKANOID RPG v0.21.9 — VISUAL EQUIPMENT TILES
+
+BALL
+[ ] Ball options appear as visual tiles
+[ ] Iron / Piercing / Cinder are visually distinct
+[ ] Clicking a tile SELECTS it without immediately equipping
+[ ] Selected tile gets a highlight
+[ ] Equipped tile is labeled EQUIPPED
+[ ] Description area below updates to selected ball
+[ ] EQUIP button equips selected ball
+[ ] Once equipped, button changes to EQUIPPED
+
+GEAR
+[ ] Gear options also appear as visual tiles
+[ ] Adventurer / Heavy / Quick are distinguishable
+[ ] Clicking Gear tile updates description below
+[ ] Equip button works
+
+LAYOUT
+[ ] Description area is clearly below the tile grid
+[ ] Right side no longer feels like giant text cards
+[ ] Desktop fits without horizontal clipping
+[ ] Mobile tile grid is readable
+[ ] No red console errors
+
+NOTES:
+__________________________________________________
+__________________________________________________

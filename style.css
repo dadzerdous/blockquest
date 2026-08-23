@@ -2029,7 +2029,8 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
 }
 
 
-/* v0.21.8 — compact Prepare: Paddle / Ball / Gear */
+
+/* v0.21.9 — Prepare visual tile browser */
 #loadoutOverlay {
   position: fixed;
   inset: 0;
@@ -2040,370 +2041,373 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   padding: 14px;
   box-sizing: border-box;
   overflow: auto;
-  background: rgba(4, 4, 8, .82);
+  background: rgba(4,4,8,.82);
 }
-#loadoutOverlay.hidden {
-  display: none;
-}
+#loadoutOverlay.hidden { display:none; }
 
 .preparePanel,
-.preparePanel * {
-  box-sizing: border-box;
-}
+.preparePanel * { box-sizing:border-box; }
 
 .preparePanel {
-  width: min(760px, calc(100vw - 28px));
-  max-width: 100%;
-  max-height: min(760px, calc(100dvh - 28px));
-  overflow: auto;
-  padding: 18px;
-  border: 1px solid rgba(214,190,143,.42);
-  border-radius: 14px;
-  background: rgba(17,15,20,.98);
-  box-shadow: 0 18px 55px rgba(0,0,0,.62);
+  width:min(780px,calc(100vw - 28px));
+  max-height:min(790px,calc(100dvh - 28px));
+  overflow:auto;
+  padding:18px;
+  border:1px solid rgba(214,190,143,.42);
+  border-radius:14px;
+  background:rgba(17,15,20,.98);
+  box-shadow:0 18px 55px rgba(0,0,0,.62);
 }
 
 .prepareHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  min-width: 0;
-  padding-bottom: 13px;
-  border-bottom: 1px solid rgba(214,190,143,.18);
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  min-width:0;
+  padding-bottom:13px;
+  border-bottom:1px solid rgba(214,190,143,.18);
 }
-
-.prepareTitleBlock {
-  min-width: 0;
-}
-
+.prepareTitleBlock { min-width:0; }
 .prepareHeader h1 {
-  margin: 2px 0 3px;
-  font-size: clamp(25px, 5vw, 36px);
+  margin:2px 0 3px;
+  font-size:clamp(25px,5vw,36px);
 }
-
 .prepareHeader p {
-  margin: 0;
-  max-width: 520px;
-  font-size: 12px;
-  line-height: 1.35;
-  opacity: .72;
+  margin:0;
+  max-width:520px;
+  font-size:12px;
+  line-height:1.35;
+  opacity:.72;
 }
-
 .prepareBack {
-  flex: 0 0 auto;
-  padding: 8px 12px;
+  flex:0 0 auto;
+  padding:8px 12px;
 }
 
 .prepareBody {
-  display: grid;
-  grid-template-columns: 190px minmax(0, 1fr);
-  gap: 14px;
-  min-width: 0;
-  padding-top: 14px;
+  display:grid;
+  grid-template-columns:180px minmax(0,1fr);
+  gap:14px;
+  min-width:0;
+  padding-top:14px;
 }
 
 .prepareSlots {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
 }
 
 .prepareSlot {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-width: 0;
-  min-height: 58px;
-  padding: 9px;
-  text-align: left;
-  border: 1px solid rgba(255,255,255,.11);
-  border-radius: 9px;
-  background: rgba(255,255,255,.035);
-  color: #eee7d8;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  min-width:0;
+  min-height:58px;
+  padding:9px;
+  text-align:left;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:9px;
+  background:rgba(255,255,255,.035);
+  color:#eee7d8;
 }
-
-.prepareSlot:not(.lockedSlot):hover {
-  background: rgba(255,255,255,.07);
-}
-
 .prepareSlot.active {
-  border-color: rgba(237,199,92,.75);
-  background: rgba(237,199,92,.09);
-  box-shadow: 0 0 14px rgba(237,199,92,.12);
+  border-color:rgba(237,199,92,.75);
+  background:rgba(237,199,92,.09);
+  box-shadow:0 0 14px rgba(237,199,92,.12);
 }
-
-.prepareSlotIcon {
-  flex: 0 0 27px;
-  width: 27px;
-  text-align: center;
-  font-size: 19px;
-}
-
-.prepareSlotText {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.prepareSlotText small {
-  font-size: 8px;
-  letter-spacing: .12em;
-  opacity: .55;
-}
-
-.prepareSlotText strong {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-}
-
 .prepareSlot.lockedSlot {
-  opacity: .48;
-  cursor: default;
+  opacity:.48;
+  cursor:default;
+}
+.prepareSlotIcon {
+  flex:0 0 27px;
+  width:27px;
+  text-align:center;
+  font-size:19px;
+}
+.prepareSlotText {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+.prepareSlotText small {
+  font-size:8px;
+  letter-spacing:.12em;
+  opacity:.55;
+}
+.prepareSlotText strong {
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:11px;
 }
 
 .prepareDetail {
-  min-width: 0;
-  overflow: hidden;
-  padding: 14px;
-  border: 1px solid rgba(255,255,255,.09);
-  border-radius: 11px;
-  background: rgba(0,0,0,.22);
+  min-width:0;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:11px;
+  background:rgba(0,0,0,.22);
 }
 
-.prepareDetailHead {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
+.prepareDetailTop small,
+.prepareDescriptionHead small {
+  color:#d7bd7b;
+  letter-spacing:.14em;
+  font-size:8px;
 }
-
-.prepareDetailHead > div:first-child {
-  min-width: 0;
-}
-
-.prepareDetailHead small {
-  color: #d7bd7b;
-  letter-spacing: .14em;
-  font-size: 8px;
-}
-
-.prepareDetailHead h2 {
-  margin: 4px 0 0;
-  overflow-wrap: anywhere;
-  font-size: clamp(20px, 4vw, 27px);
-}
-
-.prepareEquippedBadge {
-  flex: 0 0 auto;
-  padding: 5px 8px;
-  border: 1px solid rgba(237,199,92,.45);
-  border-radius: 999px;
-  color: #f2d574;
-  font-size: 7px;
-  font-weight: 900;
-  letter-spacing: .08em;
-}
-
-.prepareItemEffect {
-  margin: 11px 0;
-  max-width: 100%;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-  font-size: 12px;
-  opacity: .86;
-}
-
-.prepareStats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 15px;
-}
-
-.prepareStats span {
-  max-width: 100%;
-  padding: 5px 7px;
-  border-radius: 6px;
-  background: rgba(255,255,255,.06);
-  overflow-wrap: anywhere;
-  font-size: 9px;
-  color: #ddd5c6;
+.prepareDetailTop h2 {
+  margin:4px 0 12px;
+  font-size:22px;
 }
 
 .prepareChoiceTitle {
-  margin-bottom: 6px;
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: .14em;
-  color: #b7aa91;
+  margin-bottom:7px;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.14em;
+  color:#b7aa91;
 }
 
-.preparePicker {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 7px;
-  min-width: 0;
+.prepareTileGrid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  min-width:0;
+  margin-bottom:14px;
 }
 
-.prepareChoice {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-  min-width: 0;
-  min-height: 78px;
-  padding: 9px;
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 9px;
-  background: rgba(255,255,255,.035);
-  color: #eee8dc;
-  text-align: left;
-  white-space: normal;
+.prepareTile {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  min-width:0;
+  min-height:126px;
+  padding:9px 7px 8px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:10px;
+  background:rgba(255,255,255,.035);
+  color:#eee8dc;
+  text-align:center;
+}
+.prepareTile:hover {
+  background:rgba(255,255,255,.07);
+}
+.prepareTile.selected {
+  border-color:rgba(237,199,92,.78);
+  box-shadow:0 0 13px rgba(237,199,92,.14);
+}
+.prepareTile.equipped {
+  background:rgba(237,199,92,.07);
 }
 
-.prepareChoice:hover {
-  background: rgba(255,255,255,.075);
+.prepareTileArt {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:70px;
+  height:70px;
+  margin-bottom:7px;
+  border-radius:12px;
+  background:rgba(0,0,0,.28);
+  box-shadow:inset 0 0 14px rgba(255,255,255,.03);
 }
 
-.prepareChoice.equipped {
-  border-color: rgba(237,199,92,.72);
-  background: rgba(237,199,92,.09);
+.prepareBallCore {
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  box-shadow:
+    inset -8px -8px 12px rgba(0,0,0,.28),
+    inset 7px 7px 10px rgba(255,255,255,.18),
+    0 4px 12px rgba(0,0,0,.35);
 }
 
-.prepareChoiceName,
-.prepareChoiceEffect,
-.prepareChoiceStats {
-  display: block;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  white-space: normal;
+.ballIron .prepareBallCore {
+  background:
+    radial-gradient(circle at 35% 30%,#f7f4ff 0 13%,#bbb5c9 34%,#746f81 70%,#3d3948 100%);
+}
+.ballPiercing .prepareBallCore {
+  border-radius:42% 58% 48% 52%;
+  background:
+    radial-gradient(circle at 38% 32%,#f4f5fb 0 12%,#aeb3bd 34%,#666c77 69%,#2e333b 100%);
+  transform:rotate(-18deg);
+}
+.ballPiercing .prepareBallCore::after {
+  content:"";
+  display:block;
+  width:9px;
+  height:48px;
+  margin:-3px auto 0;
+  background:linear-gradient(#e5e7ec,#7b8088);
+  clip-path:polygon(50% 0,100% 74%,68% 100%,32% 100%,0 74%);
+}
+.ballCinder .prepareBallCore {
+  background:
+    radial-gradient(circle at 35% 30%,#fff3a0 0 9%,#ffb23b 25%,#ef5c20 55%,#812115 80%,#39100e 100%);
+  box-shadow:
+    0 0 16px rgba(255,109,39,.48),
+    inset -8px -8px 12px rgba(0,0,0,.25),
+    inset 7px 7px 10px rgba(255,240,154,.16);
 }
 
-.prepareChoiceName {
-  font-size: 12px;
-  font-weight: 900;
+.gearTileArt span {
+  font-size:42px;
 }
 
-.prepareChoiceEffect {
-  margin-top: 3px;
-  font-size: 9px;
-  line-height: 1.35;
-  opacity: .74;
+.prepareTileName {
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:10px;
+  font-weight:900;
+}
+.prepareTileEquipped {
+  margin-top:5px;
+  padding:3px 5px;
+  border-radius:999px;
+  background:rgba(237,199,92,.14);
+  color:#f2d574;
+  font-size:6px;
+  font-weight:900;
+  letter-spacing:.08em;
 }
 
-.prepareChoiceStats {
-  margin-top: 6px;
-  font-size: 8px;
-  color: #d9bf78;
+.prepareDescriptionPanel {
+  padding:12px;
+  border-top:1px solid rgba(214,190,143,.16);
+  background:rgba(0,0,0,.10);
 }
 
-.prepareHint {
-  margin-top: 9px;
-  font-size: 8px;
-  opacity: .46;
+.prepareDescriptionHead {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.prepareDescriptionHead h3 {
+  margin:4px 0 0;
+  font-size:21px;
 }
 
-@media (max-width: 600px) {
+.prepareEquippedBadge {
+  flex:0 0 auto;
+  padding:5px 8px;
+  border:1px solid rgba(237,199,92,.45);
+  border-radius:999px;
+  color:#f2d574;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.prepareEquippedBadge.notEquipped {
+  opacity:.45;
+  border-color:rgba(255,255,255,.16);
+  color:#d4d0c8;
+}
+
+.prepareItemEffect {
+  margin:9px 0;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+  font-size:11px;
+  opacity:.84;
+}
+.prepareStats {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:11px;
+}
+.prepareStats span {
+  padding:5px 7px;
+  border-radius:6px;
+  background:rgba(255,255,255,.06);
+  font-size:8px;
+  color:#ddd5c6;
+}
+
+.prepareEquipButton {
+  width:100%;
+  padding:9px 12px;
+  border:1px solid rgba(237,199,92,.64);
+  border-radius:8px;
+  background:rgba(237,199,92,.11);
+  color:#f3d474;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.prepareEquipButton:disabled {
+  opacity:.42;
+}
+
+@media(max-width:600px) {
   #loadoutOverlay {
-    padding: 6px;
-    align-items: flex-start;
+    padding:6px;
+    align-items:flex-start;
   }
-
   .preparePanel {
-    width: calc(100vw - 12px);
-    max-height: calc(100dvh - 12px);
-    margin: 0;
-    padding: 11px;
-    border-radius: 10px;
+    width:calc(100vw - 12px);
+    max-height:calc(100dvh - 12px);
+    padding:10px;
   }
-
-  .prepareHeader {
-    gap: 8px;
-    padding-bottom: 9px;
-  }
-
-  .prepareHeader p {
-    font-size: 9px;
-  }
-
-  .prepareBack {
-    padding: 6px 8px;
-    font-size: 9px;
-  }
-
+  .prepareHeader p { font-size:9px; }
   .prepareBody {
-    grid-template-columns: 98px minmax(0, 1fr);
-    gap: 7px;
-    padding-top: 9px;
+    grid-template-columns:92px minmax(0,1fr);
+    gap:7px;
   }
-
-  .prepareSlots {
-    gap: 6px;
-  }
-
   .prepareSlot {
-    min-height: 52px;
-    gap: 4px;
-    padding: 6px 5px;
+    min-height:50px;
+    gap:4px;
+    padding:6px 5px;
   }
-
   .prepareSlotIcon {
-    flex-basis: 19px;
-    width: 19px;
-    font-size: 14px;
+    flex-basis:18px;
+    width:18px;
+    font-size:14px;
   }
+  .prepareSlotText small { font-size:6px; }
+  .prepareSlotText strong { font-size:8px; }
 
-  .prepareSlotText small {
-    font-size: 6px;
+  .prepareDetail { padding:8px; }
+  .prepareDetailTop h2 { font-size:17px; }
+
+  .prepareTileGrid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
   }
-
-  .prepareSlotText strong {
-    font-size: 8px;
+  .prepareTile {
+    min-height:100px;
+    padding:6px 4px;
   }
-
-  .prepareDetail {
-    padding: 9px;
+  .prepareTileArt {
+    width:52px;
+    height:52px;
   }
+  .prepareBallCore {
+    width:32px;
+    height:32px;
+  }
+  .ballPiercing .prepareBallCore::after {
+    width:7px;
+    height:36px;
+  }
+  .gearTileArt span { font-size:30px; }
 
+  .prepareDescriptionHead h3 {
+    font-size:17px;
+  }
   .prepareEquippedBadge {
-    display: none;
+    display:none;
   }
-
-  .prepareItemEffect {
-    margin: 8px 0;
-    font-size: 9px;
-  }
-
-  .prepareStats {
-    margin-bottom: 10px;
-  }
-
-  .prepareStats span {
-    padding: 4px 5px;
-    font-size: 7px;
-  }
-
-  .prepareChoice {
-    min-height: 66px;
-    padding: 7px;
-  }
-
-  .prepareChoiceName {
-    font-size: 10px;
-  }
-
-  .prepareChoiceEffect {
-    font-size: 8px;
-  }
-
-  .prepareChoiceStats {
-    font-size: 7px;
-  }
+  .prepareItemEffect { font-size:9px; }
+  .prepareStats span { font-size:7px; }
 }
