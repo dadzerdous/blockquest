@@ -3099,24 +3099,32 @@ function drawHunterDodgeReady() {
 
   if (progress <= 0.03) return;
 
+  // Aura hugs the hero, not the trolley.
+  const auraX = player.x;
+  const auraY = player.y - 104;
+
   ctx.save();
+
+  const pulse =
+    0.45 +
+    Math.sin(performance.now() / 150) * 0.10;
 
   ctx.globalAlpha =
     ready
-      ? 0.36 + Math.sin(performance.now() / 160) * 0.10
-      : 0.06 + progress * 0.16;
+      ? pulse
+      : 0.05 + progress * 0.18;
 
-  ctx.strokeStyle = "#fff2b5";
-  ctx.shadowBlur = ready ? 16 : 5;
-  ctx.shadowColor = "#fff2b5";
-  ctx.lineWidth = ready ? 3 : 2;
+  ctx.strokeStyle = "#fff1a8";
+  ctx.shadowBlur = ready ? 18 : 6;
+  ctx.shadowColor = "#fff1a8";
+  ctx.lineWidth = ready ? 4 : 2;
 
   ctx.beginPath();
   ctx.ellipse(
-    player.x,
-    player.y - 22,
-    player.width / 2 + 18,
-    72,
+    auraX,
+    auraY,
+    34,
+    49,
     0,
     0,
     Math.PI * 2
@@ -3220,13 +3228,61 @@ function drawPlayer() {
       : 58;
 
     if (heroImage.complete && heroImage.naturalWidth > 0) {
-      ctx.drawImage(
-        heroImage,
-        -heroW / 2,
-        -trolleyH * 0.36 - heroH + 8,
-        heroW,
-        heroH
-      );
+      const heroX = -heroW / 2;
+      const heroY = -trolleyH * 0.36 - heroH + 8;
+
+      const hpRatio =
+        player.maxHp > 0
+          ? Math.max(0, Math.min(1, player.hp / player.maxHp))
+          : 0;
+
+      const fullColorHeight =
+        heroH * hpRatio;
+
+      const fadedHeight =
+        heroH - fullColorHeight;
+
+      // Draw depleted upper portion faded/desaturated.
+      if (fadedHeight > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        ctx.filter = "grayscale(1) brightness(.85)";
+        ctx.drawImage(
+          heroImage,
+          0,
+          0,
+          heroImage.naturalWidth,
+          heroImage.naturalHeight * (fadedHeight / heroH),
+          heroX,
+          heroY,
+          heroW,
+          fadedHeight
+        );
+        ctx.restore();
+      }
+
+      // Draw remaining HP from the bottom upward in full color.
+      if (fullColorHeight > 0) {
+        const sourceY =
+          heroImage.naturalHeight *
+          (1 - hpRatio);
+
+        const sourceH =
+          heroImage.naturalHeight *
+          hpRatio;
+
+        ctx.drawImage(
+          heroImage,
+          0,
+          sourceY,
+          heroImage.naturalWidth,
+          sourceH,
+          heroX,
+          heroY + fadedHeight,
+          heroW,
+          fullColorHeight
+        );
+      }
     }
   }
 
@@ -3620,7 +3676,25 @@ function togglePause(){gameState==="paused"?resumeGame():pauseGame();}
 pauseButton.addEventListener("click",togglePause);
 resumeButton.addEventListener("click",resumeGame);
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k==="p"||k==="escape"){e.preventDefault();togglePause();}});
-function gameLoop(timestamp) {if(gameState==="paused"){draw();requestAnimationFrame(gameLoop);return;}
+function gameLoop(timestamp) {if (gameState === "paused") {
+    // Keep the last frame visible without advancing any simulation.
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
+    drawWalls();
+    drawRail();
+    drawBricks(0);
+    drawSplashEffects();
+    drawFallingPickups();
+    drawPlayerProjectiles();
+    drawProjectiles();
+    drawPlayer();
+    drawHunterDodgeReady();
+    drawHunterArrow();
+    drawBall();
+    drawExitChoice();
+    requestAnimationFrame(gameLoop);
+    return;
+  }
 
   const dt = Math.min((timestamp - lastTime) / 1000, 0.033);
   lastTime = timestamp;

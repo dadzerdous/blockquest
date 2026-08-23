@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.3**
+Current prototype: **v0.18.4**
 
 ## Current Direction
 
@@ -1036,3 +1036,26 @@ Only one Pill exists in this build:
 - Pill effect resets at the next room.
 
 This build intentionally does not add permanent Pill unlocks, Bestiary, favored weighting, Shop logic, or additional Pill types yet. The goal is only to test whether physically chasing Money / XP / a rare Pill makes the core game more fun.
+
+
+## v0.18.4 — Pause Hotfix / Hero HP / Dodge Aura / HUD Cleanup
+
+### Pause Hotfix
+- Fixed `ReferenceError: draw is not defined` while paused.
+- Pause now renders the current game scene using the actual draw functions without advancing simulation.
+
+### Hunter Dodge Readiness
+- Dodge readiness is now a white/gold aura tightly around the hero character only.
+- It no longer looks like a large circle around the whole trolley.
+- Aura is strongest when Dodge is ready and faintly reforms during recharge.
+
+### Hero HP Visual
+- Hero sprite itself now represents HP.
+- Full-health portion remains full color from the bottom upward.
+- Missing-health portion at the top becomes faded/desaturated.
+- Example: at 50% HP, lower half is full color and upper half is faded.
+- This is intended to let us remove more traditional HUD clutter.
+
+### HUD Cleanup
+- HERO and ENEMIES labels/counters are removed/hidden from the top HUD.
+- Room/combat information stays focused on things the player actually needs.
