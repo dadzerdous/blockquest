@@ -414,8 +414,8 @@ function applyPermanentStats() {
   // +10% ball damage per point.
   ball.baseDamageMultiplier = 1 + s.power * 0.10;
 
-  // +3% trolley width per point.
-  player.width = player.baseWidth * (1 + s.control * 0.03);
+  // Paddle dimensions are recalculated in one authoritative function.
+  recalculatePaddleSize("permanent stats");
 
   // Fortune remains a direct +5% treasure reward per point.
   if (player.hp > player.maxHp) player.hp = player.maxHp;
@@ -449,6 +449,7 @@ const player = {
   y: 1240,
   baseWidth: 220,
   width: 220,
+  baseHeight: 44,
   height: 44,
   baseSpeed: 620,
   speed: 620,
@@ -492,6 +493,58 @@ const roomPills = {
   wide: false,
   wideMultiplier: 1
 };
+
+function recalculatePaddleSize(reason = "unknown") {
+  const controlMultiplier =
+    1 + progression.stats.control * 0.03;
+
+  const runeWidthMultiplier =
+    Math.min(
+      1.60,
+      1 + runes.expansion * 0.10
+    );
+
+  const roomWidthMultiplier =
+    roomPills.wide
+      ? (roomPills.wideMultiplier || 1)
+      : 1;
+
+  const nextWidth =
+    Math.min(
+      player.baseWidth * 1.60,
+      player.baseWidth *
+        controlMultiplier *
+        runeWidthMultiplier *
+        roomWidthMultiplier
+    );
+
+  const changed =
+    Math.abs(player.width - nextWidth) > 0.01 ||
+    player.height !== player.baseHeight;
+
+  player.width = nextWidth;
+
+  // Height is never modified by Wide, runes, XP, equipment stat refresh,
+  // pickups, or room transitions.
+  player.height = player.baseHeight;
+
+  if (changed) {
+    console.log(
+      `[PADDLE SIZE] ${reason}`,
+      {
+        width: Math.round(player.width * 10) / 10,
+        height: player.height,
+        controlMultiplier:
+          Math.round(controlMultiplier * 1000) / 1000,
+        runeWidthMultiplier:
+          Math.round(runeWidthMultiplier * 1000) / 1000,
+        roomWidthMultiplier:
+          Math.round(roomWidthMultiplier * 1000) / 1000,
+        wideActive: roomPills.wide
+      }
+    );
+  }
+}
 
 
 const rangerSkill = {

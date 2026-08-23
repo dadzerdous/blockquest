@@ -331,7 +331,6 @@ function resetRun() {
   ballStuck = false;
   stuckTimer = 0;
 
-  player.width = player.baseWidth;
   player.speed = player.baseSpeed;
   ball.damage = 1;
   applyPermanentStats();
@@ -364,7 +363,6 @@ function startRoom() {
   fallingPickups = [];
   roomPills.wide = false;
   roomPills.wideMultiplier = 1;
-  roomPills.wideMultiplier = 1;
 
   playerProjectiles = [];
   rangerSkill.timer = 0;
@@ -393,6 +391,7 @@ function startRoom() {
   gameState = "waiting";
 
   applyRunModifiers();
+  recalculatePaddleSize("room start");
   buildRoom();
   updateRuneText();
   updateShopUI();

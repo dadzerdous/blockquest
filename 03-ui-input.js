@@ -379,7 +379,6 @@ function applyRunModifiers() {
   const ballSpeedMult = Math.max(0.55, Math.min(1.75, 1 + speedUp - speedDown));
 
   const trolleySpeedMult = Math.min(1.75, 1 + runes.agility * 0.10);
-  const widthMult = Math.min(1.60, 1 + runes.expansion * 0.10);
   const hpMult = Math.min(2.0, 1 + runes.vitality * 0.10);
 
   const cooldownReduction = Math.min(0.45, runes.cooldown * 0.08);
@@ -390,13 +389,7 @@ function applyRunModifiers() {
   ball.radius = Math.round(ball.baseRadius * ballRadiusMult);
 
   player.runSpeedMultiplier = trolleySpeedMult;
-  player.width = Math.min(
-    player.baseWidth * 1.60,
-    player.baseWidth *
-      (1 + progression.stats.control * 0.03) *
-      widthMult *
-      (roomPills.wideMultiplier || 1)
-  );
+  recalculatePaddleSize("run modifiers");
 
   const permanentMaxHp = 5 + progression.stats.vitality;
   const newMaxHp = Math.max(
