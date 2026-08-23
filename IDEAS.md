@@ -1209,3 +1209,9 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 ### Dungeon Frame
 - Run money display moved lower so it sits visually alongside the bottom track/rail area.
 - No gameplay rail coordinates changed.
+
+
+## v0.19.3 — Splash Build Label / Frame Bottom
+- Splash/title screen now displays the current build number.
+- Removed the dungeon frame's bottom border.
+- The trolley tracks now serve visually as the bottom edge of the doorway/game frame.
