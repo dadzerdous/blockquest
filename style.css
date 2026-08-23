@@ -1353,3 +1353,140 @@ body {
     max-width: none;
   }
 }
+
+/* v0.20.3 — full-screen combined-background layout */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  min-height: 100%;
+  background: #08080d;
+}
+
+body {
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+#gameShell {
+  position: relative !important;
+  width: min(100vw, calc(100dvh * 2 / 3)) !important;
+  height: min(100dvh, calc(100vw * 3 / 2)) !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+}
+
+#game-wrapper {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+}
+
+.dungeonFrame {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 2 / 3 !important;
+}
+
+/* Dynamic room text uses the artwork's blank plaque directly. */
+.frameTop {
+  left: 25.5% !important;
+  right: 25.5% !important;
+  top: 2.6% !important;
+  height: 8.5% !important;
+}
+.roomPlaque {
+  background: transparent !important;
+  color: #ead4a7 !important;
+  font-size: clamp(14px, 2.5vw, 22px) !important;
+  text-shadow: 0 2px 3px #000, 1px 1px 0 #2a180d !important;
+}
+
+/* The artwork supplies the visible X; the button is only its hit target. */
+.framePauseButton {
+  right: -48% !important;
+  top: -4% !important;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+/* Put run money on the track line instead of outside the room. */
+.frameMoney {
+  right: 3.8% !important;
+  bottom: 5.4% !important;
+  background: rgba(0,0,0,.55) !important;
+}
+
+/* Launch prompt is part of the playfield now. */
+#launchHint {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 11.5% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  z-index: 12 !important;
+  white-space: nowrap;
+}
+
+/* Instructions become a subtle overlay rather than creating a footer. */
+#mobileHint {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 1.7% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  z-index: 12 !important;
+  max-width: 78%;
+  text-align: center;
+  opacity: .48;
+  pointer-events: none;
+}
+
+/* Version is an overlay in the bottom-right, never layout space. */
+#versionBadge {
+  position: absolute !important;
+  right: 2% !important;
+  bottom: 1.2% !important;
+  margin: 0 !important;
+  z-index: 13 !important;
+}
+
+/* Existing top HUD becomes an overlay rather than sitting above the room. */
+#hud-panel {
+  position: absolute !important;
+  top: 1.2% !important;
+  left: 2.2% !important;
+  z-index: 12 !important;
+  margin: 0 !important;
+  pointer-events: none;
+}
+
+/* Any old standalone pause glyph is suppressed; only the painted X is visible. */
+.pauseButton:not(.framePauseButton) {
+  color: transparent !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* No page/footer spacing below the actual game. */
+#game-wrapper + *,
+.dungeonFrame + #mobileHint {
+  margin-top: 0 !important;
+}
+
+@media (max-width:700px) {
+  #gameShell {
+    width: min(100vw, calc(100dvh * 2 / 3)) !important;
+    height: min(100dvh, calc(100vw * 3 / 2)) !important;
+  }
+  #launchHint {
+    bottom: 10.5% !important;
+  }
+  #mobileHint {
+    font-size: 10px !important;
+  }
+}
