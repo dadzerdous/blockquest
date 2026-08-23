@@ -534,6 +534,52 @@ function chooseDungeonExit(
   startRoom();
 }
 
+
+function placeBallAtTrolleyRear() {
+  const facing =
+    player.facing >= 0 ? 1 : -1;
+
+  const rearOffset =
+    player.width * 0.34;
+
+  ball.x =
+    player.x -
+    facing * rearOffset;
+
+  ball.y =
+    player.y - 34;
+}
+
+function launchBallForwardFromTrolley() {
+  const facing =
+    player.facing >= 0 ? 1 : -1;
+
+  placeBallAtTrolleyRear();
+
+  const speed =
+    Math.hypot(
+      ball.vx || 0,
+      ball.vy || 0
+    ) ||
+    ball.speed ||
+    520;
+
+  // Mostly upward, with forward travel matching trolley facing.
+  const forwardX = 0.42 * facing;
+  const upwardY = -0.91;
+  const len =
+    Math.hypot(
+      forwardX,
+      upwardY
+    );
+
+  ball.vx =
+    (forwardX / len) * speed;
+
+  ball.vy =
+    (upwardY / len) * speed;
+}
+
 function updatePlayer(dt) {
   if (gameState === "exitChoice" || gameState === "postRewardShake") {
     player.velocityX = 0;
@@ -623,8 +669,7 @@ function updatePlayer(dt) {
     (!ball.launched && gameState === "waiting") ||
     ballStuck
   ) {
-    ball.x = player.x;
-    ball.y = player.y - 58;
+    placeBallAtTrolleyRear();
   }
 
   if (ballStuck) {

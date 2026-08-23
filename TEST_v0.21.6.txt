@@ -1,0 +1,40 @@
+ARKANOID RPG v0.21.6 — PRELOAD + REAR-LAUNCH TEST
+
+ASSET PRELOAD
+[ ] Browser title says v0.21.6
+[ ] Splash/title shows Loading assets…
+[ ] Start button is disabled while loading
+[ ] Status changes to Ready
+[ ] Start becomes enabled after preload completes
+[ ] Console shows [ASSET PRELOAD] complete
+[ ] No unexpected [ASSET PRELOAD FAILED] warnings
+[ ] hero_trolley_spritesheet.png is preloaded
+[ ] Background / doors / mobs / audio are all in manifest
+
+BALL DEPLOYMENT
+[ ] Before launch, ball sits near the REAR of trolley
+[ ] Facing right = ball sits toward left/rear side
+[ ] Facing left = ball sits toward right/rear side
+[ ] Ball no longer sits dead-center on trolley
+
+BALL LAUNCH
+[ ] Launch moves forward from rear position
+[ ] Facing right = launch has up/right direction
+[ ] Facing left = launch has up/left direction
+[ ] Launch still feels controllable
+[ ] Ball does not spawn inside trolley art
+[ ] Ball collision works normally after launch
+
+OTHER
+[ ] Game still starts normally
+[ ] Route map still works
+[ ] 1/2/3 doors still work
+[ ] Hero sprite animation still works
+[ ] No red console errors
+
+NOTES:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________

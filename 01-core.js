@@ -1,3 +1,206 @@
+
+const assetLoadState = {
+  total: 0,
+  loaded: 0,
+  failed: [],
+  ready: false
+};
+
+function getAssetLoadStatusEl() {
+  return document.getElementById("assetLoadStatus");
+}
+
+function getStartButtons() {
+  return [
+    document.getElementById("startButton"),
+    document.getElementById("startGame"),
+    document.getElementById("startRun")
+  ].filter(Boolean);
+}
+
+function setStartEnabled(enabled) {
+  getStartButtons().forEach(button => {
+    button.disabled = !enabled;
+    button.setAttribute(
+      "aria-disabled",
+      enabled ? "false" : "true"
+    );
+  });
+}
+
+function updateAssetLoadStatus() {
+  const el = getAssetLoadStatusEl();
+  if (!el) return;
+
+  if (assetLoadState.ready) {
+    if (assetLoadState.failed.length) {
+      el.textContent =
+        `Loaded with ${assetLoadState.failed.length} missing asset(s)`;
+      el.classList.add("assetLoadWarning");
+    } else {
+      el.textContent = "Ready";
+      el.classList.remove("assetLoadWarning");
+    }
+    return;
+  }
+
+  el.textContent =
+    `Loading ${assetLoadState.loaded} / ${assetLoadState.total}`;
+}
+
+function preloadImage(src) {
+  return new Promise(resolve => {
+    const image = new Image();
+
+    image.onload = () => resolve({
+      ok: true,
+      src
+    });
+
+    image.onerror = () => resolve({
+      ok: false,
+      src
+    });
+
+    image.src = src;
+  });
+}
+
+function preloadAudio(src) {
+  return new Promise(resolve => {
+    const audio = new Audio();
+
+    const finish = ok => {
+      audio.removeEventListener(
+        "canplaythrough",
+        onReady
+      );
+      audio.removeEventListener(
+        "error",
+        onError
+      );
+
+      resolve({
+        ok,
+        src
+      });
+    };
+
+    const onReady = () => finish(true);
+    const onError = () => finish(false);
+
+    audio.preload = "auto";
+    audio.addEventListener(
+      "canplaythrough",
+      onReady,
+      { once: true }
+    );
+    audio.addEventListener(
+      "error",
+      onError,
+      { once: true }
+    );
+
+    audio.src = src;
+    audio.load();
+
+    // Don't hang forever on browsers that refuse to fully buffer audio.
+    setTimeout(
+      () => finish(true),
+      3500
+    );
+  });
+}
+
+function preloadAsset(src) {
+  const lower =
+    src.toLowerCase();
+
+  if (
+    lower.endsWith(".png") ||
+    lower.endsWith(".jpg") ||
+    lower.endsWith(".jpeg") ||
+    lower.endsWith(".webp") ||
+    lower.endsWith(".gif") ||
+    lower.endsWith(".svg")
+  ) {
+    return preloadImage(src);
+  }
+
+  if (
+    lower.endsWith(".mp3") ||
+    lower.endsWith(".wav") ||
+    lower.endsWith(".ogg") ||
+    lower.endsWith(".m4a")
+  ) {
+    return preloadAudio(src);
+  }
+
+  // Files such as JSON/text don't need image/audio decoding.
+  return Promise.resolve({
+    ok: true,
+    src
+  });
+}
+
+async function preloadGameAssets() {
+  const manifest =
+    Array.isArray(window.GAME_ASSET_MANIFEST)
+      ? window.GAME_ASSET_MANIFEST
+      : [];
+
+  assetLoadState.total =
+    manifest.length;
+
+  assetLoadState.loaded = 0;
+  assetLoadState.failed = [];
+  assetLoadState.ready = false;
+
+  setStartEnabled(false);
+  updateAssetLoadStatus();
+
+  for (const src of manifest) {
+    const result =
+      await preloadAsset(src);
+
+    assetLoadState.loaded += 1;
+
+    if (!result.ok) {
+      assetLoadState.failed.push(
+        result.src
+      );
+
+      console.warn(
+        "[ASSET PRELOAD FAILED]",
+        result.src
+      );
+    }
+
+    updateAssetLoadStatus();
+  }
+
+  assetLoadState.ready = true;
+
+  updateAssetLoadStatus();
+  setStartEnabled(true);
+
+  console.log(
+    `[ASSET PRELOAD] ${assetLoadState.loaded}/${assetLoadState.total} complete`,
+    assetLoadState.failed.length
+      ? { failed: assetLoadState.failed }
+      : "all assets ready"
+  );
+}
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    preloadGameAssets();
+  },
+  { once: true }
+);
+
+
 const canvas = document.getElementById("gameCanvas");
 const pauseButton=document.getElementById("pauseButton");
 const pauseOverlay=document.getElementById("pauseOverlay");

@@ -9,9 +9,7 @@ function launchBall() {
   if (ballStuck) {
     ballStuck = false;
     stuckTimer = 0;
-    const angle = -Math.PI / 3;
-    ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
-    ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
+    launchBallForwardFromTrolley();
     ball.launched = true;
     ball.pierceDamageRemaining = 0;
     gameState = "playing";
@@ -21,12 +19,9 @@ function launchBall() {
 
   if (gameState !== "waiting" || ball.launched) return;
 
+  launchBallForwardFromTrolley();
   ball.launched = true;
   ball.pierceDamageRemaining = 0;
-
-  const angle = -Math.PI / 3;
-  ball.vx = Math.cos(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
-  ball.vy = Math.sin(angle) * ball.speed * ball.equipmentSpeedMultiplier * ball.runSpeedMultiplier;
 
   gameState = "playing";
   messageEl.style.display = "none";
