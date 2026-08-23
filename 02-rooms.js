@@ -40,14 +40,14 @@ function applyHardEnemyMix() {
 function applyRouteThreat() {
   if (roomNumber === 5 || currentRoomType !== "hard") return;
 
-  // Hard changes the encounter without simply doubling everything.
-  // Every other mob gains +2 HP for this first tuning pass.
+  // HARD = same authored room, empowered enemies.
+  // Keep brick density/layout readable; difficulty comes from the mobs.
   const mobs = bricks.filter(brick => brick.isMob);
-  mobs.forEach((brick, index) => {
-    if (index % 2 === 0) {
-      brick.hp += 2;
-      brick.maxHp += 2;
-    }
+
+  mobs.forEach(brick => {
+    brick.hp = Math.max(brick.hp + 1, Math.ceil(brick.hp * 1.30));
+    brick.maxHp = brick.hp;
+    brick.hardEmpowered = true;
   });
 }
 
@@ -241,6 +241,7 @@ function buildRoom() {
         darkFireGoblin,
         stunGoblin,
         raiderBoss,
+        hardEmpowered: false,
 
         armor: raiderBoss ? 12 : 0,
         maxArmor: raiderBoss ? 12 : 0,

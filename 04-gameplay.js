@@ -654,10 +654,12 @@ function spawnPickup(type, x, y, amount = 1) {
 function trySpawnBrickReward(brick) {
   // One reward result per brick:
   // rare Pill replaces the normal money drop.
+  const hardRewardBonus = currentRoomType === "hard";
+
   const pillChance =
     brick.treasure
-      ? 0.35
-      : 0.12;
+      ? (hardRewardBonus ? 0.45 : 0.35)
+      : (hardRewardBonus ? 0.18 : 0.12);
 
   if (Math.random() < pillChance && !roomPills.wide) {
     spawnPickup(
@@ -671,8 +673,9 @@ function trySpawnBrickReward(brick) {
 
   const moneyAmount =
     brick.treasure
-      ? 4 + Math.floor(Math.random() * 4)
-      : 1 + (Math.random() < 0.18 ? 1 : 0);
+      ? 4 + Math.floor(Math.random() * 4) + (hardRewardBonus ? 2 : 0)
+      : 1 +
+        (Math.random() < (hardRewardBonus ? 0.35 : 0.18) ? 1 : 0);
 
   spawnPickup(
     "money",
@@ -967,13 +970,13 @@ function updateEnemyAttacks(dt) {
         if (enemy.raiderBoss) {
           enemy.fireCooldown = enemy.armor > 0 ? 1.65 : 1.10;
         } else if (enemy.shooterVariant === "stun") {
-          enemy.fireCooldown = 3.0;
+          enemy.fireCooldown = 3.0 * (currentRoomType === "hard" ? 0.80 : 1);
         } else if (enemy.shooterVariant === "spread") {
-          enemy.fireCooldown = 1.35;
+          enemy.fireCooldown = 1.35 * (currentRoomType === "hard" ? 0.80 : 1);
         } else if (enemy.iceGoblin) {
-          enemy.fireCooldown = 2.6;
+          enemy.fireCooldown = 2.6 * (currentRoomType === "hard" ? 0.80 : 1);
         } else {
-          enemy.fireCooldown = 2.2;
+          enemy.fireCooldown = 2.2 * (currentRoomType === "hard" ? 0.80 : 1);
         }
       }
 
@@ -984,15 +987,19 @@ function updateEnemyAttacks(dt) {
       if (enemy.raiderBoss) {
         enemy.fireCharge = 0.58;
       } else if (enemy.shooterVariant === "stun") {
-        enemy.fireCharge = 0.8;
+        enemy.fireCharge = 0.8 * (currentRoomType === "hard" ? 0.80 : 1);
       } else if (enemy.shooterVariant === "spread") {
-        enemy.fireCharge = 0.42;
+        enemy.fireCharge = 0.42 * (currentRoomType === "hard" ? 0.80 : 1);
       } else {
-        enemy.fireCharge = 0.65;
+        enemy.fireCharge = 0.65 * (currentRoomType === "hard" ? 0.80 : 1);
       }
       enemy.telegraph = enemy.fireCharge;
     }
   }
+}
+
+function hardProjectileSpeed(speed) {
+  return currentRoomType === "hard" ? speed * 1.20 : speed;
 }
 
 function fireEnemyShot(shooter) {
@@ -1018,7 +1025,7 @@ function fireEnemyShot(shooter) {
   }
 
   if (shooter.iceGoblin) {
-    enemyProjectiles.push({x,y,radius:15,vx:0,vy:320,type:"ice"});
+    enemyProjectiles.push({x,y,radius:15,vx:0,vy:hardProjectileSpeed(320),type:"ice"});
     return;
   }
 
@@ -1028,20 +1035,21 @@ function fireEnemyShot(shooter) {
       y,
       radius: 14,
       vx: 0,
-      vy: 355,
+      vy: hardProjectileSpeed(355),
       type: "stun"
     });
     return;
   }
 
   if (shooter.shooterVariant === "spread") {
-    for (const vx of [-150, 0, 150]) {
-      enemyProjectiles.push({x,y,radius:12,vx,vy:350,type:"damage"});
+    for (const baseVx of [-150, 0, 150]) {
+      const speedMult = currentRoomType === "hard" ? 1.20 : 1;
+      enemyProjectiles.push({x,y,radius:12,vx:baseVx * speedMult,vy:350 * speedMult,type:"damage"});
     }
     return;
   }
 
-  enemyProjectiles.push({x,y,radius:13,vx:0,vy:380,type:"damage"});
+  enemyProjectiles.push({x,y,radius:13,vx:0,vy:hardProjectileSpeed(380),type:"damage"});
 }
 
 function updateProjectiles(dt) {

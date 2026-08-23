@@ -1,0 +1,35 @@
+ARKANOID RPG v0.20.6 — STANDARD vs HARD TEST
+
+Run ROOM 3 on Standard, then ROOM 3 on Hard if possible.
+
+STANDARD
+[ ] Enemy HP feels like the normal baseline
+[ ] Shooter timing feels normal
+[ ] Projectile speed feels normal
+[ ] Room is still threatening, but fair
+
+HARD
+[ ] Same basic authored room still feels recognizable
+[ ] ALL normal enemies take noticeably more hits (~30% HP boost)
+[ ] Shooters attack noticeably sooner/more often (~20%)
+[ ] Enemy projectiles are noticeably faster (~20%)
+[ ] Hard feels more dangerous WITHOUT simply filling the room with bricks
+[ ] Hard still feels readable, not cheap
+[ ] Pill drops seem somewhat more likely
+[ ] Money rewards feel somewhat better
+
+COMPARE
+Which felt better differentiated?
+________________________________________
+
+Hard too easy / right / too hard?
+________________________________________
+
+Were faster projectiles fair?
+________________________________________
+
+Were enemies too spongey?
+________________________________________
+
+Console errors:
+________________________________________
