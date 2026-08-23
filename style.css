@@ -1696,3 +1696,87 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   .routeSectionMap{width:64%!important;top:50%!important}
   .sectionMap{height:205px}
 }
+
+/* v0.20.9 — dynamic 1/2/3-path five-stage route graph */
+.routeGraphMap{
+  width:min(52%,350px)!important;
+  top:51%!important;
+  padding:10px 12px 9px!important;
+}
+.routeGraph{
+  position:relative;
+  height:245px;
+  overflow:visible;
+}
+.routeEdge{
+  position:absolute;
+  height:2px;
+  background:rgba(211,192,151,.35);
+  transform-origin:0 50%;
+  z-index:1;
+}
+.routeEdge.edge-active{
+  background:rgba(244,213,116,.82);
+  box-shadow:0 0 7px rgba(244,213,116,.25);
+}
+.graphNode{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  width:44px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  border:2px solid rgba(218,204,174,.48);
+  border-radius:50%;
+  background:rgba(35,29,38,.96);
+  color:#e8dcc4;
+  font-size:15px;
+  font-weight:900;
+  line-height:1;
+  z-index:3;
+  box-sizing:border-box;
+}
+.graphNode small{
+  margin-top:2px;
+  font-size:6px;
+  letter-spacing:.03em;
+  font-weight:800;
+}
+.graphNode.type-hard{border-color:#df6b62;color:#ffd1cc}
+.graphNode.type-treasure{border-color:#dcb94f;color:#ffe79a}
+.graphNode.type-standard{border-color:#aaa89e}
+.graphNode.type-boss{
+  width:70px;height:40px;border-radius:10px;
+  border-color:#c47a4d;color:#ffd8b2;
+}
+.graphNode.state-past{opacity:.34}
+.graphNode.state-future{opacity:.42}
+.graphNode.state-current{
+  opacity:1;border-color:#f1d06c!important;color:#fff0a8!important;
+  box-shadow:0 0 16px rgba(241,208,108,.42)
+}
+.graphNode.state-choice{
+  opacity:1;
+  box-shadow:0 0 12px rgba(226,211,177,.22)
+}
+.graphNode.state-locked{opacity:.22}
+.graphChoiceTag{
+  position:absolute;
+  transform:translate(-50%,0);
+  padding:2px 5px;
+  border-radius:4px;
+  background:rgba(0,0,0,.72);
+  color:#eee1c8;
+  font-size:7px;
+  font-weight:900;
+  white-space:nowrap;
+  z-index:4;
+}
+@media(max-width:700px){
+  .routeGraphMap{width:60%!important;top:50%!important}
+  .routeGraph{height:220px}
+  .graphNode{width:40px;height:31px;font-size:13px}
+  .graphNode.type-boss{width:62px;height:37px}
+}

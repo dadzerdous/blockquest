@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG — v0.20.8</title>
+  <title>Spike Trolley RPG — v0.20.9</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -28,25 +28,10 @@
         </div>
 
         
-        <div id="routeMinimap" class="routeMinimap routeSectionMap hidden" aria-label="Rooms 1 through 5 route map">
-          <div class="routeMapTitle">DUNGEON MAP — ROOMS 1–5</div>
-          <div class="sectionMap">
-            <div class="mapConnector c12"></div>
-            <div class="mapConnector c13"></div>
-            <div class="mapConnector c24"></div>
-            <div class="mapConnector c34"></div>
-            <div class="mapConnector c45"></div>
-
-            <div id="mapRoom1" class="routeNode sectionNode room1">1</div>
-            <div id="mapRoom2" class="routeNode sectionNode room2">2</div>
-            <div id="mapRoom3" class="routeNode sectionNode room3">3</div>
-            <div id="mapRoom4" class="routeNode sectionNode room4">4</div>
-            <div id="mapRoom5" class="routeNode sectionNode room5">5<br><small>HERMAN</small></div>
-
-            <div id="mapLeftChoice" class="mapChoiceLabel leftChoice"></div>
-            <div id="mapRightChoice" class="mapChoiceLabel rightChoice"></div>
-          </div>
-          <div class="routeLegend">CURRENT • AVAILABLE • FUTURE</div>
+        <div id="routeMinimap" class="routeMinimap routeGraphMap hidden" aria-label="Five-stage dungeon route map">
+          <div class="routeMapTitle">DUNGEON MAP — STAGES 1–5</div>
+          <div id="routeGraph" class="routeGraph"></div>
+          <div class="routeLegend">GOLD = CURRENT • BRIGHT = AVAILABLE • DIM = FUTURE</div>
         </div>
 
 <div id="frameMoney" class="frameMoney" aria-label="Run money">
@@ -71,7 +56,7 @@
 <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.20.8</div>
+      <div id="versionBadge">v0.20.9</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>

@@ -1,67 +1,166 @@
 const routeMinimapEl = document.getElementById("routeMinimap");
-const mapRoomEls = [null,1,2,3,4,5].map(
-  n => n === null ? null : document.getElementById(`mapRoom${n}`)
-);
-const mapLeftChoiceEl = document.getElementById("mapLeftChoice");
-const mapRightChoiceEl = document.getElementById("mapRightChoice");
+const routeGraphEl = document.getElementById("routeGraph");
 
-function routeLabel(type) {
+// First authored five-stage graph prototype.
+// Each node may have 1, 2, or 3 exits. A run still plays one room per stage.
+const routeSectionOne = {
+  start: "1A",
+  nodes: {
+    "1A": { stage:1, x:50, type:"standard", exits:["2A","2B"] },
+
+    "2A": { stage:2, x:27, type:"hard", exits:["3A"] },
+    "2B": { stage:2, x:73, type:"treasure", exits:["3B","3C"] },
+
+    "3A": { stage:3, x:18, type:"standard", exits:["4A","4B","4C"] },
+    "3B": { stage:3, x:52, type:"hard", exits:["4B"] },
+    "3C": { stage:3, x:82, type:"standard", exits:["4B","4C"] },
+
+    "4A": { stage:4, x:16, type:"hard", exits:["5A"] },
+    "4B": { stage:4, x:50, type:"standard", exits:["5A"] },
+    "4C": { stage:4, x:84, type:"treasure", exits:["5A"] },
+
+    "5A": { stage:5, x:50, type:"boss", label:"HERMAN", exits:[] }
+  }
+};
+
+let routeGraphState = {
+  currentNodeId: "1A",
+  visited: ["1A"]
+};
+
+function routeTypeLabel(type) {
   const labels = {
-    standard: "STANDARD",
-    battle: "STANDARD",
-    hard: "HARD",
-    treasure: "TREASURE",
-    shop: "SHOP",
-    boss: "BOSS"
+    standard:"STANDARD",
+    battle:"STANDARD",
+    hard:"HARD",
+    treasure:"TREASURE",
+    shop:"SHOP",
+    boss:"BOSS"
   };
   return labels[type] || String(type || "?").toUpperCase();
 }
 
+function graphNodeY(stage) {
+  // Stage 1 at bottom, Stage 5 at top.
+  return 91 - ((stage - 1) * 20.5);
+}
+
+function createRouteEdge(from, to, active=false) {
+  const x1=from.x, y1=graphNodeY(from.stage);
+  const x2=to.x, y2=graphNodeY(to.stage);
+  const graph=routeGraphEl;
+  const w=graph.clientWidth || 320;
+  const h=graph.clientHeight || 245;
+  const ax=x1/100*w, ay=y1/100*h;
+  const bx=x2/100*w, by=y2/100*h;
+  const dx=bx-ax, dy=by-ay;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+  const edge=document.createElement("div");
+  edge.className=`routeEdge${active ? " edge-active" : ""}`;
+  edge.style.left=`${x1}%`;
+  edge.style.top=`${y1}%`;
+  edge.style.width=`${len}px`;
+  edge.style.transform=`rotate(${angle}deg)`;
+  graph.appendChild(edge);
+}
+
+function routeNodeState(id, node, current, choices) {
+  if (id === current) return "state-current";
+  if (choices.includes(id)) return "state-choice";
+  if (routeGraphState.visited.includes(id)) return "state-past";
+  if (node.stage > routeSectionOne.nodes[current].stage) return "state-future";
+  return "state-locked";
+}
+
+function renderRouteGraph() {
+  if (!routeGraphEl) return;
+  routeGraphEl.innerHTML="";
+
+  const nodes=routeSectionOne.nodes;
+  const current=routeGraphState.currentNodeId;
+  const currentNode=nodes[current] || nodes["1A"];
+  const choices=currentNode.exits || [];
+
+  // Draw all connections first.
+  Object.entries(nodes).forEach(([id,node]) => {
+    node.exits.forEach(nextId => {
+      const next=nodes[nextId];
+      if (!next) return;
+      createRouteEdge(node,next,id===current && choices.includes(nextId));
+    });
+  });
+
+  // Draw nodes.
+  Object.entries(nodes).forEach(([id,node]) => {
+    const el=document.createElement("div");
+    const state=routeNodeState(id,node,current,choices);
+    el.className=`graphNode type-${node.type} ${state}`;
+    el.style.left=`${node.x}%`;
+    el.style.top=`${graphNodeY(node.stage)}%`;
+    el.dataset.nodeId=id;
+    el.innerHTML=node.type==="boss"
+      ? `5<small>${node.label || "BOSS"}</small>`
+      : `${node.stage}<small>${routeTypeLabel(node.type)}</small>`;
+    routeGraphEl.appendChild(el);
+
+    if (choices.includes(id)) {
+      const tag=document.createElement("div");
+      tag.className="graphChoiceTag";
+      tag.style.left=`${node.x}%`;
+      tag.style.top=`${graphNodeY(node.stage)+8}%`;
+      tag.textContent=routeTypeLabel(node.type);
+      routeGraphEl.appendChild(tag);
+    }
+  });
+}
+
+function syncGraphChoicesToDoors() {
+  const current=routeSectionOne.nodes[routeGraphState.currentNodeId];
+  if (!current) return;
+
+  const choices=current.exits || [];
+  if (choices.length < 1) return;
+
+  // Existing gameplay currently supports left/right physical doors.
+  // For 3-way graph nodes, the center option is represented by a third
+  // on-screen choice and is selectable by walking centrally; this prototype
+  // preserves left/right compatibility while we test the graph structure.
+  const leftNode=routeSectionOne.nodes[choices[0]];
+  const rightNode=routeSectionOne.nodes[choices[choices.length-1]];
+
+  if (leftNode) exitChoice.leftType=leftNode.type;
+  if (rightNode) exitChoice.rightType=rightNode.type;
+
+  exitChoice.graphChoices=choices.slice();
+}
+
 function showRouteMinimap() {
   if (!routeMinimapEl) return;
-
-  for (let n = 1; n <= 5; n++) {
-    const el = mapRoomEls[n];
-    if (!el) continue;
-    el.classList.remove(
-      "map-cleared","map-current","map-available",
-      "map-future","map-hard","map-treasure"
-    );
-
-    if (n < roomNumber) el.classList.add("map-cleared");
-    else if (n === roomNumber) el.classList.add("map-current");
-    else if (n === roomNumber + 1) el.classList.add("map-available");
-    else el.classList.add("map-future");
-  }
-
-  // The next numbered room represents the two physical route choices.
-  // Labels make the route type explicit while the 1–5 structure remains visible.
-  if (mapLeftChoiceEl) {
-    mapLeftChoiceEl.textContent = `← ${routeLabel(exitChoice.leftType)}`;
-    mapLeftChoiceEl.className =
-      `mapChoiceLabel leftChoice ${exitChoice.leftType === "hard" ? "map-hard" : ""}`;
-  }
-  if (mapRightChoiceEl) {
-    mapRightChoiceEl.textContent = `${routeLabel(exitChoice.rightType)} →`;
-    mapRightChoiceEl.className =
-      `mapChoiceLabel rightChoice ${exitChoice.rightType === "hard" ? "map-hard" : ""}`;
-  }
-
-  const nextEl = mapRoomEls[Math.min(5, roomNumber + 1)];
-  if (nextEl) {
-    if (exitChoice.leftType === "hard" || exitChoice.rightType === "hard") {
-      nextEl.classList.add("map-hard");
-    }
-    if (exitChoice.leftType === "treasure" || exitChoice.rightType === "treasure") {
-      nextEl.classList.add("map-treasure");
-    }
-  }
-
+  syncGraphChoicesToDoors();
+  renderRouteGraph();
   routeMinimapEl.classList.remove("hidden");
 }
 
 function hideRouteMinimap() {
   if (routeMinimapEl) routeMinimapEl.classList.add("hidden");
+}
+
+function advanceRouteGraph(chosenType) {
+  const current=routeSectionOne.nodes[routeGraphState.currentNodeId];
+  if (!current) return;
+
+  const choices=current.exits || [];
+  let nextId=choices.find(id => routeSectionOne.nodes[id]?.type===chosenType);
+
+  // If two exits share a type or route state is unusual, use side semantics.
+  if (!nextId && choices.length) nextId=choices[0];
+  if (!nextId) return;
+
+  routeGraphState.currentNodeId=nextId;
+  if (!routeGraphState.visited.includes(nextId)) {
+    routeGraphState.visited.push(nextId);
+  }
 }
 
 function beginExitChoice() {
@@ -148,6 +247,7 @@ function chooseDungeonExit(type) {
       : type;
 
   exitChoice.chosen = normalizedType;
+  advanceRouteGraph(normalizedType);
   exitChoice.active = false;
   hideRouteMinimap();
   pathHintEl.classList.add("hidden");

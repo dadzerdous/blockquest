@@ -305,6 +305,11 @@ function openEquipmentPicker(slot) {
   equipmentPicker.classList.remove("hidden");
 }
 function resetRun() {
+  if (typeof routeGraphState !== "undefined") {
+    routeGraphState.currentNodeId = "1A";
+    routeGraphState.visited = ["1A"];
+  }
+
   hunterDodge.timer = 0;
 
   roomNumber = 1;
