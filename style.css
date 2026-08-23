@@ -908,3 +908,16 @@ body {
 }
 .frameRune strong{color:#fff1b8;font-size:11px}
 .dangerButton{border-color:#7d3e3e!important;color:#ffd6d1!important}
+
+/* v0.19.1 hotfix — preserve the game's 9:14 canvas area inside the new frame */
+.frameCanvasInset {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 14;
+}
+.frameCanvasInset #gameCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

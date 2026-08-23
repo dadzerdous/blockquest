@@ -1182,3 +1182,9 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 
 ### Money
 - Temporary money pickup changed from a circle to a gold diamond so it cannot be confused as easily with enemy shots.
+
+
+## v0.19.1 — Frame Visibility Hotfix
+- Fixed the new dungeon frame collapsing the gameplay canvas to zero height.
+- The framed canvas now explicitly preserves the game's 9:14 aspect ratio.
+- No gameplay changes.
