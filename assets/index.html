@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Spike Trolley RPG v0.19.4</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="gameShell">
+    <div id="gameWrap">
+      <div id="hud">
+        <div> <span id="heroHp">❤️ 5 / 5</span><span id="heroShield"></span><span id="livesHud"> ⚪ 3</span><span id="goldHud">💰 0</span><span id="levelHud">⭐ Lv 1</span></div>
+        <div id="roomTitle">ROOM 1 — GOBLIN OUTPOST</div>
+        <div> <span id="enemyCount">0</span></div>
+      </div>
+
+      <div id="dungeonFrame" class="dungeonFrame">
+        <img class="frameArt" src="assets/frame-1.png" alt="" draggable="false">
+        <div class="frameTop">
+          <div id="roomPlaque" class="roomPlaque">ROOM 1</div>
+          <button id="pauseButton" class="framePauseButton" type="button" aria-label="Pause game">×</button>
+        </div>
+
+        <div id="frameRunes" class="frameRunes" aria-label="Runes collected"></div>
+
+        <div class="frameCanvasInset">
+          <canvas id="gameCanvas" width="900" height="1400"></canvas>
+        </div>
+
+        <div id="frameMoney" class="frameMoney" aria-label="Run money">
+          <span class="moneyBagIcon">💰</span>
+          <strong id="frameMoneyValue">0</strong>
+        </div>
+      </div>
+
+      <div id="pauseOverlay" class="hidden">
+        <div class="pausePanel">
+          <div class="eyebrow">PAUSED</div>
+          <h1>Dungeon Paused</h1>
+          <button id="resumeButton" class="primaryLobbyButton" type="button">RESUME</button>
+          <button id="pauseOptionsButton" class="secondaryLobbyButton" type="button">⚙️ OPTIONS</button>
+          <button id="endRunButton" class="secondaryLobbyButton dangerButton" type="button">END RUN</button>
+        </div>
+      </div>
+
+
+      <div id="message">TAP / CLICK TO LAUNCH</div>
+      <button id="glueButton" class="hidden">🧲 GLUE <span id="glueButtonCount">0</span></button>
+<div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
+      <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
+      <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
+      <div id="versionBadge">v0.19.4</div>
+      <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
+      <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
+      <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
+
+
+
+
+      <div id="runLobby">
+        <div class="lobbyPanel">
+          <div class="eyebrow">SPIKE TROLLEY RPG</div>
+          <h1 id="lobbyTitle">Goblin Outpost</h1>
+          <p id="lobbySubtitle">Prepare your adventurer, then begin a run.</p>
+
+          <div class="lobbySummary">
+            <div>
+              <span>LEVEL</span>
+              <strong id="lobbyLevel">1</strong>
+            </div>
+            <div>
+              <span>XP</span>
+              <strong id="lobbyXp">0 / 100</strong>
+            </div>
+            <div>
+              <span>BEST ROOM</span>
+              <strong id="bestRoom">0</strong>
+            </div>
+          </div>
+
+          <div class="activeProfileLine">
+            SAVE: <strong id="activeProfileName">Adventurer 1</strong>
+          </div>
+
+          <div class="lobbyActions mainMenuActions">
+            <button id="startRunButton" class="primaryLobbyButton">▶ START RUN</button>
+            <button id="openStatsButton" class="secondaryLobbyButton">⭐ ALLOCATE STATS</button>
+            <button id="openLoadoutButton" class="secondaryLobbyButton">🎒 LOADOUT</button>
+            <button id="openProfilesButton" class="secondaryLobbyButton">👤 PROFILES / NEW GAME</button>
+            <button id="openOptionsButton" class="secondaryLobbyButton">⚙️ OPTIONS</button>
+          </div>
+
+          <div id="lastRunSummary" class="lastRunSummary hidden"></div>
+        </div>
+      </div>
+
+
+
+      <div id="profilesOverlay" class="hidden">
+        <div class="upgradePanel menuPanel">
+          <div class="eyebrow">SAVE PROFILES</div>
+          <h1>Choose Adventurer</h1>
+          <p>Each profile has completely separate XP, stats, equipment, and progress.</p>
+
+          <div id="profileCards" class="profileCards"></div>
+
+          <button id="closeProfiles" class="leaveShop">BACK</button>
+        </div>
+      </div>
+
+      <div id="optionsOverlay" class="hidden">
+        <div class="upgradePanel menuPanel">
+          <div class="eyebrow">OPTIONS</div>
+          <h1>Sound</h1>
+
+          <div class="optionRow">
+            <div>
+              <strong>🎵 Music</strong>
+              <small>Dungeon background music</small>
+            </div>
+            <input id="musicVolume" type="range" min="0" max="100" step="1" value="34">
+            <span id="musicVolumeText">34%</span>
+          </div>
+
+          <div class="optionRow">
+            <div>
+              <strong>🔊 Sound Effects</strong>
+              <small>Ball hits, UI sounds, attacks</small>
+            </div>
+            <input id="sfxVolume" type="range" min="0" max="100" step="1" value="70">
+            <span id="sfxVolumeText">70%</span>
+          </div>
+
+          <div class="optionButtons">
+            <button id="muteMusicButton" class="secondaryLobbyButton">MUTE MUSIC</button>
+            <button id="muteSfxButton" class="secondaryLobbyButton">MUTE SFX</button>
+          </div>
+
+          <button id="closeOptions" class="leaveShop">BACK</button>
+        </div>
+      </div>
+
+      <div id="loadoutOverlay" class="hidden">
+        <div class="upgradePanel loadoutPanel">
+          <div class="eyebrow">BETWEEN RUNS</div>
+          <h1>Equipment Loadout</h1>
+          <p>Equipment is permanent. Swap freely before starting a run.</p>
+          <div class="equipmentGrid">
+            <button class="equipmentSlot" data-slot="gloves"><span>🧤 GLOVES</span><strong id="glovesName">Adventurer Gloves</strong><small id="glovesEffect">Balanced ball handling.</small></button>
+            <button class="equipmentSlot" data-slot="ball"><span>⚪ BALL</span><strong id="ballName">Iron Ball</strong><small id="ballEffect">Standard rebound.</small></button>
+            <button class="equipmentSlot lockedSlot"><span>🪖 HELMET</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>🥋 CHEST</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>👢 BOOTS</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>💍 RING</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>📿 AMULET</span><strong>Coming soon</strong></button>
+            <button class="equipmentSlot lockedSlot"><span>🛒 TROLLEY</span><strong>Coming soon</strong></button>
+          </div>
+          <div id="equipmentPicker" class="equipmentPicker hidden"></div>
+          <button id="closeLoadout" class="leaveShop">BACK</button>
+        </div>
+      </div>
+
+      <div id="statsOverlay" class="hidden">
+        <div class="upgradePanel statsPanel">
+          <div class="eyebrow">ADVENTURER</div>
+          <h1>Permanent Stats</h1>
+          <p>XP survives failed runs. Reallocate your earned points freely.</p>
+
+          <div class="xpBox">
+            <strong id="levelText">Level 1</strong>
+            <div class="xpBar"><div id="xpFill"></div></div>
+            <small id="xpText">0 / 100 XP</small>
+          </div>
+
+          <div id="availablePoints" class="pointsLine">Available Points: 0</div>
+
+          <div class="statRows">
+            <div class="statRow">
+              <span>❤️ Vitality</span>
+              <button data-stat="vitality" data-dir="-1">−</button>
+              <strong id="statVitality">0</strong>
+              <button data-stat="vitality" data-dir="1">+</button>
+              <small>Max HP</small>
+            </div>
+            <div class="statRow">
+              <span>🛡️ Defense</span>
+              <button data-stat="defense" data-dir="-1">−</button>
+              <strong id="statDefense">0</strong>
+              <button data-stat="defense" data-dir="1">+</button>
+              <small>+1 armor HP each room</small>
+            </div>
+            <div class="statRow">
+              <span>👟 Agility</span>
+              <button data-stat="agility" data-dir="-1">−</button>
+              <strong id="statAgility">0</strong>
+              <button data-stat="agility" data-dir="1">+</button>
+              <small>+3% trolley speed</small>
+            </div>
+            <div class="statRow">
+              <span>💪 Power</span>
+              <button data-stat="power" data-dir="-1">−</button>
+              <strong id="statPower">0</strong>
+              <button data-stat="power" data-dir="1">+</button>
+              <small>+10% ball damage</small>
+            </div>
+            <div class="statRow">
+              <span>🎯 Control</span>
+              <button data-stat="control" data-dir="-1">−</button>
+              <strong id="statControl">0</strong>
+              <button data-stat="control" data-dir="1">+</button>
+              <small>+3% trolley width</small>
+            </div>
+            <div class="statRow">
+              <span>🍀 Fortune</span>
+              <button data-stat="fortune" data-dir="-1">−</button>
+              <strong id="statFortune">0</strong>
+              <button data-stat="fortune" data-dir="1">+</button>
+              <small>+5% treasure gold</small>
+            </div>
+          </div>
+
+          <button id="closeStats" class="leaveShop">BACK</button>
+        </div>
+      </div>
+
+      <div id="shopOverlay" class="hidden">
+        <div class="upgradePanel">
+          <div class="eyebrow">TRAVELING MERCHANT</div>
+          <h1>Goblin Road Shop</h1>
+          <div class="shopGold">CURRENT RUN GOLD: <strong id="shopGold">0 💰</strong></div>
+          <p>Spend run gold. Leave whenever you are ready.</p>
+
+          <div class="upgradeChoices">
+            <button class="upgradeCard shopCard" data-shop="overshield">
+              <span class="upgradeIcon">💙</span>
+              <strong>OVERSHIELD — 12 RUN GOLD</strong>
+              <span>Temporary run gear: blocks the first damage in every room.</span>
+              <small id="shieldOwned">Not owned</small>
+            </button>
+
+            <button class="upgradeCard shopCard" data-shop="glue">
+              <span class="upgradeIcon">🧲</span>
+              <strong>BALL GLUE — 8 RUN GOLD</strong>
+              <span>Next paddle catch sticks the ball for up to 3 seconds.</span>
+              <small id="glueCount">Charges: 0</small>
+            </button>
+
+            <button class="upgradeCard shopCard" data-shop="heal">
+              <span class="upgradeIcon">❤️</span>
+              <strong>PATCH UP — 6 RUN GOLD</strong>
+              <span>Restore 2 HP.</span>
+              <small id="healStatus">Current HP</small>
+            </button>
+          </div>
+
+          
+            <button class="shopCard" data-shop="ball">
+              <span class="upgradeIcon">⚪</span>
+              <strong>SPARE BALL</strong>
+              <span>Restore one lost ball.</span>
+              <small id="ballShopStatus">Balls: 3 / 3</small>
+              <b>10 💰</b>
+            </button>
+<button id="leaveShop" class="leaveShop">LEAVE SHOP →</button>
+        </div>
+      </div>
+
+      <div id="upgradeOverlay" class="hidden">
+        <div class="upgradePanel">
+          <div class="eyebrow">ROOM CLEARED</div>
+          <h1>Choose an Upgrade</h1>
+          <p>Permanent for this run. Pick one to enter the next room.</p>
+
+          <div class="upgradeChoices runeChoices">
+            <button class="upgradeCard" data-rune="power">
+              <span class="upgradeIcon">💥</span>
+              <strong>POWER RUNE</strong>
+              <span>+10% Ball damage.</span>
+              <small id="powerRuneLevel">Ball damage: +0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="tempo">
+              <span class="upgradeIcon">⚡</span>
+              <strong>TEMPO RUNE</strong>
+              <span>+8% Ball speed.</span>
+              <small id="tempoRuneLevel">Ball speed: +0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="drag">
+              <span class="upgradeIcon">🐌</span>
+              <strong>DRAG RUNE</strong>
+              <span>-8% Ball speed for easier control.</span>
+              <small id="dragRuneLevel">Ball speed: -0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="agility">
+              <span class="upgradeIcon">🏃</span>
+              <strong>AGILITY RUNE</strong>
+              <span>+10% trolley movement speed.</span>
+              <small id="agilityRuneLevel">Trolley speed: +0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="expansion">
+              <span class="upgradeIcon">↔️</span>
+              <strong>EXPANSION RUNE</strong>
+              <span>+10% trolley width.</span>
+              <small id="expansionRuneLevel">Width: +0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="vitality">
+              <span class="upgradeIcon">❤️</span>
+              <strong>VITALITY RUNE</strong>
+              <span>+10% max HP.</span>
+              <small id="vitalityRuneLevel">Max HP: +0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="cooldown">
+              <span class="upgradeIcon">⌛</span>
+              <strong>FOCUS RUNE</strong>
+              <span>-8% class-skill cooldown.</span>
+              <small id="cooldownRuneLevel">Skill cooldown: -0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="ballSize">
+              <span class="upgradeIcon">⚪</span>
+              <strong>MASS RUNE</strong>
+              <span>+8% Ball size. Capped at +50%.</span>
+              <small id="ballSizeRuneLevel">Ball size: +0%</small>
+            </button>
+
+            <button class="upgradeCard" data-rune="elemental">
+              <span class="upgradeIcon">✨</span>
+              <strong>ELEMENT RUNE</strong>
+              <span>+12% elemental effect strength.</span>
+              <small id="elementalRuneLevel">Element strength: +0%</small>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

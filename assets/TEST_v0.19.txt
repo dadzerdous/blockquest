@@ -1,0 +1,60 @@
+ARKANOID RPG v0.19 TEST FORM
+
+DEVICE
+[ ] PC
+[ ] Mobile
+
+STABILITY
+[ ] Game loads
+[ ] No red console errors
+[ ] Start Run works
+[ ] Room 1 plays normally
+
+FRAME
+[ ] Dungeon doorway frame looks good
+[ ] Room plaque is readable
+[ ] Room number updates
+[ ] X feels natural as Pause
+[ ] Money bag + number looks good
+[ ] Rune icons/counts are readable
+[ ] Frame does not cover gameplay
+
+PAUSE
+[ ] Pause works
+[ ] Resume works
+[ ] Options opens from Pause
+[ ] Back from Options returns to Pause
+[ ] End Run returns to title/lobby
+
+DROPS
+[ ] Money drops from bricks
+[ ] Money does not look like enemy fire
+[ ] XP drops from mobs
+[ ] I SAW A WIDE PADDLE PILL
+[ ] Wide Pill is catchable
+[ ] Wide Pill visibly widens paddle
+[ ] Missed drops disappear
+
+RUNES / ROUTES
+[ ] 3 random Rune choices
+[ ] Chosen Rune appears on frame
+[ ] Routes work
+[ ] Door label matches room type
+
+ROOM 5
+[ ] Room 4 forces Room 5
+[ ] Miniboss loads
+[ ] Miniboss moves
+[ ] Miniboss aims/shoots
+[ ] Armor/shield works
+
+FEEL
+Pill rate: [ ] low  [ ] good for testing  [ ] too high
+Frame: [ ] like it  [ ] needs changes  [ ] hate it
+
+BUGS / WEIRDNESS:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________
