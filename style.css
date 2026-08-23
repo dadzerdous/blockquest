@@ -2411,3 +2411,30 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   .prepareItemEffect { font-size:9px; }
   .prepareStats span { font-size:7px; }
 }
+
+/* v0.22.0 — scalable Prepare + class gear */
+.prepareTileGrid{
+  grid-template-columns:repeat(auto-fill,minmax(105px,1fr))!important;
+  align-content:start;
+  max-height:300px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:2px 5px 5px 2px;
+  scrollbar-width:thin;
+}
+.comingSoonTile{filter:grayscale(1);opacity:.42}
+.comingSoonTile.selected{opacity:.58;border-color:rgba(190,190,190,.48);box-shadow:none}
+.prepareTileComingSoon{
+  margin-top:5px;padding:3px 5px;border-radius:999px;
+  background:rgba(255,255,255,.07);color:#aaa7a0;
+  font-size:6px;font-weight:900;letter-spacing:.08em
+}
+.miniTrolley{position:relative;width:58px;height:42px}
+.miniTrolleyRail{position:absolute;left:5px;right:5px;top:5px;height:5px;border-radius:4px;background:#b4a69a}
+.miniTrolleyBody{position:absolute;left:8px;right:8px;top:12px;height:22px;border-radius:4px 4px 8px 8px;background:linear-gradient(#8b6854,#49352d);border:2px solid #b59a7b}
+.miniTrolleyWheel{position:absolute;bottom:0;width:11px;height:11px;border-radius:50%;background:#343139;border:2px solid #8f8b91}
+.wheelLeft{left:10px}.wheelRight{right:10px}
+@media(max-width:600px){
+  .prepareTileGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-height:230px}
+  .miniTrolley{transform:scale(.78)}
+}

@@ -293,6 +293,7 @@ openLoadoutButton.addEventListener("click", () => {
   runLobby.classList.add("hidden");
   loadoutOverlay.classList.remove("hidden");
   activePrepareSlot = "ball";
+  inspectedPrepareItem = progression.equipment.ball;
   updateLoadoutUI();
 });
 

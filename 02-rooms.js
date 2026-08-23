@@ -290,302 +290,107 @@ function applyEquipment() {
 let activePrepareSlot = "ball";
 let inspectedPrepareItem = null;
 
-function equipmentStatsHtml(item) {
-  return (item.stats || [])
-    .map(stat => `<span>${stat}</span>`)
-    .join("");
+const prepareCatalog = {
+  ball: {
+    iron:{name:"Iron Ball",effect:"Reliable standard rebound. No special properties.",stats:["Rebound: Standard","Element: None"],available:true},
+    piercing:{name:"Piercing Ball",effect:"Excess damage carries through a target when the hit destroys it.",stats:["Trait: Damage Carry","Element: None"],available:true},
+    cinder:{name:"Cinder Ball",effect:"Fire hits splash nearby targets and deal bonus damage against Ice enemies.",stats:["Trait: Fire Splash","Element: Fire"],available:true}
+  },
+  paddle: {
+    trolley:{name:"Standard Trolley",effect:"Your dependable dungeon trolley. Balanced size and movement.",stats:["Paddle: Standard","Handling: Balanced"],available:true}
+  },
+  gear: {
+    hunter:{name:"Hunter Gear",effect:"Hunter equipment built for mobility and ranged attacks.",stats:["Ability: Arrow","Skill: Dodge"],available:true},
+    paladin:{name:"Paladin Gear",effect:"A heavily armored class set focused on defense and protection.",stats:["COMING SOON"],available:false},
+    mystic:{name:"Mystic Gear",effect:"A magical class set built around supernatural control of the battlefield.",stats:["COMING SOON"],available:false}
+  }
+};
+
+const prepareEquipped = {paddle:"trolley",gear:"hunter"};
+
+function equipmentStatsHtml(item){return(item.stats||[]).map(stat=>`<span>${stat}</span>`).join("");}
+function getPrepareEquipped(slot){return slot==="ball"?progression.equipment.ball:prepareEquipped[slot];}
+function getPrepareIds(slot){return slot==="ball"?(progression.equipment.unlocked.ball||[]):Object.keys(prepareCatalog[slot]||{});}
+
+function prepareItemVisual(slot,id){
+  if(slot==="ball"){
+    const visualClass={iron:"ballIron",piercing:"ballPiercing",cinder:"ballCinder"}[id]||"ballIron";
+    return `<div class="prepareTileArt ${visualClass}"><div class="prepareBallCore"></div></div>`;
+  }
+  if(slot==="paddle")return `<div class="prepareTileArt paddleTileArt"><div class="miniTrolley"><span class="miniTrolleyRail"></span><span class="miniTrolleyBody"></span><span class="miniTrolleyWheel wheelLeft"></span><span class="miniTrolleyWheel wheelRight"></span></div></div>`;
+  const icon={hunter:"🏹",paladin:"🛡️",mystic:"🔮"}[id]||"⚔️";
+  return `<div class="prepareTileArt gearTileArt"><span>${icon}</span></div>`;
 }
 
-function prepareItemVisual(slot, id) {
-  if (slot === "ball") {
-    const visualClass = {
-      iron: "ballIron",
-      piercing: "ballPiercing",
-      cinder: "ballCinder"
-    }[id] || "ballIron";
-
-    return `
-      <div class="prepareTileArt ${visualClass}">
-        <div class="prepareBallCore"></div>
-      </div>
-    `;
-  }
-
-  if (slot === "gloves") {
-    const gloveIcon = {
-      adventurer: "🧤",
-      heavy: "🥊",
-      quick: "🪶"
-    }[id] || "🧤";
-
-    return `
-      <div class="prepareTileArt gearTileArt">
-        <span>${gloveIcon}</span>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="prepareTileArt">
-      <span>?</span>
-    </div>
-  `;
+function updateLoadoutUI(){
+  const ballItem=prepareCatalog.ball[progression.equipment.ball];
+  const ballName=document.getElementById("ballName");
+  const paddleName=document.getElementById("paddleName");
+  const gearName=document.getElementById("gearName");
+  if(ballName&&ballItem)ballName.textContent=ballItem.name;
+  if(paddleName)paddleName.textContent=prepareCatalog.paddle[prepareEquipped.paddle].name;
+  if(gearName)gearName.textContent=prepareCatalog.gear[prepareEquipped.gear].name;
+  document.querySelectorAll(".prepareSlot[data-slot]").forEach(b=>b.classList.toggle("active",b.dataset.slot===activePrepareSlot));
+  const ids=getPrepareIds(activePrepareSlot);
+  if(!inspectedPrepareItem||!ids.includes(inspectedPrepareItem))inspectedPrepareItem=getPrepareEquipped(activePrepareSlot)||ids[0];
+  renderPrepareSlot(activePrepareSlot);
 }
 
-function updateLoadoutUI() {
-  const gloves =
-    equipmentCatalog.gloves[
-      progression.equipment.gloves
-    ];
-
-  const ballItem =
-    equipmentCatalog.ball[
-      progression.equipment.ball
-    ];
-
-  if (glovesNameEl) {
-    glovesNameEl.textContent =
-      gloves.name;
+function renderPrepareSlot(slot){
+  activePrepareSlot=slot;
+  const ids=getPrepareIds(slot);
+  if(!ids.length)return;
+  if(!inspectedPrepareItem||!ids.includes(inspectedPrepareItem))inspectedPrepareItem=getPrepareEquipped(slot)||ids[0];
+  const selected=prepareCatalog[slot]?.[inspectedPrepareItem];
+  if(!selected)return;
+  const labelEl=document.getElementById("prepareSlotLabel");
+  const titleEl=document.getElementById("prepareCategoryTitle");
+  const nameEl=document.getElementById("prepareItemName");
+  const effectEl=document.getElementById("prepareItemEffect");
+  const statsEl=document.getElementById("prepareStats");
+  const badgeEl=document.getElementById("prepareEquippedBadge");
+  const equipButton=document.getElementById("prepareEquipButton");
+  if(labelEl)labelEl.textContent=slot.toUpperCase();
+  if(titleEl)titleEl.textContent={ball:"Choose a Ball",paddle:"Choose a Paddle",gear:"Choose Gear"}[slot];
+  if(nameEl)nameEl.textContent=selected.name;
+  if(effectEl)effectEl.textContent=selected.effect;
+  if(statsEl)statsEl.innerHTML=equipmentStatsHtml(selected);
+  const equipped=getPrepareEquipped(slot)===inspectedPrepareItem;
+  if(badgeEl){
+    badgeEl.textContent=!selected.available?"COMING SOON":equipped?"EQUIPPED":"NOT EQUIPPED";
+    badgeEl.classList.toggle("notEquipped",!equipped||!selected.available);
   }
-
-  if (ballNameEl) {
-    ballNameEl.textContent =
-      ballItem.name;
-  }
-
-  document
-    .querySelectorAll(".prepareSlot[data-slot]")
-    .forEach(button => {
-      button.classList.toggle(
-        "active",
-        button.dataset.slot === activePrepareSlot
-      );
-    });
-
-  const unlocked =
-    progression.equipment.unlocked[
-      activePrepareSlot
-    ] || [];
-
-  if (
-    !inspectedPrepareItem ||
-    !unlocked.includes(
-      inspectedPrepareItem
-    )
-  ) {
-    inspectedPrepareItem =
-      progression.equipment[
-        activePrepareSlot
-      ] || unlocked[0];
-  }
-
-  renderPrepareSlot(
-    activePrepareSlot
-  );
-}
-
-function renderPrepareSlot(slot) {
-  activePrepareSlot = slot;
-
-  const unlocked =
-    progression.equipment.unlocked[slot] || [];
-
-  if (!unlocked.length) return;
-
-  if (
-    !inspectedPrepareItem ||
-    !unlocked.includes(inspectedPrepareItem)
-  ) {
-    inspectedPrepareItem =
-      progression.equipment[slot] ||
-      unlocked[0];
-  }
-
-  const selected =
-    equipmentCatalog[slot]?.[
-      inspectedPrepareItem
-    ];
-
-  if (!selected) return;
-
-  const slotLabel =
-    slot === "gloves"
-      ? "GEAR"
-      : slot.toUpperCase();
-
-  const labelEl =
-    document.getElementById(
-      "prepareSlotLabel"
-    );
-
-  const categoryTitleEl =
-    document.getElementById(
-      "prepareCategoryTitle"
-    );
-
-  const itemNameEl =
-    document.getElementById(
-      "prepareItemName"
-    );
-
-  const itemEffectEl =
-    document.getElementById(
-      "prepareItemEffect"
-    );
-
-  const statsEl =
-    document.getElementById(
-      "prepareStats"
-    );
-
-  const badgeEl =
-    document.getElementById(
-      "prepareEquippedBadge"
-    );
-
-  const equipButton =
-    document.getElementById(
-      "prepareEquipButton"
-    );
-
-  if (labelEl) {
-    labelEl.textContent =
-      slotLabel;
-  }
-
-  if (categoryTitleEl) {
-    categoryTitleEl.textContent =
-      slot === "ball"
-        ? "Choose a Ball"
-        : "Choose Gear";
-  }
-
-  if (itemNameEl) {
-    itemNameEl.textContent =
-      selected.name;
-  }
-
-  if (itemEffectEl) {
-    itemEffectEl.textContent =
-      selected.effect;
-  }
-
-  if (statsEl) {
-    statsEl.innerHTML =
-      equipmentStatsHtml(
-        selected
-      );
-  }
-
-  const equipped =
-    progression.equipment[slot] ===
-    inspectedPrepareItem;
-
-  if (badgeEl) {
-    badgeEl.textContent =
-      equipped
-        ? "EQUIPPED"
-        : "NOT EQUIPPED";
-
-    badgeEl.classList.toggle(
-      "notEquipped",
-      !equipped
-    );
-  }
-
-  if (equipButton) {
-    equipButton.disabled =
-      equipped;
-
-    equipButton.textContent =
-      equipped
-        ? "EQUIPPED"
-        : "EQUIP";
-
-    equipButton.onclick = () => {
-      progression.equipment[slot] =
-        inspectedPrepareItem;
-
-      applyEquipment();
-      saveProgression();
+  if(equipButton){
+    equipButton.disabled=!selected.available||equipped;
+    equipButton.textContent=!selected.available?"COMING SOON":equipped?"EQUIPPED":"EQUIP";
+    equipButton.onclick=()=>{
+      if(!selected.available)return;
+      if(slot==="ball"){progression.equipment.ball=inspectedPrepareItem;applyEquipment();saveProgression();}
+      else prepareEquipped[slot]=inspectedPrepareItem;
       updateLoadoutUI();
     };
   }
-
   renderEquipmentTiles(slot);
 }
 
-function renderEquipmentTiles(slot) {
-  equipmentPicker.innerHTML = "";
-
-  for (
-    const id of
-    progression.equipment.unlocked[slot] || []
-  ) {
-    const item =
-      equipmentCatalog[slot][id];
-
-    const button =
-      document.createElement(
-        "button"
-      );
-
-    button.className =
-      "prepareTile";
-
-    if (
-      id ===
-      inspectedPrepareItem
-    ) {
-      button.classList.add(
-        "selected"
-      );
-    }
-
-    if (
-      progression.equipment[slot] ===
-      id
-    ) {
-      button.classList.add(
-        "equipped"
-      );
-    }
-
-    button.innerHTML = `
-      ${prepareItemVisual(slot, id)}
-      <span class="prepareTileName">${item.name}</span>
-      ${
-        progression.equipment[slot] === id
-          ? '<span class="prepareTileEquipped">EQUIPPED</span>'
-          : ''
-      }
-    `;
-
-    button.onclick = () => {
-      inspectedPrepareItem =
-        id;
-
-      renderPrepareSlot(
-        slot
-      );
-    };
-
-    equipmentPicker.appendChild(
-      button
-    );
+function renderEquipmentTiles(slot){
+  equipmentPicker.innerHTML="";
+  const equippedId=getPrepareEquipped(slot);
+  for(const id of getPrepareIds(slot)){
+    const item=prepareCatalog[slot][id];
+    const b=document.createElement("button");
+    b.className="prepareTile";
+    if(id===inspectedPrepareItem)b.classList.add("selected");
+    if(equippedId===id)b.classList.add("equipped");
+    if(!item.available)b.classList.add("comingSoonTile");
+    b.innerHTML=`${prepareItemVisual(slot,id)}<span class="prepareTileName">${item.name}</span>${!item.available?'<span class="prepareTileComingSoon">COMING SOON</span>':equippedId===id?'<span class="prepareTileEquipped">EQUIPPED</span>':""}`;
+    b.onclick=()=>{inspectedPrepareItem=id;renderPrepareSlot(slot);};
+    equipmentPicker.appendChild(b);
   }
-
-  equipmentPicker.classList.remove(
-    "hidden"
-  );
+  equipmentPicker.classList.remove("hidden");
 }
 
-function openEquipmentPicker(slot) {
-  inspectedPrepareItem =
-    progression.equipment[slot];
-
-  renderPrepareSlot(slot);
-}
+function openEquipmentPicker(slot){inspectedPrepareItem=getPrepareEquipped(slot);renderPrepareSlot(slot);}
 function resetRun() {
   if (typeof routeGraphState !== "undefined") {
     routeGraphState.currentNodeId = "1A";

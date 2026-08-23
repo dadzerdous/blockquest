@@ -1,0 +1,19 @@
+BLOCKQUEST v0.22.0 — PREPARE FOUNDATION TEST
+
+[ ] BALL / PADDLE / GEAR are the only categories
+[ ] Ball tiles still select/describe/equip correctly
+[ ] PADDLE opens and Standard Trolley is equipped
+[ ] GEAR opens and Hunter Gear is equipped
+[ ] Hunter Gear shows Arrow + Dodge
+[ ] Paladin Gear is greyed and says COMING SOON
+[ ] Mystic Gear is greyed and says COMING SOON
+[ ] Coming Soon gear cannot equip
+[ ] Tile browser scrolls vertically when many options exist
+[ ] Tiles form extra rows rather than stretching the window
+[ ] Mobile uses two tile columns
+[ ] Nothing clips horizontally
+[ ] No red console errors
+
+NOTES:
+__________________________________________________
+__________________________________________________
