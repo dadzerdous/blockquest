@@ -102,32 +102,7 @@ raiderImage.src = "assets/mob-skel-arch.png";
 const doorImage = new Image();
 doorImage.src = "assets/door.png";
 
-const preloadImages = [
-  bgImage,
-  brickImage1,
-  brickImage2,
-  gobImage,
-  raiderImage,
-  trolleyBodyImage,
-  heroImage,
-  doorImage
-];
 
-function waitForImageAssets() {
-  return Promise.all(
-    preloadImages.map(image => {
-      if (image.complete && image.naturalWidth > 0) {
-        return Promise.resolve();
-      }
-
-      return new Promise(resolve => {
-        const finish = () => resolve();
-        image.addEventListener("load", finish, { once: true });
-        image.addEventListener("error", finish, { once: true });
-      });
-    })
-  );
-}
 
 const splashImage = new Image();
 splashImage.src = "assets/bg-ball.png";

@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.6**
+Current prototype: **v0.18.7**
 
 ## Current Direction
 
@@ -1097,3 +1097,10 @@ Goal: establish a safer baseline before Cleanup Pass 2.
 - Framed game border that can contain Pause and future controls naturally.
 - Rename/rebuild Loadout as Prepare.
 - Prepare layout: Ball / Paddle / Gear on the left; clicked category options on the right.
+
+
+## v0.18.7 — Startup Hotfix
+- Removed the premature preload registry added in v0.18.6.
+- It referenced `brickImage1` before that image variable was declared, which stopped the entire script at startup.
+- Asset preloading will be reintroduced correctly in the planned title/start-screen pass, after all image objects are declared.
+- No gameplay changes.
