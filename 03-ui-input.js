@@ -297,9 +297,19 @@ openLoadoutButton.addEventListener("click", () => {
   updateLoadoutUI();
 });
 
-closeLoadoutButton.addEventListener("click", () => {
+closeLoadoutButton.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+
   loadoutOverlay.classList.add("hidden");
+  equipmentPicker.classList.add("hidden");
+
   runLobby.classList.remove("hidden");
+
+  // Reset inspection state so Prepare always reopens cleanly.
+  activePrepareSlot = "ball";
+  inspectedPrepareItem =
+    progression.equipment.ball;
 });
 
 document.querySelectorAll(".prepareSlot[data-slot]").forEach(button => {

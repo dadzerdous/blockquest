@@ -2438,3 +2438,39 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   .prepareTileGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-height:230px}
   .miniTrolley{transform:scale(.78)}
 }
+
+/* v0.22.1 — Prepare Back button fix */
+.prepareHeader {
+  position: sticky;
+  top: -18px;
+  z-index: 20;
+  background: rgba(17,15,20,.985);
+  padding-top: 18px;
+}
+
+.prepareBack {
+  position: relative;
+  z-index: 25;
+  min-width: 64px;
+  min-height: 36px;
+  cursor: pointer;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+.prepareBack:hover {
+  filter: brightness(1.12);
+}
+
+@media (max-width:600px) {
+  .prepareHeader {
+    top: -10px;
+    padding-top: 10px;
+  }
+
+  .prepareBack {
+    min-width: 56px;
+    min-height: 32px;
+    font-size: 9px;
+  }
+}

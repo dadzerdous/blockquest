@@ -1,0 +1,15 @@
+BLOCKQUEST v0.22.1 — PREPARE BACK BUTTON TEST
+
+[ ] Browser title says v0.22.1
+[ ] Prepare opens
+[ ] BACK is visible at top-right
+[ ] BACK remains reachable if Prepare content scrolls
+[ ] BACK closes Prepare
+[ ] Lobby reappears immediately
+[ ] Reopening Prepare starts on Ball
+[ ] No duplicate overlays remain visible
+[ ] No red console errors
+
+NOTES:
+__________________________________________________
+__________________________________________________
