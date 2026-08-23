@@ -43,7 +43,8 @@ function routeTypeLabel(type) {
 
 function graphNodeY(stage) {
   // Stage 1 at bottom, Stage 5 at top.
-  return 91 - ((stage - 1) * 20.5);
+  // v0.21.2: use more of the map's vertical space.
+  return 94 - ((stage - 1) * 22.5);
 }
 
 function createRouteEdge(from, to, active=false) {
@@ -181,9 +182,9 @@ function getDoorLayoutForChoices(choiceIds) {
       slot: "center",
       nodeId: choiceIds[0],
       x: WORLD_WIDTH / 2 - 92,
-      y: 855,
+      y: 820,
       w: 184,
-      h: 255
+      h: 245
     }];
   }
 
@@ -222,9 +223,9 @@ function getDoorLayoutForChoices(choiceIds) {
         slot: "center",
         nodeId: choiceIds[1],
         x: WORLD_WIDTH / 2 - 77,
-        y: 870,
+        y: 840,
         w: 154,
-        h: 230
+        h: 220
       },
       {
         slot: "right",
@@ -288,6 +289,7 @@ function beginExitChoice() {
   exitChoice.heroY = 1140;
   exitChoice.facing = player.facing || 1;
   exitChoice.hopTimer = 0.45;
+  exitChoice.doorGraceTimer = 0.55;
   exitChoice.chosen = null;
 
   const choices =
@@ -367,6 +369,13 @@ function updateExitChoice(dt) {
     return;
   }
 
+  if (exitChoice.doorGraceTimer > 0) {
+    exitChoice.doorGraceTimer = Math.max(
+      0,
+      exitChoice.doorGraceTimer - dt
+    );
+  }
+
   const len =
     Math.hypot(moveX, moveY);
 
@@ -404,6 +413,10 @@ function updateExitChoice(dt) {
     );
 
   const heroRadius = 28;
+
+  if (exitChoice.doorGraceTimer > 0) {
+    return;
+  }
 
   for (
     const door of

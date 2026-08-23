@@ -2001,3 +2001,29 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
     height: 44px !important;
   }
 }
+
+/* v0.21.2 — taller route map, not just a larger container */
+.routeGraphMap {
+  top: 28% !important;
+  width: min(91%, 700px) !important;
+}
+
+.routeGraph {
+  height: 405px !important;
+}
+
+/* Give the vertical graph room to breathe */
+.routeGraphMap .routeMapTitle {
+  margin-bottom: 10px !important;
+}
+
+@media (max-width:700px) {
+  .routeGraphMap {
+    top: 27% !important;
+    width: 94% !important;
+  }
+
+  .routeGraph {
+    height: 345px !important;
+  }
+}

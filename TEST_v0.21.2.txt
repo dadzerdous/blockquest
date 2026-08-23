@@ -1,0 +1,28 @@
+ARKANOID RPG v0.21.2 — MAP HEIGHT / CENTER DOOR TEST
+
+CENTER DOOR
+[ ] Hero does NOT automatically enter a center door after hopping off trolley
+[ ] Hero lands and I have control first
+[ ] I must deliberately walk into center door
+[ ] Center door collision still works once I approach it
+
+MAP
+[ ] Map is noticeably taller than v0.21.1
+[ ] Stage rows have more vertical separation
+[ ] Lines/nodes feel less cramped
+[ ] Herman/top row has breathing room
+[ ] Stage 1/bottom row has breathing room
+[ ] Map is still readable on mobile
+
+1 / 2 / 3 DOORS
+[ ] One choice = one centered door
+[ ] Two choices = left/right
+[ ] Three choices = left/center/right
+[ ] No accidental door entry after hop
+
+NOTES:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________
