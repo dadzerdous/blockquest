@@ -1545,3 +1545,9 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   font-size: 10px !important;
   opacity: .65;
 }
+
+/* TEMP DEBUG BORDER — remove after layout check */
+#gameShell {
+  outline: 2px solid #fff !important;
+  outline-offset: -2px;
+}
