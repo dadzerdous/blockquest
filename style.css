@@ -921,3 +921,20 @@ body {
   width: 100%;
   height: 100%;
 }
+
+/* v0.19.2 — frame bottom alignment */
+.frameMoney {
+  right: 18px;
+  bottom: 14px;
+  z-index: 6;
+}
+.frameCanvasInset {
+  margin-bottom: 6px;
+}
+
+#rail,
+.rail,
+.track,
+.tracks {
+  z-index: 4;
+}

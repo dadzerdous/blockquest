@@ -1188,3 +1188,24 @@ Miniboss encounters can introduce advanced enemy mechanics, then defeating that 
 - Fixed the new dungeon frame collapsing the gameplay canvas to zero height.
 - The framed canvas now explicitly preserves the game's 9:14 aspect ratio.
 - No gameplay changes.
+
+
+## v0.19.2 — Wide Pill / Damage Readability / Frame Bottom
+
+### Wide Pill
+- Wide Paddle now changes trolley length/width only.
+- It no longer affects visual height.
+- Wide effect persists for the entire room.
+- Effect resets cleanly when the next room begins.
+- Width still respects the global paddle-width cap.
+
+### Damage Numbers
+- Enemy hits now display floating damage numbers.
+- Ball damage: white.
+- Hunter skill damage: warm gold.
+- Fire/splash damage: orange.
+- Raider armor absorption displays separate grey `-X ARMOR` feedback.
+
+### Dungeon Frame
+- Run money display moved lower so it sits visually alongside the bottom track/rail area.
+- No gameplay rail coordinates changed.

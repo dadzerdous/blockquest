@@ -489,7 +489,8 @@ let playerProjectiles = [];
 let fallingPickups = [];
 
 const roomPills = {
-  wide: false
+  wide: false,
+  wideMultiplier: 1
 };
 
 
@@ -964,6 +965,7 @@ function resetRun() {
 function startRoom() {
   fallingPickups = [];
   roomPills.wide = false;
+  roomPills.wideMultiplier = 1;
 
   playerProjectiles = [];
   rangerSkill.timer = 0;
@@ -1396,7 +1398,8 @@ function applyRunModifiers() {
     player.baseWidth * 1.60,
     player.baseWidth *
       (1 + progression.stats.control * 0.03) *
-      widthMult
+      widthMult *
+      (roomPills.wideMultiplier || 1)
   );
 
   const permanentMaxHp = 5 + progression.stats.vitality;
@@ -2007,6 +2010,20 @@ function damageBrick(brick, overrideDamage = null, source = "ball") {
     brick.armor -= absorbed;
     hitDamage -= absorbed;
 
+    if (absorbed > 0) {
+      const shownArmor =
+        Number.isInteger(absorbed)
+          ? absorbed
+          : Math.round(absorbed * 10) / 10;
+
+      createFloatingText(
+        brick.x + brick.width / 2,
+        brick.y - 18,
+        `-${shownArmor} ARMOR`,
+        "#c4c9cf"
+      );
+    }
+
     createFloatingText(
       brick.x + brick.width / 2,
       brick.y - 8,
@@ -2023,6 +2040,24 @@ function damageBrick(brick, overrideDamage = null, source = "ball") {
 
   brick.hp -= hitDamage;
   brick.hitFlash = 0.12;
+
+  if (brick.isMob && hitDamage > 0) {
+    const shownDamage =
+      Number.isInteger(hitDamage)
+        ? hitDamage
+        : Math.round(hitDamage * 10) / 10;
+
+    createFloatingText(
+      brick.x + brick.width / 2,
+      brick.y + 6,
+      `-${shownDamage}`,
+      source === "weapon"
+        ? "#f3e2a6"
+        : source === "splash"
+          ? "#ff9d62"
+          : "#ffffff"
+    );
+  }
 
   // Ball-only elemental/equipment effects.
   if (ballHasFire) {
@@ -2287,13 +2322,11 @@ function applyPickup(pickup) {
 
   if (pickup.type === "pill") {
     roomPills.wide = true;
+    roomPills.wideMultiplier = 1.35;
 
-    // +35% width for this room only, respecting existing physical cap.
-    player.width =
-      Math.min(
-        player.baseWidth * 1.60,
-        player.width * 1.35
-      );
+    // Width only. Height never changes.
+    // ApplyRunModifiers will respect this room-only multiplier.
+    applyRunModifiers();
 
     createFloatingText(
       player.x,

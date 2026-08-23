@@ -1,0 +1,48 @@
+ARKANOID RPG v0.19.2 TEST FORM
+
+DEVICE
+[ ] PC
+[ ] Mobile
+
+STABILITY
+[ ] Game loads
+[ ] No red console errors
+[ ] Start Run works
+
+WIDE PILL
+[ ] I saw a Wide Pill
+[ ] Catching it widens paddle LENGTH only
+[ ] Paddle height does NOT grow
+[ ] Paddle does not snap back during the room
+[ ] Paddle returns to normal next room
+
+DAMAGE NUMBERS
+[ ] Ball hits show damage
+[ ] Hunter arrow hits show damage
+[ ] Fire splash damage is readable
+[ ] Raider armor damage is readable
+[ ] Damage numbers are not too cluttered
+
+FRAME
+[ ] Money bag is down at track level
+[ ] Money display placement feels natural
+[ ] Bottom track/frame relationship looks right
+
+PAUSE
+[ ] Pause works
+[ ] Resume works
+[ ] Options works
+[ ] End Run works
+
+ROOM FLOW
+[ ] Rune reward works
+[ ] Routes work
+[ ] Room 4 forces Room 5
+[ ] Miniboss works
+
+NOTES / BUGS:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________
