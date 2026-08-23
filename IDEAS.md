@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.2**
+Current prototype: **v0.18.3**
 
 ## Current Direction
 
@@ -1010,3 +1010,29 @@ Some future runes can be equipment- or skill-specific instead of universal.
 - Hunter arrow moved to front edge of trolley based on facing, still aimed upward.
 - Removed ready ring; ready arrow now changes color and glows cyan/gold.
 - Mob backing is much more transparent.
+
+
+## v0.18.3 — Falling Rewards Prototype
+
+### Bricks → Money
+- Destroyed non-mob bricks now drop physical money pickups instead of awarding money instantly.
+- Catch the drop with the trolley or lose it.
+- Treasure bricks drop larger money amounts.
+- A brick produces one reward result: if it rolls a Pill, it does not also drop money.
+
+### Mobs → XP
+- Defeated mobs now drop one physical XP pickup.
+- XP is only awarded if the trolley catches it.
+- Shooters are worth more XP than basic mobs.
+- Room 5 miniboss drops a larger XP pickup.
+
+### First Pill Prototype
+Only one Pill exists in this build:
+- **Wide Paddle**
+- Rarely replaces a brick's money drop.
+- Treasure bricks have a higher Pill chance.
+- Catching it widens the paddle about 35% for the rest of the room.
+- It cannot drop again in the same room once active.
+- Pill effect resets at the next room.
+
+This build intentionally does not add permanent Pill unlocks, Bestiary, favored weighting, Shop logic, or additional Pill types yet. The goal is only to test whether physically chasing Money / XP / a rare Pill makes the core game more fun.

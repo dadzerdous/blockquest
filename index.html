@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.18.2</title>
+  <title>Spike Trolley RPG v0.18.3</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -30,7 +30,7 @@
       <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.18.2</div>
+      <div id="versionBadge">v0.18.3</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
@@ -208,27 +208,27 @@
         <div class="upgradePanel">
           <div class="eyebrow">TRAVELING MERCHANT</div>
           <h1>Goblin Road Shop</h1>
-          <div class="shopGold">CURRENT GOLD: <strong id="shopGold">0 💰</strong></div>
+          <div class="shopGold">CURRENT RUN GOLD: <strong id="shopGold">0 💰</strong></div>
           <p>Spend run gold. Leave whenever you are ready.</p>
 
           <div class="upgradeChoices">
             <button class="upgradeCard shopCard" data-shop="overshield">
               <span class="upgradeIcon">💙</span>
-              <strong>OVERSHIELD — 12 GOLD</strong>
+              <strong>OVERSHIELD — 12 RUN GOLD</strong>
               <span>Temporary run gear: blocks the first damage in every room.</span>
               <small id="shieldOwned">Not owned</small>
             </button>
 
             <button class="upgradeCard shopCard" data-shop="glue">
               <span class="upgradeIcon">🧲</span>
-              <strong>BALL GLUE — 8 GOLD</strong>
+              <strong>BALL GLUE — 8 RUN GOLD</strong>
               <span>Next paddle catch sticks the ball for up to 3 seconds.</span>
               <small id="glueCount">Charges: 0</small>
             </button>
 
             <button class="upgradeCard shopCard" data-shop="heal">
               <span class="upgradeIcon">❤️</span>
-              <strong>PATCH UP — 6 GOLD</strong>
+              <strong>PATCH UP — 6 RUN GOLD</strong>
               <span>Restore 2 HP.</span>
               <small id="healStatus">Current HP</small>
             </button>

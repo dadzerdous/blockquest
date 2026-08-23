@@ -481,6 +481,12 @@ const ball = {
 let bricks = [];
 let enemyProjectiles = [];
 let playerProjectiles = [];
+let fallingPickups = [];
+
+const roomPills = {
+  wide: false
+};
+
 
 const rangerSkill = {
   cooldown: 5.0,
@@ -951,6 +957,9 @@ function resetRun() {
 }
 
 function startRoom() {
+  fallingPickups = [];
+  roomPills.wide = false;
+
   playerProjectiles = [];
   rangerSkill.timer = 0;
   resetHitCombo();
@@ -977,6 +986,7 @@ function startRoom() {
 
   gameState = "waiting";
 
+  applyRunModifiers();
   buildRoom();
   updateRuneText();
   updateShopUI();
@@ -2023,27 +2033,14 @@ function damageBrick(brick, overrideDamage = null, source = "ball") {
     brick.alive = false;
 
     if (brick.isMob) {
-      const xpReward = brick.shooter ? 10 : 5;
-      addXP(xpReward);
-      createFloatingText(
-        brick.x + brick.width / 2,
-        brick.y + brick.height / 2,
-        `+${xpReward} XP`,
-        "#d8c8ff"
-      );
+      spawnMobXP(brick);
     }
 
-    if (brick.treasure) {
-      const baseGold = 8;
-      const fortuneBonus = 1 + progression.stats.fortune * 0.05;
-      const reward = Math.max(1, Math.round(baseGold * fortuneBonus));
-      gold += reward;
-      createFloatingGold(
-        brick.x + brick.width / 2,
-        brick.y + brick.height / 2,
-        reward
-      );
+    if (!brick.isMob) {
+      trySpawnBrickReward(brick);
     }
+
+
 
     createParticles(
       brick.x + brick.width / 2,
@@ -2193,6 +2190,209 @@ function updateBossHUD(boss) {
     bossPhaseEl.textContent = `ARMOR ${Math.ceil(boss.armor)} / ${boss.maxArmor}`;
   } else {
     bossPhaseEl.textContent = "ARMOR BROKEN — RAIDER ENRAGED";
+  }
+}
+
+function spawnPickup(type, x, y, amount = 1) {
+  fallingPickups.push({
+    type,
+    x,
+    y,
+    vy: 175,
+    radius: type === "pill" ? 16 : 13,
+    amount,
+    bob: Math.random() * Math.PI * 2
+  });
+}
+
+function trySpawnBrickReward(brick) {
+  // One reward result per brick:
+  // rare Pill replaces the normal money drop.
+  const pillChance =
+    brick.treasure
+      ? 0.16
+      : 0.035;
+
+  if (Math.random() < pillChance && !roomPills.wide) {
+    spawnPickup(
+      "pill",
+      brick.x + brick.width / 2,
+      brick.y + brick.height / 2,
+      1
+    );
+    return;
+  }
+
+  const moneyAmount =
+    brick.treasure
+      ? 4 + Math.floor(Math.random() * 4)
+      : 1 + (Math.random() < 0.18 ? 1 : 0);
+
+  spawnPickup(
+    "money",
+    brick.x + brick.width / 2,
+    brick.y + brick.height / 2,
+    moneyAmount
+  );
+}
+
+function spawnMobXP(brick) {
+  const xpAmount =
+    brick.raiderBoss
+      ? 20
+      : brick.shooter
+        ? 8
+        : 4;
+
+  spawnPickup(
+    "xp",
+    brick.x + brick.width / 2,
+    brick.y + brick.height / 2,
+    xpAmount
+  );
+}
+
+function applyPickup(pickup) {
+  if (pickup.type === "money") {
+    gold += pickup.amount;
+    createFloatingText(
+      player.x,
+      player.y - 65,
+      `+${pickup.amount} GOLD`,
+      "#ffd867"
+    );
+  }
+
+  if (pickup.type === "xp") {
+    addXP(pickup.amount);
+    createFloatingText(
+      player.x,
+      player.y - 65,
+      `+${pickup.amount} XP`,
+      "#c9b5ff"
+    );
+  }
+
+  if (pickup.type === "pill") {
+    roomPills.wide = true;
+
+    // +35% width for this room only, respecting existing physical cap.
+    player.width =
+      Math.min(
+        player.baseWidth * 1.60,
+        player.width * 1.35
+      );
+
+    createFloatingText(
+      player.x,
+      player.y - 70,
+      "WIDE PADDLE!",
+      "#bff7ff"
+    );
+
+    createParticles(
+      player.x,
+      player.y - 20,
+      28,
+      "#bff7ff"
+    );
+  }
+
+  updateHUD();
+}
+
+function updateFallingPickups(dt) {
+  for (let i = fallingPickups.length - 1; i >= 0; i--) {
+    const pickup = fallingPickups[i];
+
+    pickup.y += pickup.vy * dt;
+    pickup.bob += dt * 5;
+
+    const catchLeft =
+      player.x - player.width / 2 - 8;
+
+    const catchRight =
+      player.x + player.width / 2 + 8;
+
+    const catchTop =
+      player.y - player.height / 2 - 18;
+
+    const catchBottom =
+      player.y + player.height / 2 + 18;
+
+    if (
+      pickup.x + pickup.radius > catchLeft &&
+      pickup.x - pickup.radius < catchRight &&
+      pickup.y + pickup.radius > catchTop &&
+      pickup.y - pickup.radius < catchBottom
+    ) {
+      applyPickup(pickup);
+      fallingPickups.splice(i, 1);
+      continue;
+    }
+
+    if (pickup.y > WORLD_HEIGHT + 35) {
+      fallingPickups.splice(i, 1);
+    }
+  }
+}
+
+function drawFallingPickups() {
+  for (const pickup of fallingPickups) {
+    ctx.save();
+
+    const bobX =
+      Math.sin(pickup.bob) * 2;
+
+    ctx.translate(
+      pickup.x + bobX,
+      pickup.y
+    );
+
+    if (pickup.type === "money") {
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = "#ffd867";
+      ctx.fillStyle = "#f5c84c";
+      ctx.beginPath();
+      ctx.arc(0, 0, pickup.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#6d5317";
+      ctx.font = "bold 13px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("$", 0, 1);
+    }
+
+    if (pickup.type === "xp") {
+      ctx.rotate(Math.PI / 4);
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = "#bfa8ff";
+      ctx.fillStyle = "#a889ff";
+      ctx.fillRect(
+        -pickup.radius * 0.72,
+        -pickup.radius * 0.72,
+        pickup.radius * 1.44,
+        pickup.radius * 1.44
+      );
+    }
+
+    if (pickup.type === "pill") {
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = "#d9fbff";
+
+      ctx.fillStyle = "#eefcff";
+      ctx.fillRect(-15, -7, 30, 14);
+
+      ctx.fillStyle = "#82d9ef";
+      ctx.fillRect(0, -7, 15, 14);
+
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-15, -7, 30, 14);
+    }
+
+    ctx.restore();
   }
 }
 
@@ -2556,6 +2756,7 @@ function checkVictory() {
     ball.launched = false;
     ballStuck = false;
     enemyProjectiles = [];
+    fallingPickups = [];
     bossHudEl.classList.add("hidden");
 
     // Re-center the mounted hero/trolley before presenting the reward.
@@ -3432,6 +3633,7 @@ function gameLoop(timestamp) {if(gameState==="paused"){draw();requestAnimationFr
   if (gameState === "playing") {
     updateRangerSkill(dt);
     updatePlayerProjectiles(dt);
+    updateFallingPickups(dt);
     updateBall(dt);
     updateBossMovement(dt);
     updateEnemyAttacks(dt);
@@ -3444,6 +3646,7 @@ function gameLoop(timestamp) {if(gameState==="paused"){draw();requestAnimationFr
   drawBackground();
   drawBricks(dt);
   drawSplashEffects();
+  drawFallingPickups();
   drawPlayerProjectiles();
   drawProjectiles();
   drawRail();
