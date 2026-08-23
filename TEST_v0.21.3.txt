@@ -1,0 +1,42 @@
+ARKANOID RPG v0.21.3 — HERO SPRITE ANIMATION TEST
+
+LOAD
+[ ] Game loads
+[ ] No red console errors
+[ ] New sprite sheet asset loads
+
+NEUTRAL
+[ ] After hopping off, hero has a clean neutral stance when I stop
+[ ] Neutral sprite size feels right
+[ ] Hero feet look planted on dungeon floor
+
+WALK
+[ ] Walking right animates
+[ ] Walking left animates and faces left
+[ ] Animation speed feels natural
+[ ] Walking upward toward a door uses back-facing animation
+[ ] Stopping immediately returns to neutral
+[ ] No weird sprite-sheet labels/background appear around hero
+
+DOOR FLOW
+[ ] 1-door choice still works
+[ ] 2-door choice still works
+[ ] 3-door choice still works
+[ ] Animation does not change collision
+
+SIZE:
+[ ] Too small
+[ ] About right
+[ ] Too large
+
+ANIMATION SPEED:
+[ ] Too slow
+[ ] About right
+[ ] Too fast
+
+NOTES:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________

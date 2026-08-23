@@ -431,25 +431,169 @@ function drawPlayer() {
   ctx.restore();
 }
 
+const heroSpriteSheetImage = new Image();
+heroSpriteSheetImage.src = "assets/hero_trolley_spritesheet.png";
+
+/*
+  Sprite sheet source rectangles.
+  This first animation pass intentionally uses only the clean hero rows:
+  - idle: first neutral pose
+  - walkRight: top walking row
+  - walkBack: backpack/back-facing walking row
+
+  Left-facing movement mirrors walkRight in canvas.
+*/
+const heroSpriteAtlas = {
+  idle: [
+    { x: 24, y: 42, w: 112, h: 158 }
+  ],
+
+  walkRight: [
+    { x: 526, y: 48, w: 112, h: 154 },
+    { x: 629, y: 48, w: 112, h: 154 },
+    { x: 733, y: 48, w: 112, h: 154 },
+    { x: 837, y: 48, w: 112, h: 154 },
+    { x: 941, y: 48, w: 112, h: 154 }
+  ],
+
+  walkBack: [
+    { x: 586, y: 454, w: 112, h: 150 },
+    { x: 704, y: 454, w: 112, h: 150 },
+    { x: 823, y: 454, w: 112, h: 150 },
+    { x: 944, y: 454, w: 112, h: 150 }
+  ]
+};
+
+function getHeroNavigationFrame() {
+  const moveX =
+    exitChoice.moveX || 0;
+
+  const moveY =
+    exitChoice.moveY || 0;
+
+  const moving =
+    Math.abs(moveX) > 0.08 ||
+    Math.abs(moveY) > 0.08;
+
+  if (!moving) {
+    return {
+      frame: heroSpriteAtlas.idle[0],
+      flipX: exitChoice.facing < 0
+    };
+  }
+
+  // Moving upward means walking away from camera toward a door.
+  if (
+    moveY < -0.20 &&
+    Math.abs(moveY) >= Math.abs(moveX) * 0.65
+  ) {
+    const frames =
+      heroSpriteAtlas.walkBack;
+
+    const frameIndex =
+      Math.floor(
+        performance.now() / 135
+      ) % frames.length;
+
+    return {
+      frame: frames[frameIndex],
+      flipX: false
+    };
+  }
+
+  const frames =
+    heroSpriteAtlas.walkRight;
+
+  const frameIndex =
+    Math.floor(
+      performance.now() / 115
+    ) % frames.length;
+
+  return {
+    frame: frames[frameIndex],
+    flipX: moveX < 0
+  };
+}
+
 function drawHeroSprite(x, y, facing = 1, scale = 1) {
-  if (!(heroImage.complete && heroImage.naturalWidth > 0)) {
-    ctx.fillStyle = "#4f7bc4";
-    ctx.fillRect(x - 18, y - 50, 36, 60);
+  if (
+    heroSpriteSheetImage.complete &&
+    heroSpriteSheetImage.naturalWidth > 0
+  ) {
+    const selection =
+      getHeroNavigationFrame();
+
+    const frame =
+      selection.frame;
+
+    const drawH =
+      118 * scale;
+
+    const drawW =
+      drawH *
+      (frame.w / frame.h);
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    if (selection.flipX) {
+      ctx.scale(-1, 1);
+    }
+
+    ctx.drawImage(
+      heroSpriteSheetImage,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      -drawW / 2,
+      -drawH,
+      drawW,
+      drawH
+    );
+
+    ctx.restore();
     return;
   }
 
-  const h = 118 * scale;
-  const w = h * (heroImage.naturalWidth / heroImage.naturalHeight);
+  // Existing single-image fallback.
+  if (
+    typeof heroImage !== "undefined" &&
+    heroImage.complete &&
+    heroImage.naturalWidth > 0
+  ) {
+    const h = 118 * scale;
+    const w =
+      h *
+      (heroImage.naturalWidth /
+       heroImage.naturalHeight);
 
-  ctx.save();
-  ctx.translate(x, y);
+    ctx.save();
+    ctx.translate(x, y);
 
-  if (facing < 0) {
-    ctx.scale(-1, 1);
+    if (facing < 0) {
+      ctx.scale(-1, 1);
+    }
+
+    ctx.drawImage(
+      heroImage,
+      -w / 2,
+      -h,
+      w,
+      h
+    );
+
+    ctx.restore();
+    return;
   }
 
-  ctx.drawImage(heroImage, -w / 2, -h, w, h);
-  ctx.restore();
+  ctx.fillStyle = "#4f7bc4";
+  ctx.fillRect(
+    x - 18,
+    y - 50,
+    36,
+    60
+  );
 }
 
 function drawDriver(x, y) {

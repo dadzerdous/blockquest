@@ -290,6 +290,8 @@ function beginExitChoice() {
   exitChoice.facing = player.facing || 1;
   exitChoice.hopTimer = 0.45;
   exitChoice.doorGraceTimer = 0.55;
+  exitChoice.moveX = 0;
+  exitChoice.moveY = 0;
   exitChoice.chosen = null;
 
   const choices =
@@ -363,6 +365,10 @@ function updateExitChoice(dt) {
     exitChoice.facing =
       moveX > 0 ? 1 : -1;
   }
+
+  // Feed movement direction to the sprite animator.
+  exitChoice.moveX = moveX;
+  exitChoice.moveY = moveY;
 
   if (exitChoice.hopTimer > 0) {
     exitChoice.hopTimer -= dt;
