@@ -1,4 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
+const pauseButton=document.getElementById("pauseButton");
+const pauseOverlay=document.getElementById("pauseOverlay");
+const resumeButton=document.getElementById("resumeButton");
 const ctx = canvas.getContext("2d");
 
 const heroHpEl = document.getElementById("heroHp");
@@ -169,6 +172,7 @@ function playHitSound() {
 
 
 let gameState = "waiting";
+let pausedFromState = null;
 let lastTime = 0;
 let keys = {};
 let pointerActive = false;
@@ -2858,82 +2862,20 @@ function drawRail() {
   }
 }
 
-function drawHunterArrow() {
-  if (
-    gameState === "exitChoice" ||
-    gameState === "postRewardShake"
-  ) return;
-
-  const cooldown =
-    rangerSkill.effectiveCooldown ||
-    rangerSkill.cooldown;
-
-  const recharge =
-    rangerSkill.timer <= 0
-      ? 1
-      : Math.max(
-          0,
-          1 - rangerSkill.timer / cooldown
-        );
-
-  if (recharge <= 0.02) return;
-
-  ctx.save();
-
-  // Mount the arrow at the FRONT / TOP of the trolley,
-  // pointing toward the playfield.
-  const x = player.x;
-  const y = player.y - 48;
-
-  ctx.translate(x, y);
-  ctx.globalAlpha =
-    0.08 +
-    recharge * 0.92;
-
-  // Vertical shaft.
-  ctx.strokeStyle = "#e8d4a1";
-  ctx.fillStyle = "#e8d4a1";
-  ctx.lineWidth = 4;
-
-  ctx.beginPath();
-  ctx.moveTo(0, 24);
-  ctx.lineTo(0, -24);
-  ctx.stroke();
-
-  // Arrow head pointing UP.
-  ctx.beginPath();
-  ctx.moveTo(0, -31);
-  ctx.lineTo(-8, -18);
-  ctx.lineTo(8, -18);
-  ctx.closePath();
-  ctx.fill();
-
-  // Small fletching at the bottom.
-  ctx.beginPath();
-  ctx.moveTo(0, 21);
-  ctx.lineTo(-7, 31);
-  ctx.lineTo(0, 27);
-  ctx.lineTo(7, 31);
-  ctx.closePath();
-  ctx.fill();
-
-  // Shimmer only when fully ready.
-  if (rangerSkill.timer <= 0) {
-    const shimmer =
-      0.38 +
-      Math.sin(performance.now() / 115) * 0.22;
-
-    ctx.globalAlpha = shimmer;
-    ctx.strokeStyle = "#fff6b0";
-    ctx.shadowBlur = 18;
-    ctx.shadowColor = "#fff6b0";
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.arc(0, -4, 25, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
+function drawHunterArrow(){
+  if(gameState==="exitChoice"||gameState==="postRewardShake")return;
+  const cd=rangerSkill.effectiveCooldown||rangerSkill.cooldown;
+  const amt=rangerSkill.timer<=0?1:Math.max(0,1-rangerSkill.timer/cd);
+  if(amt<=.02)return;
+  const facing=player.facing>=0?1:-1;
+  const x=player.x+facing*player.width*.38, y=player.y-44;
+  const ready=rangerSkill.timer<=0;
+  ctx.save();ctx.translate(x,y);ctx.globalAlpha=ready?1:.1+amt*.72;
+  ctx.strokeStyle=ready?"#fff1a8":"#a69e90";ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=4;
+  if(ready){ctx.shadowBlur=20;ctx.shadowColor="#70e8ff";}
+  ctx.beginPath();ctx.moveTo(0,24);ctx.lineTo(0,-24);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,-31);ctx.lineTo(-8,-18);ctx.lineTo(8,-18);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,21);ctx.lineTo(-7,31);ctx.lineTo(0,27);ctx.lineTo(7,31);ctx.closePath();ctx.fill();
   ctx.restore();
 }
 
@@ -3227,31 +3169,13 @@ function drawMobImage(image, brick, scaleX = 1, scaleY = 1, yOffset = 0) {
   return true;
 }
 
-function drawMobBacking(brick) {
-  if (!brick.isMob) return;
-
+function drawMobBacking(brick){
+  if(!brick.isMob)return;
   ctx.save();
-
-  // Neutral backing keeps every mob readable regardless of the source PNG.
-  ctx.globalAlpha = 0.78;
-  ctx.fillStyle = "#5e6268";
-  ctx.fillRect(
-    brick.x + 3,
-    brick.y + 3,
-    brick.width - 6,
-    brick.height - 6
-  );
-
-  ctx.globalAlpha = 0.34;
-  ctx.strokeStyle = "#b7bcc2";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(
-    brick.x + 3,
-    brick.y + 3,
-    brick.width - 6,
-    brick.height - 6
-  );
-
+  ctx.globalAlpha=.24;ctx.fillStyle="#73777d";
+  ctx.fillRect(brick.x+3,brick.y+3,brick.width-6,brick.height-6);
+  ctx.globalAlpha=.16;ctx.strokeStyle="#c0c4c9";ctx.lineWidth=2;
+  ctx.strokeRect(brick.x+3,brick.y+3,brick.width-6,brick.height-6);
   ctx.restore();
 }
 
@@ -3488,7 +3412,15 @@ function drawParticles() {
   ctx.textAlign = "start";
 }
 
-function gameLoop(timestamp) {
+function canPauseGame(){return ["playing","waiting","exitChoice","postRewardShake"].includes(gameState);}
+function pauseGame(){if(!canPauseGame())return;pausedFromState=gameState;gameState="paused";pauseOverlay.classList.remove("hidden");}
+function resumeGame(){if(gameState!=="paused")return;gameState=pausedFromState||"waiting";pausedFromState=null;pauseOverlay.classList.add("hidden");}
+function togglePause(){gameState==="paused"?resumeGame():pauseGame();}
+pauseButton.addEventListener("click",togglePause);
+resumeButton.addEventListener("click",resumeGame);
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k==="p"||k==="escape"){e.preventDefault();togglePause();}});
+function gameLoop(timestamp) {if(gameState==="paused"){draw();requestAnimationFrame(gameLoop);return;}
+
   const dt = Math.min((timestamp - lastTime) / 1000, 0.033);
   lastTime = timestamp;
 

@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.1**
+Current prototype: **v0.18.2**
 
 ## Current Direction
 
@@ -1003,3 +1003,10 @@ Some future runes can be equipment- or skill-specific instead of universal.
 
 ### Portals
 - Portals widened from 205 to 235 world units.
+
+
+## v0.18.2
+- Added pause button plus P/Escape toggle.
+- Hunter arrow moved to front edge of trolley based on facing, still aimed upward.
+- Removed ready ring; ready arrow now changes color and glows cyan/gold.
+- Mob backing is much more transparent.
