@@ -1490,3 +1490,58 @@ body {
     font-size: 10px !important;
   }
 }
+
+/* v0.20.4 — locked-layout cleanup */
+
+/* Put dynamic room text inside the blank wooden plaque. */
+.frameTop {
+  left: 25.5% !important;
+  right: 25.5% !important;
+  top: 1.0% !important;
+  height: 5.2% !important;
+}
+.roomPlaque {
+  height: 100% !important;
+  line-height: 1 !important;
+  font-size: clamp(13px, 2.25vw, 20px) !important;
+}
+
+/* Raise launch prompt clear of the rail. */
+#launchHint {
+  bottom: 13.2% !important;
+}
+
+/* Smaller, tighter run-money badge at the lower-right/track area. */
+.frameMoney {
+  right: 3.2% !important;
+  bottom: 9.4% !important;
+  min-width: 0 !important;
+  padding: 2px 7px !important;
+  gap: 3px !important;
+  border-radius: 7px !important;
+  font-size: clamp(12px, 2vw, 17px) !important;
+}
+
+/* Painted X is the only visible pause control; enlarge invisible hit area slightly. */
+.framePauseButton {
+  right: -49% !important;
+  top: -3% !important;
+  width: 68px !important;
+  height: 68px !important;
+}
+
+/* Control instruction is temporary guidance, not permanent HUD chrome.
+   Fade it once gameplay has started/launch hint is hidden. */
+body:has(#launchHint.hidden) #mobileHint,
+body:has(#launchHint[style*="display: none"]) #mobileHint {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Version remains tiny and entirely inside the game coordinate system. */
+#versionBadge {
+  right: 2.2% !important;
+  bottom: 1.1% !important;
+  font-size: 10px !important;
+  opacity: .65;
+}
