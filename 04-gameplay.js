@@ -1,7 +1,9 @@
 const routeMinimapEl = document.getElementById("routeMinimap");
-const routeCurrentNodeEl = document.getElementById("routeCurrentNode");
-const routeLeftNodeEl = document.getElementById("routeLeftNode");
-const routeRightNodeEl = document.getElementById("routeRightNode");
+const mapRoomEls = [null,1,2,3,4,5].map(
+  n => n === null ? null : document.getElementById(`mapRoom${n}`)
+);
+const mapLeftChoiceEl = document.getElementById("mapLeftChoice");
+const mapRightChoiceEl = document.getElementById("mapRightChoice");
 
 function routeLabel(type) {
   const labels = {
@@ -15,26 +17,46 @@ function routeLabel(type) {
   return labels[type] || String(type || "?").toUpperCase();
 }
 
-function applyRouteNodeClass(element, type) {
-  if (!element) return;
-  element.classList.remove("route-standard","route-hard","route-treasure","route-shop");
-  const normalized = type === "battle" ? "standard" : type;
-  if (["standard","hard","treasure","shop"].includes(normalized)) {
-    element.classList.add(`route-${normalized}`);
-  }
-}
-
 function showRouteMinimap() {
   if (!routeMinimapEl) return;
-  if (routeCurrentNodeEl) routeCurrentNodeEl.textContent = `ROOM ${roomNumber}`;
-  if (routeLeftNodeEl) {
-    routeLeftNodeEl.textContent = routeLabel(exitChoice.leftType);
-    applyRouteNodeClass(routeLeftNodeEl, exitChoice.leftType);
+
+  for (let n = 1; n <= 5; n++) {
+    const el = mapRoomEls[n];
+    if (!el) continue;
+    el.classList.remove(
+      "map-cleared","map-current","map-available",
+      "map-future","map-hard","map-treasure"
+    );
+
+    if (n < roomNumber) el.classList.add("map-cleared");
+    else if (n === roomNumber) el.classList.add("map-current");
+    else if (n === roomNumber + 1) el.classList.add("map-available");
+    else el.classList.add("map-future");
   }
-  if (routeRightNodeEl) {
-    routeRightNodeEl.textContent = routeLabel(exitChoice.rightType);
-    applyRouteNodeClass(routeRightNodeEl, exitChoice.rightType);
+
+  // The next numbered room represents the two physical route choices.
+  // Labels make the route type explicit while the 1–5 structure remains visible.
+  if (mapLeftChoiceEl) {
+    mapLeftChoiceEl.textContent = `← ${routeLabel(exitChoice.leftType)}`;
+    mapLeftChoiceEl.className =
+      `mapChoiceLabel leftChoice ${exitChoice.leftType === "hard" ? "map-hard" : ""}`;
   }
+  if (mapRightChoiceEl) {
+    mapRightChoiceEl.textContent = `${routeLabel(exitChoice.rightType)} →`;
+    mapRightChoiceEl.className =
+      `mapChoiceLabel rightChoice ${exitChoice.rightType === "hard" ? "map-hard" : ""}`;
+  }
+
+  const nextEl = mapRoomEls[Math.min(5, roomNumber + 1)];
+  if (nextEl) {
+    if (exitChoice.leftType === "hard" || exitChoice.rightType === "hard") {
+      nextEl.classList.add("map-hard");
+    }
+    if (exitChoice.leftType === "treasure" || exitChoice.rightType === "treasure") {
+      nextEl.classList.add("map-treasure");
+    }
+  }
+
   routeMinimapEl.classList.remove("hidden");
 }
 

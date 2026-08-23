@@ -1592,3 +1592,107 @@ body:has(#launchHint[style*="display: none"]) #mobileHint {
   .routeMapGrid{height:128px}
   .routeNode{min-width:54px;font-size:9px}
 }
+
+/* v0.20.8 — complete five-room map */
+.routeSectionMap{
+  width:min(58%,390px)!important;
+  top:52%!important;
+  padding:11px 13px 10px!important;
+}
+.routeSectionMap .routeMapTitle{
+  margin-bottom:5px;
+}
+.sectionMap{
+  position:relative;
+  height:230px;
+}
+.sectionNode{
+  width:48px!important;
+  min-width:48px!important;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0!important;
+  font-size:13px!important;
+  border-radius:50%!important;
+  transform:translate(-50%,-50%);
+}
+.sectionNode small{
+  display:block;
+  font-size:6px;
+  line-height:1;
+  margin-left:2px;
+}
+.room1{left:50%;top:88%}
+.room2{left:25%;top:64%}
+.room3{left:75%;top:64%}
+.room4{left:50%;top:38%}
+.room5{
+  left:50%;top:11%;
+  width:72px!important;
+  min-width:72px!important;
+  height:45px;
+  border-radius:10px!important;
+  border-color:#c77d4f!important;
+  color:#ffd9b5!important;
+}
+.mapConnector{
+  position:absolute;
+  height:2px;
+  background:rgba(218,197,155,.42);
+  transform-origin:left center;
+  z-index:1;
+}
+.c12{left:49%;top:84%;width:31%;transform:rotate(-139deg)}
+.c13{left:51%;top:84%;width:31%;transform:rotate(-41deg)}
+.c24{left:28%;top:59%;width:31%;transform:rotate(-39deg)}
+.c34{left:72%;top:59%;width:31%;transform:rotate(-141deg)}
+.c45{left:50%;top:34%;width:24%;transform:rotate(-90deg)}
+.mapChoiceLabel{
+  position:absolute;
+  top:69%;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.05em;
+  color:#e7dcc5;
+  padding:2px 4px;
+  border-radius:4px;
+  background:rgba(0,0,0,.58);
+}
+.leftChoice{left:4%}
+.rightChoice{right:4%}
+.routeLegend{
+  text-align:center;
+  font-size:7px;
+  letter-spacing:.08em;
+  color:rgba(230,218,195,.55);
+}
+.sectionNode.map-cleared{
+  opacity:.45;
+}
+.sectionNode.map-current{
+  border-color:#f3d36e!important;
+  color:#fff0a9!important;
+  box-shadow:0 0 16px rgba(243,211,110,.38);
+  opacity:1;
+}
+.sectionNode.map-available{
+  opacity:1;
+  box-shadow:0 0 13px rgba(225,209,174,.22);
+}
+.sectionNode.map-future{
+  opacity:.38;
+}
+.sectionNode.map-hard{
+  border-color:#e46f67!important;
+  color:#ffd8d4!important;
+}
+.sectionNode.map-treasure{
+  border-color:#e0bd58!important;
+  color:#ffeaa1!important;
+}
+@media(max-width:700px){
+  .routeSectionMap{width:64%!important;top:50%!important}
+  .sectionMap{height:205px}
+}

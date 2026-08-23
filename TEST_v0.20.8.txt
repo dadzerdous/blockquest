@@ -1,0 +1,31 @@
+ARKANOID RPG v0.20.8 — FIVE-ROOM MAP TEST
+
+VERSION
+[ ] Browser tab says v0.20.8
+[ ] Splash/build says v0.20.8
+
+MAP
+[ ] Door-choice map shows Rooms 1–5 at once
+[ ] Room 1 is the bottom/start
+[ ] Room 5 / HERMAN is clearly the destination
+[ ] Cleared rooms are dimmed
+[ ] Current room glows
+[ ] Future rooms remain visible
+[ ] Left/right route labels match the physical doors
+[ ] Hard is visually distinct
+[ ] Treasure is visually distinct
+[ ] Map is readable on phone
+[ ] Map does not make walking into doors annoying
+[ ] Map disappears after choosing a door
+
+DESIGN
+[ ] Five rooms at a time feels right
+[ ] Herman feels like the end of this map
+[ ] I can understand where I am immediately
+
+NOTES:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________
