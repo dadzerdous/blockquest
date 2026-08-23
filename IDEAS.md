@@ -2,7 +2,7 @@
 
 ## Build
 
-Current prototype: **v0.18.5**
+Current prototype: **v0.18.6**
 
 ## Current Direction
 
@@ -1082,3 +1082,18 @@ Structural cleanup only. No gameplay additions.
 - No Room 6 content.
 
 Goal: establish a safer baseline before Cleanup Pass 2.
+
+
+## v0.18.6 — Cleanup Hotfix
+- Fixed startup crash caused by `updateHUD()` still referencing removed Hero HP and Enemy Count DOM elements.
+- Hero HP remains represented visually on the hero.
+- Enemy count stays removed from the HUD.
+- Added a reusable essential-image preload helper for the upcoming start-screen/Prepare pass.
+- Startup behavior itself is unchanged in this hotfix.
+
+### Next UI/Startup Pass
+- Defined title/start screen that cannot launch directly into gameplay.
+- Essential asset preload before enabling run start.
+- Framed game border that can contain Pause and future controls naturally.
+- Rename/rebuild Loadout as Prepare.
+- Prepare layout: Ball / Paddle / Gear on the left; clicked category options on the right.
