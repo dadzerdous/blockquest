@@ -1,5 +1,50 @@
+const routeMinimapEl = document.getElementById("routeMinimap");
+const routeCurrentNodeEl = document.getElementById("routeCurrentNode");
+const routeLeftNodeEl = document.getElementById("routeLeftNode");
+const routeRightNodeEl = document.getElementById("routeRightNode");
+
+function routeLabel(type) {
+  const labels = {
+    standard: "STANDARD",
+    battle: "STANDARD",
+    hard: "HARD",
+    treasure: "TREASURE",
+    shop: "SHOP",
+    boss: "BOSS"
+  };
+  return labels[type] || String(type || "?").toUpperCase();
+}
+
+function applyRouteNodeClass(element, type) {
+  if (!element) return;
+  element.classList.remove("route-standard","route-hard","route-treasure","route-shop");
+  const normalized = type === "battle" ? "standard" : type;
+  if (["standard","hard","treasure","shop"].includes(normalized)) {
+    element.classList.add(`route-${normalized}`);
+  }
+}
+
+function showRouteMinimap() {
+  if (!routeMinimapEl) return;
+  if (routeCurrentNodeEl) routeCurrentNodeEl.textContent = `ROOM ${roomNumber}`;
+  if (routeLeftNodeEl) {
+    routeLeftNodeEl.textContent = routeLabel(exitChoice.leftType);
+    applyRouteNodeClass(routeLeftNodeEl, exitChoice.leftType);
+  }
+  if (routeRightNodeEl) {
+    routeRightNodeEl.textContent = routeLabel(exitChoice.rightType);
+    applyRouteNodeClass(routeRightNodeEl, exitChoice.rightType);
+  }
+  routeMinimapEl.classList.remove("hidden");
+}
+
+function hideRouteMinimap() {
+  if (routeMinimapEl) routeMinimapEl.classList.add("hidden");
+}
+
 function beginExitChoice() {
   if (roomNumber === 4) {
+    hideRouteMinimap();
     exitChoice.active=false; exitChoice.chosen="boss"; pathHintEl.classList.add("hidden");
     pendingRoomType="boss"; currentRoomType="boss"; roomNumber=5;
     startRoom(); return;
@@ -22,6 +67,7 @@ function beginExitChoice() {
   const pair = routeSets[Math.floor(Math.random() * routeSets.length)];
   exitChoice.leftType = pair[0];
   exitChoice.rightType = pair[1];
+  showRouteMinimap();
   pathHintEl.classList.remove("hidden");
 }
 
@@ -81,6 +127,7 @@ function chooseDungeonExit(type) {
 
   exitChoice.chosen = normalizedType;
   exitChoice.active = false;
+  hideRouteMinimap();
   pathHintEl.classList.add("hidden");
 
   if (normalizedType === "shop") {

@@ -1,0 +1,28 @@
+ARKANOID RPG v0.20.7 — ROUTE MINIMAP TEST
+
+VERSION
+[ ] Browser tab says v0.20.7
+[ ] Splash/build says v0.20.7
+
+MINIMAP
+[ ] Appears during door choice
+[ ] Current room shown at bottom
+[ ] Left node matches left door
+[ ] Right node matches right door
+[ ] Hard looks distinct
+[ ] Treasure looks distinct
+[ ] One ? future node above each path
+[ ] Does not block door movement badly
+[ ] Disappears after choosing door
+[ ] Room received matches chosen door
+
+FEEL
+[ ] Makes path choice clearer
+Future visibility: [ ] more  [ ] about right  [ ] less
+
+BUGS / NOTES:
+__________________________________________________
+__________________________________________________
+
+CONSOLE ERRORS:
+__________________________________________________

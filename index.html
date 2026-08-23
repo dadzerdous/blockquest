@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Spike Trolley RPG v0.20.4</title>
+  <title>Spike Trolley RPG — v0.20.7</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -27,7 +27,22 @@
           <canvas id="gameCanvas" width="900" height="1400"></canvas>
         </div>
 
-        <div id="frameMoney" class="frameMoney" aria-label="Run money">
+        
+        <div id="routeMinimap" class="routeMinimap hidden" aria-label="Route map">
+          <div class="routeMapTitle">ROUTE</div>
+          <div class="routeMapGrid">
+            <div class="routeNode routeUnknown routeFutureLeft">?</div>
+            <div class="routeNode routeUnknown routeFutureRight">?</div>
+            <div class="routeBranch routeBranchLeft"></div>
+            <div class="routeBranch routeBranchRight"></div>
+            <div id="routeLeftNode" class="routeNode routeChoiceNode">LEFT</div>
+            <div id="routeRightNode" class="routeNode routeChoiceNode">RIGHT</div>
+            <div class="routeStem"></div>
+            <div id="routeCurrentNode" class="routeNode routeCurrentNode">YOU</div>
+          </div>
+        </div>
+
+<div id="frameMoney" class="frameMoney" aria-label="Run money">
           <span class="moneyBagIcon">💰</span>
           <strong id="frameMoneyValue">0</strong>
         </div>
@@ -49,7 +64,7 @@
 <div id="bossHud" class="hidden"><span>🛡️ ARMORED RAIDER</span><div class="bossBar"><i id="bossBarFill"></i></div><small id="bossPhase">ARMORED</small></div>
       <div id="comboHud" class="hidden">COMBO <strong id="comboCount">x0</strong> <span id="comboXp">+0 XP</span></div>
       <div id="runeHud">RUNES: <span id="runeHudText">None</span></div>
-      <div id="versionBadge">v0.20.4</div>
+      <div id="versionBadge">v0.20.7</div>
       <div id="roomClearBanner" class="hidden">ROOM CLEARED</div>
       <div id="pathHint" class="hidden">ROOM CLEARED — WALK THROUGH A DOOR</div>
       <div id="mobileHint">Drag anywhere to steer • A/D or ←/→ on PC</div>
