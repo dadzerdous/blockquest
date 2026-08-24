@@ -295,7 +295,7 @@ const WORLD_HEIGHT = 1400;
 
 
 const bgImage = new Image();
-bgImage.src = "assets/bg1.png";
+bgImage.src = "assets/bg-dungeon-framed.png";
 
 const trolleyImage = new Image();
 trolleyImage.src = "assets/trolley1.png";
@@ -817,38 +817,18 @@ function updateComboHUD() {
   comboXpEl.textContent = `+${comboXpEarned} XP`;
 }
 
+const standardRoomBoard = [
+  "BBBBB",
+  "BBBBB",
+  "BBBBB",
+  "BBBBB"
+];
+
 const roomLayouts = [
-  // Room 1 — 2 Grey Grunts + 1 Fire Grunt
-  [
-    "BBBBB",
-    "BMBFB",
-    "BBMBB",
-    "BBBBB"
-  ],
-
-  // Room 2 — 2 Ice Grunts + 2 Green Grunts
-  [
-    "BBIBB",
-    "BGBGB",
-    "BBIBB",
-    "BBBBB"
-  ],
-
-  // Room 3 — 2 Grey + 2 Ice + 1 Dark-Red Fire
-  [
-    "BIMIB",
-    "BBDBB",
-    "BIMIB",
-    "BBBBB"
-  ],
-
-  // Room 4 — Grey Grunt endurance room
-  [
-    "BMBMB",
-    "BBMBB",
-    "BMBMB",
-    "BBBBB"
-  ],
+  standardRoomBoard,
+  standardRoomBoard,
+  standardRoomBoard,
+  standardRoomBoard,
 
   // Room 5 — Armored Raider mini-boss arena (5x8)
   [
@@ -860,3 +840,26 @@ const roomLayouts = [
   ]
 ];
 
+// Normal rooms share one readable board. Their enemy roster is placed into
+// shuffled authored slots so runs vary without producing unsafe random boards.
+const normalEnemySlots = [
+  [0, 2], [1, 0], [1, 2], [1, 4],
+  [2, 1], [2, 3], [3, 0], [3, 4]
+];
+
+const roomEncounterRosters = {
+  1: [{ type:"G" }, { type:"G" }, { type:"F" }],
+  2: [
+    { type:"I" }, { type:"I" },
+    { type:"G", armor:2 }, { type:"F", armor:2 }
+  ],
+  3: [
+    { type:"D" }, { type:"D", armor:3 },
+    { type:"G" }, { type:"F", armor:3 }, { type:"I" }
+  ],
+  4: [
+    { type:"D" }, { type:"D" },
+    { type:"U" }, { type:"U", armor:3 },
+    { type:"F" }, { type:"I" }
+  ]
+};

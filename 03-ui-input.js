@@ -605,7 +605,11 @@ function updatePostRewardShake(dt) {
 
   if (postRewardShakeTimer <= 0) {
     pendingExitAfterReward = false;
-    beginExitChoice();
+    const currentNode = routeSectionOne.nodes[routeGraphState.currentNodeId];
+    if (currentNode && (currentNode.exits || []).length === 0) {
+      returnToLobby(true);
+    } else {
+      beginExitChoice();
+    }
   }
 }
-

@@ -242,16 +242,15 @@ function getDoorLayoutForChoices(choiceIds) {
 }
 
 function beginExitChoice() {
-  if (roomNumber === 4) {
+  const current = routeSectionOne.nodes[routeGraphState.currentNodeId];
+  const nextIds = current?.exits || [];
+  const bossId = nextIds.length === 1 &&
+    routeSectionOne.nodes[nextIds[0]]?.type === "boss"
+      ? nextIds[0]
+      : null;
+
+  if (bossId) {
     hideRouteMinimap();
-
-    const current =
-      routeSectionOne.nodes[
-        routeGraphState.currentNodeId
-      ];
-
-    const bossId =
-      current?.exits?.[0] || "5A";
 
     routeGraphState.currentNodeId =
       bossId;
@@ -275,7 +274,7 @@ function beginExitChoice() {
 
     pendingRoomType = "boss";
     currentRoomType = "boss";
-    roomNumber = 5;
+    roomNumber = routeSectionOne.nodes[bossId].stage;
 
     startRoom();
     return;
@@ -793,9 +792,7 @@ function checkBrickCollisions() {
         damageToApply = ball.pierceDamageRemaining;
       }
 
-      const hpBefore =
-        brick.hp +
-        (brick.raiderBoss ? brick.armor : 0);
+      const hpBefore = brick.hp + brick.armor;
 
       damageBrick(
         brick,
@@ -883,7 +880,7 @@ function damageBrick(brick, overrideDamage = null, source = "ball") {
   }
 
   // Armor is universal defense; both Ball and weapon damage can break it.
-  if (brick.raiderBoss && brick.armor > 0) {
+  if (brick.armor > 0) {
     const absorbed = Math.min(brick.armor, hitDamage);
     brick.armor -= absorbed;
     hitDamage -= absorbed;
@@ -1023,9 +1020,7 @@ function fireExplosion(x, y, sourceBrick) {
         target.alive = false;
 
         if (target.isMob) {
-          const xpReward = target.shooter ? 10 : 5;
-          addXP(xpReward);
-          createFloatingText(tx, ty, `+${xpReward} XP`, "#d8c8ff");
+          spawnMobXP(target);
         }
 
         if (target.treasure) {
@@ -1436,6 +1431,16 @@ function updateEnemyAttacks(dt) {
   for (const enemy of bricks) {
     if (!enemy.alive || !(enemy.shooter || enemy.iceGoblin || enemy.raiderBoss)) continue;
 
+    if (enemy.burstRemaining > 0) {
+      enemy.burstGap = (enemy.burstGap || 0) - dt;
+      if (enemy.burstGap <= 0) {
+        fireAimedDamageShot(enemy);
+        enemy.burstRemaining -= 1;
+        enemy.burstGap = 0.18;
+      }
+      continue;
+    }
+
     enemy.fireCooldown = (enemy.fireCooldown || 0) - dt;
 
     if (enemy.fireCharge > 0) {
@@ -1452,6 +1457,8 @@ function updateEnemyAttacks(dt) {
           enemy.fireCooldown = 3.0 * (currentRoomType === "hard" ? 0.80 : 1);
         } else if (enemy.shooterVariant === "spread") {
           enemy.fireCooldown = 1.35 * (currentRoomType === "hard" ? 0.80 : 1);
+        } else if (enemy.shooterVariant === "burst") {
+          enemy.fireCooldown = 2.35 * (currentRoomType === "hard" ? 0.80 : 1);
         } else if (enemy.iceGoblin) {
           enemy.fireCooldown = 2.6 * (currentRoomType === "hard" ? 0.80 : 1);
         } else {
@@ -1479,6 +1486,21 @@ function updateEnemyAttacks(dt) {
 
 function hardProjectileSpeed(speed) {
   return currentRoomType === "hard" ? speed * 1.20 : speed;
+}
+
+function fireAimedDamageShot(shooter) {
+  const x = shooter.x + shooter.width / 2;
+  const y = shooter.y + shooter.height;
+  const dx = player.x - x;
+  const dy = (player.y - 20) - y;
+  const length = Math.hypot(dx, dy) || 1;
+  const speed = hardProjectileSpeed(410);
+  enemyProjectiles.push({
+    x, y, radius:12,
+    vx:dx / length * speed,
+    vy:dy / length * speed,
+    type:"damage"
+  });
 }
 
 function fireEnemyShot(shooter) {
@@ -1525,6 +1547,13 @@ function fireEnemyShot(shooter) {
       const speedMult = currentRoomType === "hard" ? 1.20 : 1;
       enemyProjectiles.push({x,y,radius:12,vx:baseVx * speedMult,vy:350 * speedMult,type:"damage"});
     }
+    return;
+  }
+
+  if (shooter.shooterVariant === "burst") {
+    fireAimedDamageShot(shooter);
+    shooter.burstRemaining = 2;
+    shooter.burstGap = 0.18;
     return;
   }
 
@@ -1673,4 +1702,3 @@ function loseBallFromHP() {
   messageEl.textContent = `KNOCKED OUT — ${ballsLeft} BALLS LEFT — TAP TO RELAUNCH`;
   updateHUD();
 }
-

@@ -786,6 +786,7 @@ function drawEnemyAura(brick) {
   let c=null;
   if (brick.iceGoblin) c="#73ddff";
   else if (brick.stunGoblin) c="#ffe35b";
+  else if (brick.darkBlueGoblin) c="#4778ff";
   else if (brick.darkFireGoblin || brick.fireGoblin) c="#ff674d";
   else if (brick.greenGoblin) c="#75e66b";
   if (!c) return;
@@ -821,6 +822,8 @@ function drawBricks(dt) {
         ctx.filter = "hue-rotate(48deg) saturate(2.1) brightness(1.2)";
       } else if (brick.darkFireGoblin) {
         ctx.filter = "hue-rotate(320deg) saturate(2) brightness(.66)";
+      } else if (brick.darkBlueGoblin) {
+        ctx.filter = "hue-rotate(175deg) saturate(2.15) brightness(.70)";
       } else if (brick.fireGoblin || brick.shooter) {
         ctx.filter = "hue-rotate(300deg) saturate(1.8) brightness(.95)";
       } else if (brick.iceGoblin) {
@@ -903,7 +906,7 @@ function drawBricks(dt) {
       }
     }
 
-    if (brick.raiderBoss && brick.armor > 0) {
+    if (brick.armor > 0) {
       ctx.save();
       const pulse = 0.78 + Math.sin(performance.now() * 0.006) * 0.10;
 
@@ -1017,4 +1020,3 @@ function drawParticles() {
   ctx.globalAlpha = 1;
   ctx.textAlign = "start";
 }
-

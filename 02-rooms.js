@@ -60,6 +60,22 @@ function buildRoom() {
       : roomLayouts[3]; // temporary post-boss fallback: Room 4, never repeat boss
 
   const workingLayout = layout.map(row => row.split(""));
+  const armorByCell = new Map();
+
+  if (roomNumber !== 5) {
+    const slots = normalEnemySlots.map(([row, col]) => [row, col]);
+    for (let i = slots.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [slots[i], slots[j]] = [slots[j], slots[i]];
+    }
+
+    const roster = roomEncounterRosters[roomNumber] || roomEncounterRosters[4];
+    roster.forEach((enemy, index) => {
+      const [row, col] = slots[index];
+      workingLayout[row][col] = enemy.type;
+      if (enemy.armor) armorByCell.set(`${row}:${col}`, enemy.armor);
+    });
+  }
 
   if (roomNumber !== 5) {
     const availableBricks = [];
@@ -146,6 +162,7 @@ function buildRoom() {
       let greenGoblin = false;
       let fireGoblin = false;
       let darkFireGoblin = false;
+      let darkBlueGoblin = false;
       let stunGoblin = false;
       let raiderBoss = false;
 
@@ -197,6 +214,15 @@ function buildRoom() {
         darkFireGoblin = true;
       }
 
+      // Dark-blue burst goblin — fires three aimed shots in sequence.
+      if (type === "U") {
+        hp = 5;
+        isMob = true;
+        shooter = true;
+        shooterVariant = "burst";
+        darkBlueGoblin = true;
+      }
+
       // Stun Grunt — stationary electric attacker.
       if (type === "Z") {
         hp = 4;
@@ -239,12 +265,13 @@ function buildRoom() {
         greenGoblin,
         fireGoblin,
         darkFireGoblin,
+        darkBlueGoblin,
         stunGoblin,
         raiderBoss,
         hardEmpowered: false,
 
-        armor: raiderBoss ? 12 : 0,
-        maxArmor: raiderBoss ? 12 : 0,
+        armor: raiderBoss ? 12 : (armorByCell.get(`${row}:${col}`) || 0),
+        maxArmor: raiderBoss ? 12 : (armorByCell.get(`${row}:${col}`) || 0),
 
         moveDir: 1,
         moveSpeed: raiderBoss ? 92 : 0,
@@ -492,4 +519,3 @@ function startRoom() {
   messageEl.style.display = "block";
   messageEl.textContent = "TAP / CLICK TO LAUNCH";
 }
-
