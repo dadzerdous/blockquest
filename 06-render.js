@@ -784,7 +784,8 @@ function drawMobBacking(brick){
 function drawEnemyAura(brick) {
   if (!brick.isMob) return;
   let c=null;
-  if (brick.iceGoblin) c="#73ddff";
+  if (brick.armor > 0) c="#aeb4bb";
+  else if (brick.iceGoblin) c="#73ddff";
   else if (brick.stunGoblin) c="#ffe35b";
   else if (brick.darkBlueGoblin) c="#4778ff";
   else if (brick.darkFireGoblin || brick.fireGoblin) c="#ff674d";
@@ -904,35 +905,6 @@ function drawBricks(dt) {
         ctx.fillStyle = damaged ? "#7b3f31" : "#b35042";
         ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
       }
-    }
-
-    if (brick.armor > 0) {
-      ctx.save();
-      const pulse = 0.78 + Math.sin(performance.now() * 0.006) * 0.10;
-
-      ctx.globalAlpha = pulse;
-      ctx.strokeStyle = "#aeb4bb";
-      ctx.lineWidth = 7;
-      ctx.shadowBlur = 14;
-      ctx.shadowColor = "#9299a1";
-
-      ctx.strokeRect(
-        brick.x - 7,
-        brick.y - 9,
-        brick.width + 14,
-        brick.height + 18
-      );
-
-      ctx.globalAlpha = 0.09;
-      ctx.fillStyle = "#c5c9cd";
-      ctx.fillRect(
-        brick.x - 5,
-        brick.y - 7,
-        brick.width + 10,
-        brick.height + 14
-      );
-
-      ctx.restore();
     }
 
     if (brick.maxHp > 1) {

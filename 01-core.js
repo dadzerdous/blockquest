@@ -854,8 +854,8 @@ const roomEncounterRosters = {
     { type:"G", armor:2 }, { type:"F", armor:2 }
   ],
   3: [
-    { type:"D" }, { type:"D", armor:3 },
-    { type:"G" }, { type:"F", armor:3 }, { type:"I" }
+    { type:"D" }, { type:"G", armor:2 },
+    { type:"F", armor:2 }, { type:"G" }
   ],
   4: [
     { type:"D" }, { type:"D" },
