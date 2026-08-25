@@ -961,6 +961,8 @@ function drawProjectiles() {
       ? "#91e9ff"
       : shot.type === "stun"
         ? "#ffe15a"
+        : shot.type === "burst"
+          ? "#5f8cff"
         : shot.type === "arrow"
           ? "#d7c6a1"
           : "#ff5d4c";
@@ -1027,6 +1029,20 @@ function drawProjectiles() {
       ctx.lineTo(-1, 2);
       ctx.closePath();
       ctx.fill();
+    } else if (shot.type === "burst") {
+      ctx.translate(shot.x, shot.y);
+      ctx.rotate(Math.atan2(shot.vy, shot.vx));
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "#d9e5ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(shot.radius * 1.35, 0);
+      ctx.lineTo(0, -shot.radius * 0.82);
+      ctx.lineTo(-shot.radius * 1.05, 0);
+      ctx.lineTo(0, shot.radius * 0.82);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
     } else {
       ctx.translate(shot.x, shot.y);
       ctx.rotate(Math.atan2(shot.vy, shot.vx));

@@ -1452,7 +1452,7 @@ function updateEnemyAttacks(dt) {
       if (enemy.burstGap <= 0) {
         fireAimedDamageShot(enemy);
         enemy.burstRemaining -= 1;
-        enemy.burstGap = 0.18;
+        enemy.burstGap = 0.28;
       }
       continue;
     }
@@ -1510,12 +1510,12 @@ function fireAimedDamageShot(shooter) {
   const dx = player.x - x;
   const dy = (player.y - 20) - y;
   const length = Math.hypot(dx, dy) || 1;
-  const speed = hardProjectileSpeed(410);
+  const speed = hardProjectileSpeed(395);
   enemyProjectiles.push({
     x, y, radius:12,
     vx:dx / length * speed,
     vy:dy / length * speed,
-    type:"damage"
+    type:"burst"
   });
 }
 
@@ -1569,7 +1569,7 @@ function fireEnemyShot(shooter) {
   if (shooter.shooterVariant === "burst") {
     fireAimedDamageShot(shooter);
     shooter.burstRemaining = 2;
-    shooter.burstGap = 0.18;
+    shooter.burstGap = 0.28;
     return;
   }
 
