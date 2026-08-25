@@ -1117,11 +1117,15 @@ function spawnPickup(type, x, y, amount = 1) {
   fallingPickups.push({
     type,
     x,
+    originX: x,
     y,
-    vy: 175,
+    vy: 112,
     radius: type === "pill" ? 16 : 13,
     amount,
-    bob: Math.random() * Math.PI * 2
+    bob: Math.random() * Math.PI * 2,
+    twinkle: Math.random() * Math.PI * 2,
+    swayAmount: 48 + Math.random() * 10,
+    swaySpeed: 1.65 + Math.random() * 0.35
   });
 }
 
@@ -1227,7 +1231,9 @@ function updateFallingPickups(dt) {
     const pickup = fallingPickups[i];
 
     pickup.y += pickup.vy * dt;
-    pickup.bob += dt * 5;
+    pickup.bob += dt * pickup.swaySpeed;
+    pickup.twinkle += dt * 4.6;
+    pickup.x = pickup.originX + Math.sin(pickup.bob) * pickup.swayAmount;
 
     const catchLeft =
       player.x - player.width / 2 - 8;
@@ -1261,14 +1267,24 @@ function updateFallingPickups(dt) {
 function drawFallingPickups() {
   for (const pickup of fallingPickups) {
     ctx.save();
+    const pulse = 0.90 + (Math.sin(pickup.twinkle) + 1) * 0.075;
 
-    const bobX =
-      Math.sin(pickup.bob) * 2;
+    ctx.translate(pickup.x, pickup.y);
+    ctx.scale(pulse, pulse);
 
-    ctx.translate(
-      pickup.x + bobX,
-      pickup.y
-    );
+    // Small four-point twinkle makes collectibles readable as rewards.
+    const sparkle = 5 + (Math.sin(pickup.twinkle * 1.7) + 1) * 3;
+    ctx.save();
+    ctx.globalAlpha = 0.45 + (Math.sin(pickup.twinkle) + 1) * 0.18;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, -pickup.radius - sparkle);
+    ctx.lineTo(0, pickup.radius + sparkle);
+    ctx.moveTo(-pickup.radius - sparkle, 0);
+    ctx.lineTo(pickup.radius + sparkle, 0);
+    ctx.stroke();
+    ctx.restore();
 
     if (pickup.type === "money") {
       ctx.save();

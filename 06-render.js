@@ -781,20 +781,42 @@ function drawMobBacking(brick){
   ctx.restore();
 }
 
+function enemyAuraColor(brick) {
+  if (brick.raiderBoss) return "#d7a06f";
+  if (brick.iceGoblin) return "#73ddff";
+  if (brick.stunGoblin) return "#ffe35b";
+  if (brick.darkBlueGoblin) return "#4778ff";
+  if (brick.darkFireGoblin || brick.fireGoblin) return "#ff674d";
+  if (brick.greenGoblin) return "#75e66b";
+  return "#a6adb5";
+}
+
 function drawEnemyAura(brick) {
   if (!brick.isMob) return;
-  let c=null;
-  if (brick.armor > 0) c="#aeb4bb";
-  else if (brick.iceGoblin) c="#73ddff";
-  else if (brick.stunGoblin) c="#ffe35b";
-  else if (brick.darkBlueGoblin) c="#4778ff";
-  else if (brick.darkFireGoblin || brick.fireGoblin) c="#ff674d";
-  else if (brick.greenGoblin) c="#75e66b";
-  if (!c) return;
+  const normalColor = enemyAuraColor(brick);
+  const armorRatio = brick.maxArmor > 0
+    ? Math.max(0, Math.min(1, brick.armor / brick.maxArmor))
+    : 0;
+  const perimeter = 2 * ((brick.width - 8) + (brick.height - 8));
+  const alpha=.42+Math.sin(performance.now()/180+brick.x*.01)*.14;
+
   ctx.save();
-  ctx.globalAlpha=.42+Math.sin(performance.now()/180+brick.x*.01)*.14;
-  ctx.strokeStyle=c; ctx.shadowBlur=20; ctx.shadowColor=c; ctx.lineWidth=5;
+  ctx.globalAlpha=alpha;
+  ctx.strokeStyle=normalColor;
+  ctx.shadowBlur=20;
+  ctx.shadowColor=normalColor;
+  ctx.lineWidth=5;
   ctx.strokeRect(brick.x+4,brick.y+4,brick.width-8,brick.height-8);
+
+  if (armorRatio > 0) {
+    ctx.strokeStyle="#aeb4bb";
+    ctx.shadowColor="#9299a1";
+    if (armorRatio < 0.999) {
+      ctx.setLineDash([perimeter * armorRatio, perimeter]);
+      ctx.lineDashOffset = perimeter * 0.125;
+    }
+    ctx.strokeRect(brick.x+4,brick.y+4,brick.width-8,brick.height-8);
+  }
   ctx.restore();
 }
 
@@ -935,11 +957,40 @@ function drawProjectiles() {
   for (const shot of enemyProjectiles) {
     ctx.save();
 
+    const color = shot.type === "ice"
+      ? "#91e9ff"
+      : shot.type === "stun"
+        ? "#ffe15a"
+        : shot.type === "arrow"
+          ? "#d7c6a1"
+          : "#ff5d4c";
+    const speed = Math.hypot(shot.vx || 0, shot.vy || 0) || 1;
+    const nx = (shot.vx || 0) / speed;
+    const ny = (shot.vy || 0) / speed;
+    const trailLength = shot.type === "arrow" ? 34 : 48;
+    const trail = ctx.createLinearGradient(
+      shot.x, shot.y,
+      shot.x - nx * trailLength,
+      shot.y - ny * trailLength
+    );
+    trail.addColorStop(0, color);
+    trail.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.strokeStyle = trail;
+    ctx.lineWidth = shot.type === "arrow" ? 4 : Math.max(5, shot.radius * 0.7);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(shot.x, shot.y);
+    ctx.lineTo(shot.x - nx * trailLength, shot.y - ny * trailLength);
+    ctx.stroke();
+
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = color;
+
     if (shot.type === "arrow") {
       ctx.translate(shot.x, shot.y);
       ctx.rotate(shot.angle || Math.atan2(shot.vy, shot.vx));
-      ctx.strokeStyle = "#d7c6a1";
-      ctx.fillStyle = "#d7c6a1";
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
       ctx.lineWidth = 5;
       ctx.beginPath();
       ctx.moveTo(-18, 0);
@@ -952,17 +1003,40 @@ function drawProjectiles() {
       ctx.lineTo(7, 7);
       ctx.closePath();
       ctx.fill();
-    } else {
-      ctx.fillStyle =
-        shot.type === "ice"
-          ? "#91e9ff"
-          : shot.type === "stun"
-            ? "#ffe15a"
-            : "#ff5d4c";
-      ctx.shadowBlur = 14;
-      ctx.shadowColor = ctx.fillStyle;
+    } else if (shot.type === "ice") {
+      ctx.translate(shot.x, shot.y);
+      ctx.rotate(Math.atan2(shot.vy, shot.vx) + Math.PI / 2);
+      ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
+      ctx.moveTo(0, -shot.radius * 1.35);
+      ctx.lineTo(shot.radius * 0.72, 0);
+      ctx.lineTo(0, shot.radius * 1.35);
+      ctx.lineTo(-shot.radius * 0.72, 0);
+      ctx.closePath();
+      ctx.fill();
+    } else if (shot.type === "stun") {
+      ctx.translate(shot.x, shot.y);
+      ctx.rotate(Math.atan2(shot.vy, shot.vx) - Math.PI / 2);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(-5, -17);
+      ctx.lineTo(7, -4);
+      ctx.lineTo(1, -4);
+      ctx.lineTo(7, 17);
+      ctx.lineTo(-8, 2);
+      ctx.lineTo(-1, 2);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.translate(shot.x, shot.y);
+      ctx.rotate(Math.atan2(shot.vy, shot.vx));
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(shot.radius * 1.3, 0);
+      ctx.lineTo(-shot.radius * 0.65, -shot.radius * 0.8);
+      ctx.lineTo(-shot.radius, 0);
+      ctx.lineTo(-shot.radius * 0.65, shot.radius * 0.8);
+      ctx.closePath();
       ctx.fill();
     }
 
