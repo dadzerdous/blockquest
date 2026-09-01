@@ -390,6 +390,11 @@ let keys = {};
 let pointerActive = false;
 let pointerX = WORLD_WIDTH / 2;
 let pointerY = WORLD_HEIGHT / 2;
+let activePointerId = null;
+let pointerControlMode = null;
+let pointerStartX = WORLD_WIDTH / 2;
+let pointerStartY = WORLD_HEIGHT / 2;
+let directPointerOffsetX = 0;
 let roomNumber = 1;
 
 let pendingRoomType = "battle";

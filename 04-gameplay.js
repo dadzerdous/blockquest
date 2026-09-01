@@ -586,6 +586,7 @@ function updatePlayer(dt) {
   }
 
   let move = 0;
+  let directTargetX = null;
 
   if (player.stunTimer > 0) {
     player.stunTimer = Math.max(0, player.stunTimer - dt);
@@ -600,10 +601,25 @@ function updatePlayer(dt) {
       gameState !== "upgrade" &&
       gameState !== "shop"
     ) {
-      const difference = pointerX - player.x;
+      if (pointerControlMode === "direct") {
+        directTargetX = pointerX + directPointerOffsetX;
+      } else if (pointerControlMode === "relative") {
+        const dragDistance = pointerX - pointerStartX;
+        const deadZone = 12;
 
-      if (Math.abs(difference) > 10) {
-        move = Math.max(-1, Math.min(1, difference / 120));
+        if (Math.abs(dragDistance) > deadZone) {
+          // A small drag gives precise movement; about 150 world pixels from
+          // the anchor reaches full trolley speed.
+          move = Math.max(
+            -1,
+            Math.min(
+              1,
+              (dragDistance - Math.sign(dragDistance) * deadZone) / 138
+            )
+          );
+        } else {
+          move = 0;
+        }
       }
     }
   }
@@ -627,21 +643,43 @@ function updatePlayer(dt) {
     player.slowMultiplier = 1;
   }
 
-  player.velocityX =
-    move *
-    player.speed *
-    player.runSpeedMultiplier *
-    player.slowMultiplier;
-
-  player.x += player.velocityX * dt;
-
   const halfWidth = player.width / 2;
+  const minPlayerX = halfWidth + 30;
+  const maxPlayerX = WORLD_WIDTH - halfWidth - 30;
+
+  if (directTargetX !== null) {
+    const clampedTargetX = Math.max(
+      minPlayerX,
+      Math.min(maxPlayerX, directTargetX)
+    );
+    const difference = clampedTargetX - player.x;
+    // Direct dragging is intentionally much more responsive than directional
+    // steering, while slow effects still reduce how quickly it can catch up.
+    const directSpeed =
+      player.speed *
+      player.runSpeedMultiplier *
+      player.slowMultiplier *
+      2.4;
+    const maxStep = directSpeed * dt;
+    const step = Math.max(-maxStep, Math.min(maxStep, difference));
+
+    player.velocityX = dt > 0 ? step / dt : 0;
+    player.x += step;
+  } else {
+    player.velocityX =
+      move *
+      player.speed *
+      player.runSpeedMultiplier *
+      player.slowMultiplier;
+
+    player.x += player.velocityX * dt;
+  }
 
   player.x =
     Math.max(
-      halfWidth + 30,
+      minPlayerX,
       Math.min(
-        WORLD_WIDTH - halfWidth - 30,
+        maxPlayerX,
         player.x
       )
     );

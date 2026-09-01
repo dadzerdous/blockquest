@@ -49,11 +49,13 @@ canvas.addEventListener("pointerdown", event => {
   ensureBgMusic();
   if (gameState === "upgrade" || gameState === "shop" || gameState === "stats") return;
 
+  // Ignore a second finger/button until the active pointer is released.
+  if (activePointerId !== null && activePointerId !== event.pointerId) return;
+
+  const point = getPointerWorldPosition(event);
+
   if (gameState === "playing") {
-    const rect = canvas.getBoundingClientRect();
-    const worldX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
-    const worldY = ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT;
-    const tappedEnemy = enemyAtWorldPoint(worldX, worldY);
+    const tappedEnemy = enemyAtWorldPoint(point.x, point.y);
 
     if (tappedEnemy && useRangerSkill(tappedEnemy)) {
       event.preventDefault();
@@ -63,12 +65,34 @@ canvas.addEventListener("pointerdown", event => {
 
   if (gameState === "exitChoice" || gameState === "roomClear") {
     pointerActive = true;
+    activePointerId = event.pointerId;
+    pointerControlMode = "navigation";
     setPointerPosition(event);
     return;
   }
 
   pointerActive = true;
-  setPointerPosition(event);
+  activePointerId = event.pointerId;
+  pointerX = point.x;
+  pointerY = point.y;
+  pointerStartX = point.x;
+  pointerStartY = point.y;
+
+  if (pointerIsOnTrolley(point.x, point.y)) {
+    pointerControlMode = "direct";
+    // Keep the exact spot that was grabbed under the finger. This prevents
+    // the trolley from snapping its center to the initial press.
+    directPointerOffsetX = player.x - point.x;
+  } else {
+    // The initial press becomes a virtual anchor. Movement comes from how far
+    // the player drags left or right from it, not from where they touched.
+    pointerControlMode = "relative";
+    directPointerOffsetX = 0;
+  }
+
+  try {
+    canvas.setPointerCapture(event.pointerId);
+  } catch (_) {}
 
   if (gameState === "lost") {
     returnToLobby(false);
@@ -79,18 +103,46 @@ canvas.addEventListener("pointerdown", event => {
 });
 
 canvas.addEventListener("pointermove", event => {
-  if (!pointerActive) return;
+  if (!pointerActive || event.pointerId !== activePointerId) return;
   setPointerPosition(event);
 });
 
-window.addEventListener("pointerup", () => {
+function releasePointerControl(event) {
+  if (event && activePointerId !== null && event.pointerId !== activePointerId) return;
   pointerActive = false;
-});
+  activePointerId = null;
+  pointerControlMode = null;
+  directPointerOffsetX = 0;
+}
+
+window.addEventListener("pointerup", releasePointerControl);
+window.addEventListener("pointercancel", releasePointerControl);
+
+function getPointerWorldPosition(event) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH,
+    y: ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT
+  };
+}
 
 function setPointerPosition(event) {
-  const rect = canvas.getBoundingClientRect();
-  pointerX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
-  pointerY = ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT;
+  const point = getPointerWorldPosition(event);
+  pointerX = point.x;
+  pointerY = point.y;
+}
+
+function pointerIsOnTrolley(worldX, worldY) {
+  const trolleyHalfWidth = player.width * 0.66;
+  const trolleyTop = player.y - player.height * 0.95;
+  const trolleyBottom = player.y + player.height * 0.90;
+
+  return (
+    worldX >= player.x - trolleyHalfWidth &&
+    worldX <= player.x + trolleyHalfWidth &&
+    worldY >= trolleyTop &&
+    worldY <= trolleyBottom
+  );
 }
 
 openProfilesButton.addEventListener("click", () => {
